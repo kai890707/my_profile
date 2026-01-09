@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -18,9 +22,13 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'username',
         'name',
         'email',
-        'password',
+        'password_hash',
+        'role',
+        'status',
+        'email_verified_at',
     ];
 
     /**
@@ -29,7 +37,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $hidden = [
-        'password',
+        'password_hash',
         'remember_token',
     ];
 
@@ -42,7 +50,58 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password_hash' => 'hashed',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'deleted_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Get the salesperson profile for the user.
+     */
+    public function salespersonProfile(): HasOne
+    {
+        return $this->hasOne(SalespersonProfile::class);
+    }
+
+    /**
+     * Get the companies created by this user.
+     */
+    public function companiesCreated(): HasMany
+    {
+        return $this->hasMany(Company::class, 'created_by');
+    }
+
+    /**
+     * Get the companies approved by this user.
+     */
+    public function companiesApproved(): HasMany
+    {
+        return $this->hasMany(Company::class, 'approved_by');
+    }
+
+    /**
+     * Get the certifications for this user.
+     */
+    public function certifications(): HasMany
+    {
+        return $this->hasMany(Certification::class);
+    }
+
+    /**
+     * Get the experiences for this user.
+     */
+    public function experiences(): HasMany
+    {
+        return $this->hasMany(Experience::class);
+    }
+
+    /**
+     * Get the approval logs created by this admin user.
+     */
+    public function approvalLogs(): HasMany
+    {
+        return $this->hasMany(ApprovalLog::class, 'admin_id');
     }
 }
