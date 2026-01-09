@@ -1,0 +1,137 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ develop ]
+
+env:
+  PHP_VERSION: '8.4'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ==============================================
+  # Build and Test
+  # ==============================================
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, bcmath, gd, pdo_mysql, zip
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Run PHPStan
+        run: ./vendor/bin/phpstan analyse --memory-limit=2G
+
+      - name: Run tests
+        run: ./vendor/bin/pest
+
+  # ==============================================
+  # Build and Push Docker Image
+  # ==============================================
+  docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=staging-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.prod
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ==============================================
+  # Deploy to Staging Server
+  # ==============================================
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: docker
+    environment:
+      name: staging
+      url: https://staging.yourdomain.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd /opt/my_profile_laravel
+
+            # Pull latest code
+            git pull origin develop
+
+            # Pull latest Docker image
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop
+
+            # Stop old containers
+            docker-compose -f docker-compose.staging.yml down
+
+            # Start new containers
+            docker-compose -f docker-compose.staging.yml up -d
+
+            # Run migrations
+            docker exec my_profile_laravel_app_staging php artisan migrate --force
+
+            # Clear cache
+            docker exec my_profile_laravel_app_staging php artisan cache:clear
+            docker exec my_profile_laravel_app_staging php artisan config:cache
+            docker exec my_profile_laravel_app_staging php artisan route:cache
+            docker exec my_profile_laravel_app_staging php artisan view:cache
+
+            # Health check
+            sleep 10
+            curl -f https://staging.yourdomain.com/health || exit 1
+
+      - name: Notify deployment
+        if: always()
+        run: |
+          echo "Deployment to staging: ${{ job.status }}"

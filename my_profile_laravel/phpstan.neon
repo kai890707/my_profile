@@ -1,0 +1,17 @@
+includes:
+    - ./vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 9
+    paths:
+        - app
+        - tests
+    excludePaths:
+        - vendor
+
+    # Laravel specific
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: true
+
+    # Custom error format
+    editorUrl: 'phpstorm://open?file=%%file%%&line=%%line%%'
