@@ -1,278 +1,678 @@
-# AI 自動化開發流程系統
+# YAMU 開發系統指南
 
-## 系統概述
+**專案**: YAMU 業務員推廣系統
+**架構**: Laravel 11 (Backend) + Next.js 15 (Frontend)
+**開發方法**: OpenSpec Specification-Driven Development (SDD)
+**版本**: 3.0
+**最後更新**: 2026-01-10
 
-完整的 AI 自動化開發流程，透過角色扮演和指令編排實現從需求到交付的全流程自動化。
+---
 
-**核心理念**：一個指令完成所有開發流程
+## 📋 系統概述
 
+這是一個完整的 **OpenSpec 規範驅動開發系統**，整合了 Git Flow 工作流程和自動化開發流程，確保代碼品質、流程規範、可追溯性。
+
+### 核心理念
+
+**規範先行，程式碼後行**
+
+```bash
+# Backend 功能開發
+/implement [功能描述]
+
+# Frontend 功能開發
+/implement-frontend [功能描述]
+```
+
+一個指令完成完整的開發流程：需求確認 → 規格撰寫 → 任務拆解 → 規格驗證 → 程式碼實作 → 歸檔規範庫
+
+---
+
+## 🏗️ 專案架構
+
+```
+YAMU/
+├── my_profile_laravel/         # Laravel 11 Backend API
+│   ├── app/
+│   │   ├── Http/Controllers/Api/
+│   │   ├── Models/
+│   │   ├── Services/
+│   │   └── Policies/
+│   ├── database/
+│   ├── tests/                  # 201 tests, 80%+ coverage
+│   └── docker-compose.yml      # Docker 配置
+├── frontend/                    # Next.js 15 Frontend
+│   ├── app/                    # App Router
+│   ├── components/
+│   ├── lib/
+│   ├── hooks/
+│   └── types/
+├── openspec/                    # OpenSpec 規範庫
+│   ├── specs/                  # 歸檔的規格
+│   │   ├── api/
+│   │   ├── models/
+│   │   ├── frontend/
+│   │   └── architecture/
+│   └── changes/                # 進行中的變更
+│       ├── <feature-name>/
+│       │   ├── proposal.md
+│       │   ├── specs/
+│       │   └── tasks.md
+│       └── archived/
+└── .claude/                     # 開發系統配置
+    ├── README.md               # 本文件
+    ├── commands/               # 開發指令
+    │   ├── README.md           # Commands 使用指南
+    │   ├── implement.md
+    │   ├── implement-frontend.md
+    │   ├── proposal.md
+    │   ├── spec.md
+    │   ├── tasks.md
+    │   ├── validate.md
+    │   ├── develop.md
+    │   ├── archive.md
+    │   ├── feature-start.md
+    │   ├── feature-finish.md
+    │   └── pr-review.md
+    ├── workflows/              # 工作流程文檔
+    │   ├── GIT_FLOW.md
+    │   └── DEVELOPMENT.md
+    └── skills/                 # 專業技能
+        ├── php-pro/
+        ├── frontend-design/
+        └── playwright-skill/
+```
+
+---
+
+## 🚀 快速開始
+
+### 1. 開發新功能 (推薦)
+
+```bash
+# Backend 功能
+/implement 新增業務員評分功能
+
+# Frontend 功能
+/implement-frontend 新增評分 UI 組件
+```
+
+這兩個指令會自動完成完整的 SDD 流程（6 個步驟）。
+
+### 2. Git Flow 管理
+
+```bash
+# 開始新功能開發
+/feature-start add-rating-api
+
+# 完成功能，創建 Pull Request
+/feature-finish
+
+# 審查 Pull Request
+/pr-review 123
+```
+
+### 3. 查看狀態與測試
+
+```bash
+# 查看開發狀態
+/status
+
+# 執行測試
+/test
+
+# 生成文檔
+/docs
+```
+
+---
+
+## 📚 Commands 系統
+
+### Commands 分層架構
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Layer 1: Git Flow 管理 (專案管理層)                  │
+├─────────────────────────────────────────────────────┤
+│ git-flow-init, feature-start, feature-finish        │
+│ pr-review, release-start, hotfix-start              │
+└─────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│ Layer 2: SDD 自動化 (功能開發層)                     │
+├─────────────────────────────────────────────────────┤
+│ implement (Backend)                                 │
+│ implement-frontend (Frontend)                       │
+└─────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│ Layer 3: SDD 手動控制 (開發步驟層)                   │
+├─────────────────────────────────────────────────────┤
+│ proposal → spec → tasks → validate → develop →     │
+│ archive                                             │
+└─────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│ Layer 4: 輔助工具 (支援層)                           │
+├─────────────────────────────────────────────────────┤
+│ status, test, docs                                  │
+└─────────────────────────────────────────────────────┘
+```
+
+### 完整 Commands 列表
+
+| 分類 | Command | 用途 |
+|------|---------|------|
+| **Git Flow** | `/git-flow-init` | 初始化 Git Flow |
+| | `/feature-start` | 開始新功能 (創建分支) |
+| | `/feature-finish` | 完成功能 (創建 PR) |
+| | `/pr-review` | 審查 Pull Request |
+| **SDD 自動化** | `/implement` | Backend 完整 SDD 流程 |
+| | `/implement-frontend` | Frontend 完整 SDD 流程 |
+| **SDD 單步驟** | `/proposal` | 建立變更提案 |
+| | `/spec` | 撰寫詳細規格 |
+| | `/tasks` | 拆解實作任務 |
+| | `/validate` | 驗證規格完整性 |
+| | `/develop` | 實作程式碼 |
+| | `/archive` | 歸檔到規範庫 |
+| **架構遷移** | `/migration-start` | 開始遷移模組 |
+| | `/migration-finish` | 完成遷移 (含測試) |
+| **輔助工具** | `/status` | 查看開發狀態 |
+| | `/test` | 執行測試 |
+| | `/docs` | 生成文檔 |
+
+**詳細說明**: 請參考 [commands/README.md](./commands/README.md)
+
+---
+
+## 🔄 完整工作流程
+
+### 典型的功能開發流程
+
+```bash
+# ========== 階段 1: Git Flow 準備 ==========
+/feature-start add-rating-feature
+# → 創建 feature/add-rating-feature 分支
+
+# ========== 階段 2: Backend 開發 ==========
+/implement 新增業務員評分與評論功能
+# 自動執行 6 步驟:
+#   Step 1: Create Proposal (確認需求)
+#   Step 2: Write Specifications (API + 資料模型 + 業務規則)
+#   Step 3: Break Down Tasks (拆解任務)
+#   Step 4: Validate Specs (驗證規格)
+#   Step 5: Implement (實作程式碼)
+#   Step 6: Archive (歸檔規範庫)
+
+# ========== 階段 3: Frontend 開發 ==========
+/implement-frontend 新增評分 UI 組件與頁面
+# 自動執行 6 步驟:
+#   Step 1: Create Proposal (確認 UI/UX)
+#   Step 2: Write Specifications (UI/UX + 組件 + 頁面 + API 整合)
+#   Step 3: Break Down Tasks (拆解 UI 任務)
+#   Step 4: Validate Specs (驗證設計完整性)
+#   Step 5: Implement (實作組件和頁面)
+#   Step 6: Archive (歸檔前端規範)
+
+# ========== 階段 4: 測試與文檔 ==========
+/test                          # 執行所有測試
+/docs                          # 生成 API 文檔
+/status add-rating-feature     # 確認完成狀態
+
+# ========== 階段 5: 完成與審查 ==========
+/feature-finish
+# → 創建 Pull Request 到 develop 分支
+
+/pr-review 123
+# → 代碼審查通過後合併
+```
+
+---
+
+## 📖 OpenSpec SDD 流程
+
+### SDD 6 步驟詳解
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Step 1: Proposal (建立變更提案)                      │
+├─────────────────────────────────────────────────────┤
+│ • 使用 AskUserQuestion 確認需求                      │
+│ • 明確定義 In Scope / Out of Scope                  │
+│ • 制定驗收標準                                       │
+│ 產出: openspec/changes/<feature>/proposal.md        │
+└─────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│ Step 2: Specifications (撰寫詳細規格)                │
+├─────────────────────────────────────────────────────┤
+│ Backend:                                            │
+│   • api.md - API 端點 (Request/Response 範例)       │
+│   • data-model.md - 資料模型 (Migration 程式碼)     │
+│   • business-rules.md - 業務規則 (驗證邏輯)         │
+│ Frontend:                                           │
+│   • ui-ux.md - UI/UX 設計                           │
+│   • components.md - 組件規格                        │
+│   • pages.md - 頁面規格                             │
+│   • api-integration.md - API 整合                   │
+│   • state-routing.md - 狀態管理與路由               │
+│ 產出: openspec/changes/<feature>/specs/             │
+└─────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│ Step 3: Tasks (拆解實作任務)                         │
+├─────────────────────────────────────────────────────┤
+│ • 將規格拆解為原子任務                               │
+│ • 標記任務依賴關係                                   │
+│ • 預估工作量 (S/M/L)                                │
+│ 產出: openspec/changes/<feature>/tasks.md           │
+└─────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│ Step 4: Validate (驗證規格完整性)                    │
+├─────────────────────────────────────────────────────┤
+│ • 完整性檢查 (所有必要章節都已填寫)                  │
+│ • 一致性檢查 (規格之間無衝突)                        │
+│ • 清晰性檢查 (無歧義，可直接實作)                    │
+│ • 可測性檢查 (有明確驗收標準)                        │
+│ ⚠️  所有檢查通過才進入實作階段                       │
+└─────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│ Step 5: Develop (實作程式碼)                         │
+├─────────────────────────────────────────────────────┤
+│ • 使用 TodoWrite 追蹤進度                            │
+│ • 嚴格遵循規格定義                                   │
+│ • 一次只處理一個 in_progress 任務                    │
+│ • 每個任務完成立即驗證                               │
+│ • 遇到錯誤立即修復，不累積技術債                     │
+│ 產出: 完整的程式碼實作                               │
+└─────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────┐
+│ Step 6: Archive (歸檔到規範庫)                       │
+├─────────────────────────────────────────────────────┤
+│ • 合併規格到 openspec/specs/                        │
+│ • 移動變更到 openspec/changes/archived/             │
+│ • 更新規範庫版本記錄                                 │
+│ 產出: 更新的規範庫                                   │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🎯 使用場景
+
+### 場景 1: 新功能開發
+
+```bash
+# 使用自動化流程 (推薦)
+/implement 新增業務員評分功能
+```
+
+**適用於**: 90% 的功能開發場景
+
+### 場景 2: 複雜功能 (需要分階段)
+
+```bash
+# 使用手動步驟控制
+/proposal 新增推薦演算法
+/spec recommendation-algorithm
+/tasks recommendation-algorithm
+/validate recommendation-algorithm
+# ... 確認規格無誤後再實作
+/develop recommendation-algorithm
+/archive recommendation-algorithm
+```
+
+**適用於**:
+- 複雜功能需要分階段執行
+- 多人協作 (一人寫規格，另一人實作)
+- 需要暫停並稍後繼續
+
+### 場景 3: Bug 修復
+
+```bash
+/implement 修復購物車計算錯誤
+```
+
+**Proposal 應包含**:
+- Bug 重現步驟
+- 根本原因分析
+- 修復方案
+
+### 場景 4: 架構遷移 (Laravel 專用)
+
+```bash
+/migration-start 03-auth-module
+# ... 使用 /implement 開發功能
+/migration-finish
+# → 自動執行 API 兼容性測試 (100%)
+```
+
+---
+
+## 🛠️ 輔助工具
+
+### 查看開發狀態
+
+```bash
+# 查看所有活躍項目
+/status
+
+# 查看特定功能狀態
+/status rating-feature
+```
+
+**顯示內容**:
+- 活躍的變更提案列表
+- 每個提案的完成階段
+- 待辦任務統計
+- 已完成/總任務數
+
+### 執行測試
+
+```bash
+# 執行所有測試
+/test
+
+# 僅 Backend 測試
+/test backend
+
+# 僅 Frontend 測試
+/test frontend
+
+# 僅 API 測試
+/test api
+```
+
+### 生成文檔
+
+```bash
+# 生成所有文檔
+/docs
+
+# 生成 API 文檔
+/docs api
+
+# 生成 Frontend 組件文檔
+/docs frontend
+```
+
+**產出格式**:
+- Swagger/OpenAPI 3.0
+- Markdown 格式
+- HTML 靜態網站
+
+---
+
+## 📚 重要原則
+
+### 1. 規範驅動
+
+❌ **禁止**:
+- 未撰寫規格就開始寫程式
+- 規格模糊、不完整就開始實作
+- 實作過程中隨意偏離規格
+- 忽略響應式設計 (Frontend)
+
+✅ **必須**:
+- 規格必須詳細到「無需解釋就能理解」
+- 所有 API 端點都有完整的 Request/Response 範例
+- 所有資料表都有完整的欄位定義與約束
+- 所有業務規則都有明確的驗證邏輯
+- Frontend 遵循設計系統規範
+
+### 2. 最小化幻覺
+
+**問題**: AI 容易「自行腦補」未明確定義的內容
+
+**解決**:
+- 在 Proposal 階段使用 `AskUserQuestion` 確認所有模糊點
+- 規格中明確列出「In Scope」和「Out of Scope」
+- 每個功能都有明確的驗收標準
+- 發散需求推理邊界場景
+- 每項提案都必須提出三種可用的解決方案
+
+### 3. 錯誤預防
+
+**策略 1: 規格審查點**
+- Proposal 完成後暫停，確認需求理解正確
+- Specs 完成後暫停，確認技術方案可行
+- Tasks 拆解後暫停，確認執行順序合理
+
+**策略 2: 漸進式實作**
+- 一次只處理一個 Task（in_progress）
+- 每個 Task 完成立即測試驗證
+- 發現錯誤立即修復，不累積技術債
+
+**策略 3: 規格一致性檢查**
+- API 規格與資料模型必須對應
+- 業務規則必須在程式碼中實現
+- 測試案例必須覆蓋所有驗收標準
+
+### 4. 代碼品質
+
+**Backend (Laravel 11)**:
+- ✅ PHPStan Level 9 (最嚴格靜態分析)
+- ✅ 201 測試，80%+ 覆蓋率
+- ✅ Service Layer 業務邏輯分離
+- ✅ Policy Authorization 權限管理
+- ✅ Form Request 驗證
+- ❌ 禁止 SQL Injection, XSS, CSRF
+
+**Frontend (Next.js 15)**:
+- ✅ TypeScript 嚴格模式
+- ✅ 遵循設計系統規範
+- ✅ 組件可複用
+- ✅ 響應式設計 (Mobile/Tablet/Desktop)
+- ❌ 禁止 Any 類型
+- ❌ 禁止內聯樣式 (使用 Tailwind)
+
+---
+
+## 📖 文檔資源
+
+### 核心文檔
+
+| 文檔 | 說明 |
+|------|------|
+| [.claude/commands/README.md](./commands/README.md) | **Commands 使用指南** (必讀) |
+| [.claude/workflows/GIT_FLOW.md](./workflows/GIT_FLOW.md) | Git Flow 完整指南 |
+| [.claude/workflows/DEVELOPMENT.md](./workflows/DEVELOPMENT.md) | 完整開發流程 |
+| [.claude/commands/WORKFLOW.md](./commands/WORKFLOW.md) | Commands 工作流程圖 |
+
+### 專案開發規範
+
+| 文檔 | 說明 |
+|------|------|
+| [README.md](../README.md) | 專案總覽 |
+| [my_profile_laravel/README.md](../my_profile_laravel/README.md) | Laravel Backend 開發規範 |
+| [frontend/README.md](../frontend/README.md) | Next.js Frontend 開發規範 |
+| [frontend/CLAUDE.md](../frontend/CLAUDE.md) | Frontend OpenSpec 規範 |
+
+### OpenSpec 規範庫
+
+| 文檔 | 說明 |
+|------|------|
+| [openspec/specs/README.md](../openspec/specs/README.md) | 規範庫索引 |
+| [openspec/specs/api/endpoints.md](../openspec/specs/api/endpoints.md) | Backend API 規範 (31 個端點) |
+| [openspec/specs/models/data-models.md](../openspec/specs/models/data-models.md) | 資料模型規範 (8 個 Models) |
+| [openspec/specs/frontend/README.md](../openspec/specs/frontend/README.md) | Frontend 規範總覽 |
+| [openspec/specs/frontend/ui-components.md](../openspec/specs/frontend/ui-components.md) | UI 組件規範 (30+ 組件) |
+| [openspec/specs/frontend/api-integration.md](../openspec/specs/frontend/api-integration.md) | API 整合規範 (31 個端點) |
+
+### 技術文檔
+
+| 文檔 | 說明 |
+|------|------|
+| [frontend/docs/design-system.md](../frontend/docs/design-system.md) | 設計系統規範 |
+| [frontend/docs/testing.md](../frontend/docs/testing.md) | 測試指南 |
+| [frontend/docs/performance.md](../frontend/docs/performance.md) | 性能優化 |
+
+### 專案報告
+
+| 文檔 | 說明 |
+|------|------|
+| [my_profile_laravel/MIGRATION_SUMMARY.md](../my_profile_laravel/MIGRATION_SUMMARY.md) | Laravel 遷移完成報告 |
+| [my_profile_laravel/MODULE_07_COMPLETION.md](../my_profile_laravel/MODULE_07_COMPLETION.md) | 生產部署完整指南 |
+| [my_profile_laravel/SWAGGER_IMPLEMENTATION.md](../my_profile_laravel/SWAGGER_IMPLEMENTATION.md) | Swagger 實作報告 |
+| [frontend/reports/project-completion.md](../frontend/reports/project-completion.md) | Frontend 專案完成報告 |
+
+---
+
+## 🎓 最佳實踐
+
+### 1. 優先使用自動化流程
+
+✅ **推薦**:
 ```bash
 /implement [功能描述]
+/implement-frontend [功能描述]
 ```
 
-## 系統架構
+- 省時省力
+- 確保流程完整
+- 自動追蹤進度
 
-```
-用戶需求
-   ↓
-PM (需求確認)
-   ↓
-Architect (技術分析)
-   ↓
-Tech Lead (計畫制定) → 等待確認
-   ↓
-Developer (程式碼實作)
-   ↓
-QA (品質驗收)
-   ↓
-交付成果
-```
+❌ **不推薦**: 手動執行每個步驟 (除非有特殊需求)
 
-## 檔案結構
+### 2. 善用 AskUserQuestion
 
-```
-.claude/
-├── README.md
-└── commands/
-    ├── implement.md      # 主指令
-    ├── clarify.md       # PM
-    ├── explore.md       # Architect
-    ├── plan.md          # Tech Lead
-    ├── execute.md       # Developer
-    └── verify.md        # QA
-```
+- 任何不確定的地方都要問
+- 寧可多問，也不要猜測
+- 確認後再繼續下一步
 
-## 角色說明
+### 3. 規格要詳細
 
-### PM - /clarify
-- 需求訪談與確認
-- 功能範圍界定
-- 驗收標準制定
-- 輸出：需求規格書
+- API 要有完整的 Request/Response 範例
+- 資料模型要有完整的 Migration 程式碼
+- 業務規則要有明確的驗證邏輯
+- UI 要有詳細的設計系統規範
 
-### Architect - /explore
-- 系統架構分析
-- 程式碼掃描（Glob/Grep/Read）
-- 整合點識別
-- 輸出：技術分析報告
+### 4. 小步快跑
 
-### Tech Lead - /plan
-- 技術方案設計
-- 任務拆解與排序
-- 風險評估
-- 輸出：實作計畫書
+- 每個功能應該可以在 1-3 天內完成
+- 太大的功能應該拆分
+- 頻繁歸檔，保持規範庫最新
 
-### Developer - /execute
-- 程式碼實作
-- TodoWrite 進度追蹤
-- 品質控制
-- 輸出：可運行程式碼
+### 5. 信任流程
 
-**工作準則**：
-- 一次一個 in_progress 任務
-- 遵循程式碼規範
-- 避免過度工程
-- 禁止跳過步驟
-- 禁止添加計畫外功能
+- 讓每個步驟專注職責
+- 不跳過 Validate 階段
+- 遇到錯誤立即修復
 
-### QA - /verify
-- 驗收標準檢查
-- 功能測試（正常/邊界/異常）
-- 安全檢查（OWASP Top 10）
-- 效能與相容性測試
-- 輸出：驗收測試報告
+---
 
-## 使用方式
+## 🔧 疑難排解
 
-### 完整流程
+### Q: 如何查看開發進度？
 
-```bash
-/implement 建立用戶登入系統
-```
+使用 `/status` 命令查看所有活躍項目狀態。
 
-執行 5 個階段：
-1. PM 訪談需求
-2. Architect 分析技術
-3. Tech Lead 制定計畫（等待確認）
-4. Developer 編寫程式碼
-5. QA 測試驗收
+### Q: 規格不符期望怎麼辦？
 
-### 單獨執行
+在 Specs 完成後的暫停點可以：
+1. 要求重新撰寫規格
+2. 回到 Proposal 重新確認需求
+3. 提供更多範例和說明
 
-```bash
-/clarify [描述]      # 僅需求確認
-/explore [描述]      # 僅技術分析
-/plan [描述]         # 僅計畫制定
-/execute             # 僅程式碼實作
-/verify              # 僅品質驗收
-```
+### Q: 發現 Bug 怎麼處理？
 
-## 使用範例
-
-### 新增功能
-
-```bash
-/implement 新增商品評論功能
-```
-
-流程：
-1. PM：了解評論功能需求（評分、內容、圖片）
-2. Architect：找出商品、用戶資料表位置
-3. Tech Lead：設計資料表、API、前端頁面
-4. Developer：建立 Migration、Model、Controller、View
-5. QA：測試評論新增/編輯/刪除/顯示
-
-### 修復 Bug
-
-```bash
-/implement 修復購物車總價計算錯誤
-```
-
-流程：
-1. PM：確認錯誤重現步驟
-2. Architect：定位購物車程式碼
-3. Tech Lead：設計修復方案
-4. Developer：修改計算邏輯
-5. QA：測試各種購物車情境
-
-### 效能優化
-
-```bash
-/implement 優化首頁載入速度
-```
-
-流程：
-1. PM：定義效能目標（3秒內）
-2. Architect：識別效能瓶頸
-3. Tech Lead：設計優化策略
-4. Developer：實施優化
-5. QA：測量載入時間、壓力測試
-
-## 配置選項
-
-### 執行模式
-
-```bash
-# 完全自動（僅計畫後暫停）
-/implement [描述] --auto
-
-# 每階段暫停（預設）
-/implement [描述] --step
-
-# 跳過 QA
-/implement [描述] --skip-verify
-```
-
-### 角色範圍
-
-```bash
-# 僅需求確認
-/implement [描述] --pm-only
-
-# 技術開發（跳過 PM）
-/implement [描述] --tech-only
-
-# 完整流程（預設）
-/implement [描述] --full
-```
-
-## 品質保證
-
-### Developer 檢查清單
-
-**安全性**：
-- 無 SQL Injection 風險
-- 無 XSS 漏洞
-- 無 CSRF 風險
-- 輸入驗證完整
-
-**效能**：
-- 無 N+1 查詢
-- 適當使用快取
-- 記憶體使用合理
-
-**程式碼**：
-- 遵循專案規範
-- 變數命名有意義
-- 可讀性佳
-
-### QA 測試清單
-
-**功能**：
-- 正常流程
-- 邊界情況
-- 錯誤處理
-
-**品質**：
-- 安全性
-- 效能
-- 相容性
-
-## 最佳實踐
-
-### 清楚描述需求
-
-不好：
-```
-/implement 做一個功能
-```
-
-良好：
-```
-/implement 建立用戶登入系統，支援 Email/密碼和 Google OAuth
-```
-
-### 信任流程
-
-- 讓每個角色專注職責
-- 不跳過 Plan 階段確認
-- 讓 QA 完整測試
-
-### 及時反饋
-
-- PM 訪談時提供清楚需求
-- Plan 階段仔細審查計畫
-- QA 階段確認測試結果
-
-## 疑難排解
-
-### Q: 如何查看進度？
-
-Developer 使用 TodoWrite 即時更新任務狀態。
-
-### Q: 計畫不符期望？
-
-在 Plan 階段暫停時可：
-1. 要求 Tech Lead 調整
-2. 回到 PM 重新確認需求
-3. 要求 Architect 提供其他方案
-
-### Q: 發現 Bug？
-
-QA 會記錄 Bug，可選擇：
-1. 要求 Developer 修復
-2. 降低優先級稍後處理
-3. 調整需求規避問題
+使用 `/implement` 流程修復 Bug，在 Proposal 階段說明：
+1. Bug 重現步驟
+2. 根本原因分析
+3. 修復方案
 
 ### Q: 想添加計畫外功能？
 
 不建議執行中途添加，應：
 1. 完成當前開發
-2. 啟動新 /implement 流程
-3. 讓 PM 確認新需求
+2. 啟動新 `/implement` 流程
+3. 讓 Proposal 確認新需求
 
-## 系統優勢
+### Q: Commands 不知道怎麼用？
 
-| 優勢 | 說明 |
-|------|------|
-| 專業分工 | 每個角色專注擅長領域 |
-| 品質保證 | 多層次檢查確保品質 |
-| 流程透明 | 每階段產出清楚可見 |
-| 可追蹤 | TodoWrite 即時追蹤 |
-| 可擴展 | 易於添加角色或階段 |
-| 可重用 | 子指令可獨立使用 |
+詳細閱讀 [commands/README.md](./commands/README.md)，裡面有完整的使用指南和範例。
 
 ---
 
-版本：1.0.0
-最後更新：2026-01-07
+## 🌟 系統優勢
+
+| 優勢 | 說明 |
+|------|------|
+| **規範驅動** | 規格先行，降低幻覺和錯誤 |
+| **系統化** | 流程標準化，可追溯 |
+| **品質保證** | 多重驗證，減少錯誤 |
+| **可維護** | 規範庫持續更新 |
+| **專業分工** | Backend/Frontend 分離開發 |
+| **Git Flow** | 完整的分支管理和發布流程 |
+| **測試保障** | 201 測試，80%+ 覆蓋率 |
+| **文檔完整** | Swagger API 文檔自動生成 |
+
+---
+
+## 📊 專案統計
+
+### Backend (Laravel 11)
+
+- **API 端點**: 31 個 (完整 RESTful)
+- **測試數量**: 201 個 (165 Feature + 36 Unit)
+- **測試覆蓋率**: 80%+
+- **代碼品質**: PHPStan Level 9
+- **文檔覆蓋率**: 100% (Swagger/OpenAPI 3.0)
+
+### Frontend (Next.js 15)
+
+- **UI 組件**: 30+ 組件
+- **頁面路由**: 18 個路由
+- **API 整合**: 31 個端點
+- **設計系統**: 完整的 Tailwind 設計系統
+- **測試框架**: Vitest + React Testing Library
+
+### OpenSpec 規範庫
+
+- **API 規格**: 31 個端點完整定義
+- **資料模型**: 8 個 Models 完整 Schema
+- **Frontend 規格**: UI/UX + 組件 + 頁面 + API 整合
+- **業務規則**: 完整的驗證邏輯定義
+
+---
+
+## 🚀 下一步
+
+### 開始開發
+
+```bash
+# 1. 閱讀 Commands 指南
+cat .claude/commands/README.md
+
+# 2. 開始新功能
+/feature-start <feature-name>
+
+# 3. 開發功能
+/implement [功能描述]
+
+# 4. 測試
+/test
+
+# 5. 完成功能
+/feature-finish
+
+# 6. 審查
+/pr-review <pr-number>
+```
+
+### 學習資源
+
+1. 閱讀 [commands/README.md](./commands/README.md) - Commands 完整指南
+2. 閱讀 [workflows/GIT_FLOW.md](./workflows/GIT_FLOW.md) - Git Flow 工作流程
+3. 閱讀 [openspec/specs/README.md](../openspec/specs/README.md) - 規範庫索引
+4. 實際操作一次完整流程
+
+---
+
+**維護者**: Development Team
+**最後更新**: 2026-01-10
+**版本**: 3.0 - OpenSpec SDD + Git Flow 整合版
