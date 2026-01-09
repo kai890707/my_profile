@@ -1,6 +1,6 @@
 # OpenSpec Commands 使用指南
 
-**版本**: 3.0
+**版本**: 3.1
 **最後更新**: 2026-01-10
 **開發方法**: Specification-Driven Development (SDD)
 
@@ -54,7 +54,6 @@
 | 分類 | Commands | 用途 |
 |------|----------|------|
 | **Git Flow** | `git-flow-init`, `feature-start`, `feature-finish`, `release-start`, `release-finish`, `hotfix-start`, `hotfix-finish` | Git 分支管理和發布流程 |
-| **架構遷移** | `migration-start`, `migration-finish` | Laravel 架構遷移專用 |
 | **代碼審查** | `pr-review` | Pull Request 審查流程 |
 | **自動化流程** | `implement`, `implement-frontend` | 一鍵完成完整 SDD 流程 |
 | **提案階段** | `proposal` | 建立變更提案並確認需求 |
@@ -134,53 +133,6 @@
 
 ---
 
-### `/migration-start` - 開始遷移模組
-
-**文件**: [migration-start.md](./migration-start.md)
-
-**用途**: 開始 Laravel 架構遷移模組
-
-**語法**:
-```bash
-/migration-start <module-name>
-```
-
-**範例**:
-```bash
-/migration-start 03-auth-module
-```
-
-**遷移模組順序**:
-1. `01-project-setup` - Laravel 初始化
-2. `02-database-layer` - Models, Migrations
-3. `03-auth-module` - JWT 認證
-4. `04-api-endpoints` - Controllers, Routes
-5. `05-business-logic` - Services, Repositories
-6. `06-testing` - PHPUnit Tests
-7. `07-deployment` - Docker, CI/CD
-
----
-
-### `/migration-finish` - 完成遷移模組
-
-**文件**: [migration-finish.md](./migration-finish.md)
-
-**用途**: 完成遷移模組，通過 API 兼容性測試
-
-**語法**:
-```bash
-/migration-finish
-```
-
-**執行操作**:
-- 單元測試（≥80% 覆蓋率）
-- **API 兼容性測試（100%）**
-- 前端整合測試
-- PHPStan Level 9 檢查
-- 創建遷移 PR
-
----
-
 ### `/pr-review` - 審查 Pull Request
 
 **文件**: [pr-review.md](./pr-review.md)
@@ -205,7 +157,7 @@
 - 性能審查
 - 測試審查
 - 文檔審查
-- **API 兼容性審查（遷移 PR 專用）**
+- API 兼容性審查
 
 ---
 
@@ -741,6 +693,14 @@ Step 6: Archive
 
 ## 📝 更新日誌
 
+### Version 3.1 (2026-01-10) ✅ **Laravel 遷移完成版**
+- 🎉 **移除架構遷移 Commands** (遷移已 100% 完成):
+  - 移除 `/migration-start` 和 `/migration-finish`
+  - Laravel 11 遷移已完成 (31 APIs, 201 tests, 80%+ coverage)
+  - 參考: [MIGRATION_SUMMARY.md](../../my_profile_laravel/MIGRATION_SUMMARY.md)
+- 🔄 更新文檔連結，移除已刪除的 CI4 專案參考
+- 📚 更新專案結構文檔連結
+
 ### Version 3.0 (2026-01-09) 🚀 **新創公司工作流程版**
 - ✨ **新增 Git Flow Commands**:
   - `/git-flow-init` - 初始化 Git Flow
@@ -775,4 +735,4 @@ Step 6: Archive
 
 **維護者**: Development Team
 **最後更新**: 2026-01-10
-**版本**: 3.0 - 新創公司工作流程版
+**版本**: 3.1 - Laravel 遷移完成版
