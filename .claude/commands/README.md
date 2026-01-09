@@ -1,7 +1,7 @@
 # OpenSpec Commands 使用指南
 
-**版本**: 2.0
-**最後更新**: 2026-01-09
+**版本**: 3.0
+**最後更新**: 2026-01-10
 **開發方法**: Specification-Driven Development (SDD)
 
 ---
@@ -718,8 +718,9 @@ Step 6: Archive
 
 ### 專案開發規範
 - [README.md](../../README.md) - 專案總覽
-- [my_profile_ci4/CLAUDE.md](../../my_profile_ci4/CLAUDE.md) - 後端開發規範（CI4）
-- [frontend/CLAUDE.md](../../frontend/CLAUDE.md) - 前端開發規範
+- [my_profile_laravel/README.md](../../my_profile_laravel/README.md) - Laravel Backend 開發規範
+- [frontend/README.md](../../frontend/README.md) - Next.js Frontend 開發規範
+- [frontend/CLAUDE.md](../../frontend/CLAUDE.md) - Frontend OpenSpec 規範
 
 ### 技術標準
 - [.claude/skills/php-pro/SKILL.md](../.claude/skills/php-pro/SKILL.md) - PHP Pro 標準（Laravel 遷移專用）
@@ -773,5 +774,5 @@ Step 6: Archive
 ---
 
 **維護者**: Development Team
-**最後更新**: 2026-01-09
+**最後更新**: 2026-01-10
 **版本**: 3.0 - 新創公司工作流程版
