@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\IndustryController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\SalespersonProfileController;
+use App\Http\Controllers\HealthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,6 +21,10 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+// Health Check routes (for load balancer and monitoring)
+Route::get('/health', [HealthController::class, 'index']);
+Route::get('/health/detailed', [HealthController::class, 'detailed']);
 
 // Public Reference Data routes
 Route::prefix('industries')->group(function (): void {
