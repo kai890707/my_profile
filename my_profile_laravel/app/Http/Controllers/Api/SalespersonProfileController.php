@@ -10,6 +10,7 @@ use App\Services\SalespersonProfileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use OpenApi\Attributes as OA;
 
 class SalespersonProfileController extends Controller
 {
@@ -21,6 +22,68 @@ class SalespersonProfileController extends Controller
     /**
      * Get all approved salesperson profiles (public).
      */
+    #[OA\Get(
+        path: '/profiles',
+        summary: '取得所有業務員檔案',
+        description: '取得所有已審核通過的業務員檔案列表，支援公司、地區和關鍵字篩選',
+        tags: ['業務員檔案'],
+        parameters: [
+            new OA\Parameter(
+                name: 'company_id',
+                in: 'query',
+                description: '公司 ID',
+                required: false,
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'service_region',
+                in: 'query',
+                description: '服務地區 ID',
+                required: false,
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'search',
+                in: 'query',
+                description: '搜尋關鍵字（姓名）',
+                required: false,
+                schema: new OA\Schema(type: 'string', example: '王')
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                description: '每頁筆數',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 15, example: 15)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: '成功返回業務員列表',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'success', type: 'boolean', example: true),
+                        new OA\Property(
+                            property: 'data',
+                            properties: [
+                                new OA\Property(
+                                    property: 'profiles',
+                                    type: 'object',
+                                    properties: [
+                                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/SalespersonProfile')),
+                                        new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                                        new OA\Property(property: 'total', type: 'integer', example: 50),
+                                    ]
+                                ),
+                            ],
+                            type: 'object'
+                        ),
+                    ]
+                )
+            ),
+        ]
+    )]
     public function index(Request $request): JsonResponse
     {
         $filters = [

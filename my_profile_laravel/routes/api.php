@@ -26,6 +26,12 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', [HealthController::class, 'index']);
 Route::get('/health/detailed', [HealthController::class, 'detailed']);
 
+// Swagger API Documentation (development/staging only)
+Route::prefix('docs')->group(function (): void {
+    Route::get('/', [\App\Http\Controllers\Api\SwaggerController::class, 'index']);
+    Route::get('/openapi.json', [\App\Http\Controllers\Api\SwaggerController::class, 'json']);
+});
+
 // Public Reference Data routes
 Route::prefix('industries')->group(function (): void {
     Route::get('/', [IndustryController::class, 'index']);
