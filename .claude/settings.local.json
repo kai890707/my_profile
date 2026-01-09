@@ -43,7 +43,23 @@
       "Bash(chmod:*)",
       "Bash(/Users/kai/KAA/my_profile/frontend/test_all.sh)",
       "Bash(bash:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nchore: setup Git Flow and development workflows\n\n- Add Git Flow commands: git-flow-init, feature-start/finish, release-start/finish, hotfix-start/finish\n- Add migration commands: migration-start/finish for Laravel migration\n- Add pr-review command for Pull Request reviews\n- Create workflow documents: GIT_FLOW.md, DEVELOPMENT.md\n- Create project-specific CLAUDE.md for backend and frontend\n- Organize documentation structure \\(docs/reports/\\)\n- Update commands/README.md to v3.0\n- Integrate PHP Pro Skill standards for Laravel development\n\nThis establishes complete Git Flow and development processes for the startup team.\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git checkout:*)",
+      "Bash(git push:*)",
+      "Bash(git tag:*)",
+      "Bash(xargs:*)",
+      "Bash(git pull:*)",
+      "Bash(composer create-project:*)",
+      "Bash(composer require:*)",
+      "Bash(echo:*)",
+      "Bash(php artisan vendor:publish:*)",
+      "Bash(php artisan:*)",
+      "Bash(./vendor/bin/pest:*)",
+      "Bash(./vendor/bin/phpstan analyse:*)",
+      "Bash(composer update:*)",
+      "Bash(php:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
