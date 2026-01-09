@@ -176,8 +176,6 @@ YAMU/
 | | `/validate` | 驗證規格完整性 |
 | | `/develop` | 實作程式碼 |
 | | `/archive` | 歸檔到規範庫 |
-| **架構遷移** | `/migration-start` | 開始遷移模組 |
-| | `/migration-finish` | 完成遷移 (含測試) |
 | **輔助工具** | `/status` | 查看開發狀態 |
 | | `/test` | 執行測試 |
 | | `/docs` | 生成文檔 |
@@ -341,15 +339,6 @@ YAMU/
 - Bug 重現步驟
 - 根本原因分析
 - 修復方案
-
-### 場景 4: 架構遷移 (Laravel 專用)
-
-```bash
-/migration-start 03-auth-module
-# ... 使用 /implement 開發功能
-/migration-finish
-# → 自動執行 API 兼容性測試 (100%)
-```
 
 ---
 
