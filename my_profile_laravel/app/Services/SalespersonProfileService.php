@@ -15,7 +15,7 @@ class SalespersonProfileService
      * Get all salesperson profiles with pagination.
      *
      * @param  array<string, mixed>  $filters
-     * @return \Illuminate\Pagination\LengthAwarePaginator<SalespersonProfile>
+     * @return \Illuminate\Pagination\LengthAwarePaginator<int, SalespersonProfile>
      */
     public function getAll(array $filters = []): \Illuminate\Pagination\LengthAwarePaginator
     {
@@ -39,8 +39,12 @@ class SalespersonProfileService
             });
         }
 
-        /** @var int $perPage */
-        $perPage = isset($filters['per_page']) ? (int) $filters['per_page'] : 15;
+        $perPage = 15;
+        if (isset($filters['per_page']) && is_int($filters['per_page'])) {
+            $perPage = $filters['per_page'];
+        } elseif (isset($filters['per_page']) && is_numeric($filters['per_page'])) {
+            $perPage = (int) $filters['per_page'];
+        }
 
         return $query->orderBy('created_at', 'desc')->paginate($perPage);
     }

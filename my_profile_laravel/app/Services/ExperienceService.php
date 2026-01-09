@@ -92,8 +92,9 @@ class ExperienceService
         }
 
         $experience->update($updateData);
+        $experience->refresh();
 
-        return $experience->fresh();
+        return $experience;
     }
 
     /**
@@ -101,7 +102,7 @@ class ExperienceService
      */
     public function delete(Experience $experience): bool
     {
-        return $experience->delete();
+        return (bool) $experience->delete();
     }
 
     /**
@@ -116,7 +117,9 @@ class ExperienceService
             'approved_at' => now(),
         ]);
 
-        return $experience->fresh();
+        $experience->refresh();
+
+        return $experience;
     }
 
     /**
@@ -131,6 +134,8 @@ class ExperienceService
             'approved_at' => null,
         ]);
 
-        return $experience->fresh();
+        $experience->refresh();
+
+        return $experience;
     }
 }

@@ -15,9 +15,9 @@ class CompanyService
      * Get all approved companies.
      *
      * @param  array<string, mixed>  $filters
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator<Company>
+     * @return \Illuminate\Pagination\LengthAwarePaginator<int, Company>
      */
-    public function getAll(array $filters = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function getAll(array $filters = []): \Illuminate\Pagination\LengthAwarePaginator
     {
         $query = Company::with(['industry', 'creator'])
             ->where('approval_status', 'approved');
@@ -26,7 +26,7 @@ class CompanyService
             $query->where('industry_id', $filters['industry_id']);
         }
 
-        if (isset($filters['search'])) {
+        if (isset($filters['search']) && is_string($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search): void {
                 $q->where('name', 'like', "%{$search}%")
@@ -34,7 +34,12 @@ class CompanyService
             });
         }
 
-        $perPage = isset($filters['per_page']) ? (int) $filters['per_page'] : 15;
+        $perPage = 15;
+        if (isset($filters['per_page']) && is_int($filters['per_page'])) {
+            $perPage = $filters['per_page'];
+        } elseif (isset($filters['per_page']) && is_numeric($filters['per_page'])) {
+            $perPage = (int) $filters['per_page'];
+        }
 
         return $query->orderBy('created_at', 'desc')->paginate($perPage);
     }
@@ -118,8 +123,9 @@ class CompanyService
             }
 
             $company->update($updateData);
+            $company->refresh();
 
-            return $company->fresh();
+            return $company;
         });
     }
 
@@ -128,7 +134,7 @@ class CompanyService
      */
     public function delete(Company $company): bool
     {
-        return $company->delete();
+        return (bool) $company->delete();
     }
 
     /**
@@ -162,7 +168,9 @@ class CompanyService
                 'admin_id' => $admin->id,
             ]);
 
-            return $company->fresh();
+            $company->refresh();
+
+            return $company;
         });
     }
 
@@ -185,7 +193,9 @@ class CompanyService
                 'reason' => $reason,
             ]);
 
-            return $company->fresh();
+            $company->refresh();
+
+            return $company;
         });
     }
 }
