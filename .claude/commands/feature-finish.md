@@ -1,6 +1,28 @@
 # 完成功能開發
 
-完成 feature 開發，創建 Pull Request 準備合併到 develop。
+完成 feature 開發，**執行強制品質檢查**，創建 Pull Request 準備合併到 develop。
+
+---
+
+## ⚠️ 重要說明
+
+此命令包含**強制品質檢查**，確保所有程式碼符合專案標準：
+
+### 品質門檻 (Quality Gates)
+
+**Backend (Laravel)**:
+- ✅ 測試通過率: 100% (201/201 tests)
+- ✅ 測試覆蓋率: ≥80%
+- ✅ PHPStan: Level 9 (0 errors)
+- ✅ Code Style: PSR-12 compliant
+
+**Frontend (Next.js)**:
+- ✅ TypeScript: 編譯無錯誤
+- ✅ ESLint: 0 errors (warnings 可接受)
+- ✅ Tests: 所有測試通過
+- ✅ Build: 構建成功
+
+**如果任何檢查失敗，將阻止 PR 創建**，必須先修復問題。
 
 ---
 
@@ -64,11 +86,146 @@ git rebase origin/develop
 git push origin feature/<feature-name> --force-with-lease
 ```
 
-### 6. 執行測試（如有 CI/CD）
+### 6. 執行測試與品質檢查 ⚠️ **強制檢查**
+
+**重要**: 此步驟為**強制執行**，所有檢查通過才能創建 PR。
+
+#### 6.1 Backend 檢查 (Laravel)
 
 ```bash
-# 等待 CI/CD 檢查通過
-# 如果失敗，提醒用戶修復問題
+# 切換到 Backend 目錄
+cd my_profile_laravel
+
+# 1. 執行所有測試
+php artisan test
+
+# 檢查點:
+# - 測試通過率: 100% (201/201 tests passing)
+# - 如果有測試失敗，顯示失敗原因並阻止 PR 創建
+
+# 2. 檢查測試覆蓋率
+php artisan test --coverage --min=80
+
+# 檢查點:
+# - 最低覆蓋率: ≥80%
+# - 如果覆蓋率不足，顯示詳細報告並阻止 PR 創建
+
+# 3. PHPStan Level 9 靜態分析
+vendor/bin/phpstan analyse
+
+# 檢查點:
+# - 必須通過 Level 9 檢查 (0 errors)
+# - 如果有錯誤，顯示錯誤列表並阻止 PR 創建
+
+# 4. Laravel Pint 代碼風格檢查
+vendor/bin/pint --test
+
+# 檢查點:
+# - 代碼風格符合 PSR-12
+# - 如果不符合，提示執行 vendor/bin/pint 修復
+```
+
+#### 6.2 Frontend 檢查 (Next.js)
+
+```bash
+# 切換到 Frontend 目錄
+cd ../frontend
+
+# 1. TypeScript 編譯檢查
+npm run type-check
+
+# 檢查點:
+# - TypeScript 編譯無錯誤
+# - 如果有錯誤，顯示錯誤列表並阻止 PR 創建
+
+# 2. ESLint 檢查
+npm run lint
+
+# 檢查點:
+# - ESLint 檢查通過 (0 errors, warnings 可接受)
+# - 如果有錯誤，顯示錯誤列表並阻止 PR 創建
+
+# 3. 執行測試 (如果存在)
+npm test -- --run
+
+# 檢查點:
+# - 所有測試通過
+# - 建議覆蓋率: ≥70%
+
+# 4. 構建檢查
+npm run build
+
+# 檢查點:
+# - 構建成功，無錯誤
+# - 如果構建失敗，顯示錯誤並阻止 PR 創建
+```
+
+#### 6.3 檢查結果處理
+
+**如果所有檢查通過**:
+```
+✅ 所有品質檢查通過！
+
+Backend:
+  ✅ Tests: 201/201 passing
+  ✅ Coverage: 82%
+  ✅ PHPStan: Level 9 passed
+  ✅ Code Style: PSR-12 compliant
+
+Frontend:
+  ✅ TypeScript: Compiled successfully
+  ✅ ESLint: 0 errors
+  ✅ Build: Success
+
+▶️  繼續創建 Pull Request...
+```
+
+**如果任何檢查失敗**:
+```
+❌ 品質檢查失敗！無法創建 PR。
+
+失敗項目:
+  ❌ Backend Tests: 198/201 passing (3 failed)
+  ❌ Coverage: 75% (需要 ≥80%)
+
+請先修復以下問題:
+
+1. Backend Tests Failed:
+   - SalespersonProfileTest::test_update_profile_validation
+   - CompanyTest::test_create_company_requires_auth
+   - AdminTest::test_approve_company
+
+2. Coverage Not Met:
+   - Services/SalespersonProfileService: 72%
+   - Controllers/Api/AdminController: 68%
+
+🔧 修復建議:
+   cd my_profile_laravel
+   php artisan test --filter=SalespersonProfileTest
+   php artisan test --coverage
+
+❌ PR 創建已取消。修復問題後重新執行 /feature-finish
+```
+
+#### 6.4 警告處理
+
+如果只有 warnings (非 errors):
+- ESLint warnings
+- TypeScript 嚴格模式 warnings
+
+使用 `AskUserQuestion` 詢問用戶是否繼續：
+```
+⚠️  發現 Warnings (非阻塞性問題)
+
+Warnings:
+  ⚠️  ESLint: 3 warnings in components/
+  ⚠️  TypeScript: 2 implicit any warnings
+
+這些 warnings 不會阻止 PR 創建，但建議修復。
+
+是否繼續創建 PR?
+  - 是，繼續創建 (建議在 PR 中說明)
+  - 否，先修復 warnings
 ```
 
 ### 7. 創建 Pull Request
@@ -94,18 +251,39 @@ Closes #[issue-number]
 - 變更 1
 - 變更 2
 
-## 🧪 測試
-- [x] 單元測試已通過
-- [x] 整合測試已通過
+## 🧪 測試與品質檢查
+
+### Backend (Laravel)
+- [x] Tests: 201/201 passing (100%)
+- [x] Coverage: 82% (≥80%)
+- [x] PHPStan: Level 9 passed (0 errors)
+- [x] Code Style: PSR-12 compliant
+
+### Frontend (Next.js)
+- [x] TypeScript: Compiled successfully
+- [x] ESLint: 0 errors
+- [x] Tests: All passing
+- [x] Build: Success
+
+### 其他測試
 - [x] 手動測試已完成
+- [x] API 整合測試通過
+- [ ] 瀏覽器兼容性測試 (如適用)
 
 ## 🔗 相關連結
 - OpenSpec 規格: \`openspec/changes/<feature-name>/\`
+- 測試報告: [連結]
 
-## ✅ Checklist
-- [x] 代碼符合規範
-- [x] 測試覆蓋率達標
-- [x] 文檔已更新
+## ✅ PR Merge 要求
+- [x] 至少 1 人 Code Review 通過
+- [x] 所有測試通過 (201/201)
+- [x] 測試覆蓋率達標 (≥80%)
+- [x] PHPStan Level 9 無錯誤
+- [x] TypeScript 編譯無錯誤
+- [x] OpenSpec 規格已歸檔
+
+---
+🤖 此 PR 已通過 /feature-finish 的所有品質檢查
 EOF
 )"
 ```
@@ -120,6 +298,7 @@ gh pr edit --add-reviewer <reviewer-username>
 ### 9. 輸出結果
 
 告知用戶：
+- 品質檢查結果
 - PR 已創建
 - PR 連結
 - 等待審查
@@ -127,7 +306,19 @@ gh pr edit --add-reviewer <reviewer-username>
 
 範例輸出：
 ```
-✅ Pull Request 已創建！
+🎉 Feature 開發完成！
+
+✅ 品質檢查通過:
+Backend:
+  ✅ Tests: 201/201 passing
+  ✅ Coverage: 82% (目標: ≥80%)
+  ✅ PHPStan: Level 9 passed
+  ✅ Code Style: PSR-12 compliant
+
+Frontend:
+  ✅ TypeScript: Compiled
+  ✅ ESLint: 0 errors
+  ✅ Build: Success
 
 📋 PR 資訊:
 - 標題: feat: add rating API endpoint
@@ -136,13 +327,15 @@ gh pr edit --add-reviewer <reviewer-username>
 - 審查者: @reviewer
 
 ⏳ 下一步:
-1. 等待審查者 review
+1. 等待審查者 Code Review
 2. 根據 feedback 進行修改（如需要）
-3. 審查通過後，使用 Squash and Merge 合併
-4. 合併後分支會自動刪除
+3. 確保所有檢查通過（CI/CD）
+4. 審查通過後，使用 Squash and Merge 合併到 develop
+5. 合併後 feature 分支會自動刪除
 
 📚 參考:
-- Code Review 標準: .claude/workflows/GIT_FLOW.md#code-review-標準
+- PR Merge 要求: 至少 1 人 Review + 所有測試通過
+- Code Review 標準: .claude/workflows/GIT_FLOW.md
 ```
 
 ---

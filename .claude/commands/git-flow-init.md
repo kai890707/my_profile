@@ -91,4 +91,5 @@ git config core.hooksPath .githooks
 ## 相關 Commands
 
 - `/feature-start` - 開始新功能開發
-- `/migration-start` - 開始 Laravel 遷移
+- `/feature-finish` - 完成功能，創建 PR
+- `/pr-review` - 審查 Pull Request
