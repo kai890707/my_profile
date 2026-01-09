@@ -34,13 +34,7 @@ class CompanyController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'companies' => $companies->items(),
-                'pagination' => [
-                    'current_page' => $companies->currentPage(),
-                    'per_page' => $companies->perPage(),
-                    'total' => $companies->total(),
-                    'last_page' => $companies->lastPage(),
-                ],
+                'companies' => $companies,
             ],
         ]);
     }

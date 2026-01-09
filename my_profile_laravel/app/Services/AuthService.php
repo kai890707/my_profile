@@ -63,6 +63,11 @@ class AuthService
             return null;
         }
 
+        // Check if user status is active
+        if ($user->status !== 'active') {
+            return null;
+        }
+
         $token = JWTAuth::fromUser($user);
         $refreshToken = $this->createRefreshToken($user);
 
@@ -87,12 +92,50 @@ class AuthService
     }
 
     /**
+     * Refresh the authentication token using a refresh token.
+     *
+     * @return array<string, mixed>
+     */
+    public function refreshWithToken(string $refreshToken): array
+    {
+        // Verify and decode the refresh token
+        $payload = JWTAuth::setToken($refreshToken)->getPayload();
+
+        // Verify it's a refresh token
+        if ($payload->get('type') !== 'refresh') {
+            throw new \Exception('Invalid refresh token');
+        }
+
+        // Get the user
+        $userId = $payload->get('sub');
+        $user = User::find($userId);
+
+        if (! $user) {
+            throw new \Exception('User not found');
+        }
+
+        // Generate new tokens
+        $newAccessToken = JWTAuth::fromUser($user);
+        $newRefreshToken = $this->createRefreshToken($user);
+
+        /** @var int $ttl */
+        $ttl = config('jwt.ttl', 60);
+
+        return [
+            'access_token' => $newAccessToken,
+            'refresh_token' => $newRefreshToken,
+            'token_type' => 'Bearer',
+            'expires_in' => $ttl * 60,
+        ];
+    }
+
+    /**
      * Log out the user (invalidate the token).
      */
     public function logout(): void
     {
         try {
-            JWTAuth::invalidate();
+            JWTAuth::parseToken()->invalidate();
         } catch (\Exception $e) {
             // Token already invalid or not found
         }

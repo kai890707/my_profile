@@ -48,8 +48,12 @@ return new class extends Migration
                 ->onUpdate('cascade');
         });
 
-        // Add MEDIUMBLOB column using raw SQL
-        DB::statement('ALTER TABLE certifications ADD COLUMN file_data MEDIUMBLOB NULL AFTER description');
+        // Add MEDIUMBLOB column using raw SQL (database-specific)
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement('ALTER TABLE certifications ADD COLUMN file_data BLOB NULL');
+        } else {
+            DB::statement('ALTER TABLE certifications ADD COLUMN file_data MEDIUMBLOB NULL AFTER description');
+        }
     }
 
     /**

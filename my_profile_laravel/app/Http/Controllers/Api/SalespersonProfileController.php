@@ -35,13 +35,7 @@ class SalespersonProfileController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'profiles' => $profiles->items(),
-                'pagination' => [
-                    'current_page' => $profiles->currentPage(),
-                    'per_page' => $profiles->perPage(),
-                    'total' => $profiles->total(),
-                    'last_page' => $profiles->lastPage(),
-                ],
+                'profiles' => $profiles,
             ],
         ]);
     }
@@ -125,7 +119,7 @@ class SalespersonProfileController extends Controller
         $validator = Validator::make($request->all(), [
             'company_id' => 'nullable|integer|exists:companies,id',
             'full_name' => 'required|string|max:200',
-            'phone' => 'required|string|max:20',
+            'phone' => 'required|string|max:20|regex:/^[0-9\-\s\(\)]+$/',
             'bio' => 'nullable|string',
             'specialties' => 'nullable|string',
             'service_regions' => 'nullable|array',
@@ -178,7 +172,7 @@ class SalespersonProfileController extends Controller
         $validator = Validator::make($request->all(), [
             'company_id' => 'nullable|integer|exists:companies,id',
             'full_name' => 'sometimes|required|string|max:200',
-            'phone' => 'sometimes|required|string|max:20',
+            'phone' => 'sometimes|required|string|max:20|regex:/^[0-9\-\s\(\)]+$/',
             'bio' => 'nullable|string',
             'specialties' => 'nullable|string',
             'service_regions' => 'nullable|array',

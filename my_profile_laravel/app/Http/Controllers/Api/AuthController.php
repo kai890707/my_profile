@@ -116,27 +116,38 @@ class AuthController extends Controller
     /**
      * Refresh the authentication token.
      */
-    public function refresh(): JsonResponse
+    public function refresh(Request $request): JsonResponse
     {
-        try {
-            $token = $this->authService->refresh();
+        $validator = Validator::make($request->all(), [
+            'refresh_token' => 'required|string',
+        ]);
 
-            /** @var int $ttl */
-            $ttl = config('jwt.ttl', 60);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $refreshToken = $request->input('refresh_token');
+
+            if (! is_string($refreshToken)) {
+                throw new \Exception('Invalid refresh token');
+            }
+
+            $result = $this->authService->refreshWithToken($refreshToken);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Token refreshed successfully',
-                'data' => [
-                    'access_token' => $token,
-                    'token_type' => 'Bearer',
-                    'expires_in' => $ttl * 60,
-                ],
+                'data' => $result,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Token refresh failed',
+                'message' => 'Invalid refresh token',
             ], 401);
         }
     }
@@ -151,7 +162,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Logged out successfully',
+                'message' => 'Successfully logged out',
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -186,6 +197,7 @@ class AuthController extends Controller
                     'role' => $user->role,
                     'status' => $user->status,
                     'created_at' => $user->created_at?->toIso8601String(),
+                    'updated_at' => $user->updated_at?->toIso8601String(),
                 ],
             ],
         ]);

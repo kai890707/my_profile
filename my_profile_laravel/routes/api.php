@@ -38,17 +38,26 @@ Route::prefix('regions')->group(function (): void {
 Route::prefix('auth')->group(function (): void {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/refresh', [AuthController::class, 'refresh']);
 });
 
 // Protected authentication routes
 Route::middleware('jwt.auth')->prefix('auth')->group(function (): void {
-    Route::post('/refresh', [AuthController::class, 'refresh']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 });
 
-// Public Company routes
+// Company routes (specific routes before wildcards)
 Route::prefix('companies')->group(function (): void {
+    // Protected specific routes first
+    Route::middleware('jwt.auth')->group(function (): void {
+        Route::get('/my', [CompanyController::class, 'myCompanies']);
+        Route::post('/', [CompanyController::class, 'store']);
+        Route::put('/{id}', [CompanyController::class, 'update']);
+        Route::delete('/{id}', [CompanyController::class, 'destroy']);
+    });
+
+    // Public routes after (wildcard last)
     Route::get('/', [CompanyController::class, 'index']);
     Route::get('/{id}', [CompanyController::class, 'show']);
 });
@@ -57,14 +66,6 @@ Route::prefix('companies')->group(function (): void {
 Route::prefix('profiles')->group(function (): void {
     Route::get('/', [SalespersonProfileController::class, 'index']);
     Route::get('/{id}', [SalespersonProfileController::class, 'show']);
-});
-
-// Protected Company routes
-Route::middleware('jwt.auth')->prefix('companies')->group(function (): void {
-    Route::get('/my/list', [CompanyController::class, 'myCompanies']);
-    Route::post('/', [CompanyController::class, 'store']);
-    Route::put('/{id}', [CompanyController::class, 'update']);
-    Route::delete('/{id}', [CompanyController::class, 'destroy']);
 });
 
 // Protected Salesperson Profile routes

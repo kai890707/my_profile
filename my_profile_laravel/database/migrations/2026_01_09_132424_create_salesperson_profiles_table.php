@@ -56,8 +56,12 @@ return new class extends Migration
                 ->onUpdate('cascade');
         });
 
-        // Add MEDIUMBLOB column using raw SQL
-        DB::statement('ALTER TABLE salesperson_profiles ADD COLUMN avatar_data MEDIUMBLOB NULL AFTER service_regions');
+        // Add MEDIUMBLOB column using raw SQL (database-specific)
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement('ALTER TABLE salesperson_profiles ADD COLUMN avatar_data BLOB NULL');
+        } else {
+            DB::statement('ALTER TABLE salesperson_profiles ADD COLUMN avatar_data MEDIUMBLOB NULL AFTER service_regions');
+        }
     }
 
     /**
