@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\IndustryController;
+use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\SalespersonProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +20,19 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+// Public Reference Data routes
+Route::prefix('industries')->group(function (): void {
+    Route::get('/', [IndustryController::class, 'index']);
+    Route::get('/{id}', [IndustryController::class, 'show']);
+});
+
+Route::prefix('regions')->group(function (): void {
+    Route::get('/', [RegionController::class, 'index']);
+    Route::get('/flat', [RegionController::class, 'flat']);
+    Route::get('/{id}', [RegionController::class, 'show']);
+    Route::get('/{id}/children', [RegionController::class, 'children']);
+});
 
 // Public authentication routes
 Route::prefix('auth')->group(function (): void {
