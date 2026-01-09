@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\SalespersonProfileController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,12 +32,39 @@ Route::middleware('jwt.auth')->prefix('auth')->group(function (): void {
     Route::get('/me', [AuthController::class, 'me']);
 });
 
-// Example of role-protected route
-Route::middleware(['jwt.auth', 'role:admin'])->prefix('admin')->group(function (): void {
-    // Admin routes will go here
+// Public Company routes
+Route::prefix('companies')->group(function (): void {
+    Route::get('/', [CompanyController::class, 'index']);
+    Route::get('/{id}', [CompanyController::class, 'show']);
 });
 
-// Example of salesperson-protected route
-Route::middleware(['jwt.auth', 'role:salesperson,admin'])->prefix('salesperson')->group(function (): void {
-    // Salesperson routes will go here
+// Public Salesperson Profile routes
+Route::prefix('profiles')->group(function (): void {
+    Route::get('/', [SalespersonProfileController::class, 'index']);
+    Route::get('/{id}', [SalespersonProfileController::class, 'show']);
+});
+
+// Protected Company routes
+Route::middleware('jwt.auth')->prefix('companies')->group(function (): void {
+    Route::get('/my/list', [CompanyController::class, 'myCompanies']);
+    Route::post('/', [CompanyController::class, 'store']);
+    Route::put('/{id}', [CompanyController::class, 'update']);
+    Route::delete('/{id}', [CompanyController::class, 'destroy']);
+});
+
+// Protected Salesperson Profile routes
+Route::middleware('jwt.auth')->prefix('profile')->group(function (): void {
+    Route::get('/', [SalespersonProfileController::class, 'me']);
+    Route::post('/', [SalespersonProfileController::class, 'store']);
+    Route::put('/', [SalespersonProfileController::class, 'update']);
+    Route::delete('/', [SalespersonProfileController::class, 'destroy']);
+});
+
+// Admin routes
+Route::middleware(['jwt.auth', 'role:admin'])->prefix('admin')->group(function (): void {
+    Route::get('/pending-approvals', [AdminController::class, 'pendingApprovals']);
+    Route::post('/companies/{id}/approve', [AdminController::class, 'approveCompany']);
+    Route::post('/companies/{id}/reject', [AdminController::class, 'rejectCompany']);
+    Route::post('/profiles/{id}/approve', [AdminController::class, 'approveProfile']);
+    Route::post('/profiles/{id}/reject', [AdminController::class, 'rejectProfile']);
 });
