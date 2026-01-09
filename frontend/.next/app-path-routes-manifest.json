@@ -1,0 +1,20 @@
+{
+  "/(admin)/admin/approvals/page": "/admin/approvals",
+  "/(admin)/admin/page": "/admin",
+  "/(admin)/admin/settings/page": "/admin/settings",
+  "/(admin)/admin/statistics/page": "/admin/statistics",
+  "/(admin)/admin/users/page": "/admin/users",
+  "/(auth)/login/page": "/login",
+  "/(auth)/register/page": "/register",
+  "/(dashboard)/dashboard/approval-status/page": "/dashboard/approval-status",
+  "/(dashboard)/dashboard/certifications/page": "/dashboard/certifications",
+  "/(dashboard)/dashboard/experiences/page": "/dashboard/experiences",
+  "/(dashboard)/dashboard/page": "/dashboard",
+  "/403/page": "/403",
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/page": "/",
+  "/salesperson/[id]/page": "/salesperson/[id]",
+  "/search/page": "/search",
+  "/ui-demo/page": "/ui-demo"
+}
