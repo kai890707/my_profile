@@ -42,6 +42,8 @@ class ApprovalLog extends Model
 
     /**
      * Get the parent approvable model (Company, Certification, SalespersonProfile).
+     *
+     * @return MorphTo<\Illuminate\Database\Eloquent\Model, $this>
      */
     public function approvable(): MorphTo
     {
@@ -50,6 +52,8 @@ class ApprovalLog extends Model
 
     /**
      * Get the admin who performed this approval action.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function admin(): BelongsTo
     {

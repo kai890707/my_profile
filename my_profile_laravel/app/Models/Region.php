@@ -36,6 +36,8 @@ class Region extends Model
 
     /**
      * Get the parent region (for hierarchical structure).
+     *
+     * @return BelongsTo<Region, $this>
      */
     public function parent(): BelongsTo
     {
@@ -44,6 +46,8 @@ class Region extends Model
 
     /**
      * Get the child regions.
+     *
+     * @return HasMany<Region, $this>
      */
     public function children(): HasMany
     {

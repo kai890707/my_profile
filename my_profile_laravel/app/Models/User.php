@@ -59,6 +59,8 @@ class User extends Authenticatable
 
     /**
      * Get the salesperson profile for the user.
+     *
+     * @return HasOne<SalespersonProfile, $this>
      */
     public function salespersonProfile(): HasOne
     {
@@ -67,6 +69,8 @@ class User extends Authenticatable
 
     /**
      * Get the companies created by this user.
+     *
+     * @return HasMany<Company, $this>
      */
     public function companiesCreated(): HasMany
     {
@@ -75,6 +79,8 @@ class User extends Authenticatable
 
     /**
      * Get the companies approved by this user.
+     *
+     * @return HasMany<Company, $this>
      */
     public function companiesApproved(): HasMany
     {
@@ -83,6 +89,8 @@ class User extends Authenticatable
 
     /**
      * Get the certifications for this user.
+     *
+     * @return HasMany<Certification, $this>
      */
     public function certifications(): HasMany
     {
@@ -91,6 +99,8 @@ class User extends Authenticatable
 
     /**
      * Get the experiences for this user.
+     *
+     * @return HasMany<Experience, $this>
      */
     public function experiences(): HasMany
     {
@@ -99,6 +109,8 @@ class User extends Authenticatable
 
     /**
      * Get the approval logs created by this admin user.
+     *
+     * @return HasMany<ApprovalLog, $this>
      */
     public function approvalLogs(): HasMany
     {

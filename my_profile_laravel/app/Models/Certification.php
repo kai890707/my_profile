@@ -49,6 +49,8 @@ class Certification extends Model
 
     /**
      * Get the user that owns this certification.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -57,6 +59,8 @@ class Certification extends Model
 
     /**
      * Get the admin who approved this certification.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function approver(): BelongsTo
     {
@@ -65,6 +69,8 @@ class Certification extends Model
 
     /**
      * Get all approval logs for this certification.
+     *
+     * @return MorphMany<ApprovalLog, $this>
      */
     public function approvalLogs(): MorphMany
     {

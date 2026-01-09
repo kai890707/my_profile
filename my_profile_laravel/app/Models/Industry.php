@@ -35,6 +35,8 @@ class Industry extends Model
 
     /**
      * Get the companies in this industry.
+     *
+     * @return HasMany<Company, $this>
      */
     public function companies(): HasMany
     {

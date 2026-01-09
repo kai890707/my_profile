@@ -46,6 +46,8 @@ class Experience extends Model
 
     /**
      * Get the user that owns this experience.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -54,6 +56,8 @@ class Experience extends Model
 
     /**
      * Get the admin who approved this experience.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function approver(): BelongsTo
     {

@@ -45,6 +45,8 @@ class Company extends Model
 
     /**
      * Get the industry that this company belongs to.
+     *
+     * @return BelongsTo<Industry, $this>
      */
     public function industry(): BelongsTo
     {
@@ -53,6 +55,8 @@ class Company extends Model
 
     /**
      * Get the user who created this company.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function creator(): BelongsTo
     {
@@ -61,6 +65,8 @@ class Company extends Model
 
     /**
      * Get the admin who approved this company.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function approver(): BelongsTo
     {
@@ -69,6 +75,8 @@ class Company extends Model
 
     /**
      * Get the salesperson profiles for this company.
+     *
+     * @return HasMany<SalespersonProfile, $this>
      */
     public function salespersonProfiles(): HasMany
     {
@@ -77,6 +85,8 @@ class Company extends Model
 
     /**
      * Get all approval logs for this company.
+     *
+     * @return MorphMany<ApprovalLog, $this>
      */
     public function approvalLogs(): MorphMany
     {

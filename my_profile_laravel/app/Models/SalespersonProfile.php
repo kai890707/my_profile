@@ -49,6 +49,8 @@ class SalespersonProfile extends Model
 
     /**
      * Get the user that owns this profile.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -57,6 +59,8 @@ class SalespersonProfile extends Model
 
     /**
      * Get the company this salesperson belongs to.
+     *
+     * @return BelongsTo<Company, $this>
      */
     public function company(): BelongsTo
     {
@@ -65,6 +69,8 @@ class SalespersonProfile extends Model
 
     /**
      * Get the admin who approved this profile.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function approver(): BelongsTo
     {
@@ -73,6 +79,8 @@ class SalespersonProfile extends Model
 
     /**
      * Get all approval logs for this profile.
+     *
+     * @return MorphMany<ApprovalLog, $this>
      */
     public function approvalLogs(): MorphMany
     {
