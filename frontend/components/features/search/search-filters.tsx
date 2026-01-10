@@ -102,7 +102,7 @@ export function SearchFilters({ initialValues, onSearch }: SearchFiltersProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部產業</SelectItem>
-                {industries?.map((industry) => (
+                {Array.isArray(industries) && industries.map((industry) => (
                   <SelectItem key={industry.id} value={industry.id.toString()}>
                     {industry.name}
                   </SelectItem>
@@ -131,7 +131,7 @@ export function SearchFilters({ initialValues, onSearch }: SearchFiltersProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部地區</SelectItem>
-                {regions?.map((region) => (
+                {Array.isArray(regions) && regions.map((region) => (
                   <SelectItem key={region.id} value={region.id.toString()}>
                     {region.name}
                   </SelectItem>

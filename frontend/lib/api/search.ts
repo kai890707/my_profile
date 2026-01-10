@@ -35,7 +35,7 @@ export async function getSalespersonDetail(id: number): Promise<SalespersonProfi
  */
 export async function getIndustries() {
   const response = await apiClient.get('/industries');
-  return response.data.data;
+  return response.data.data.industries;
 }
 
 /**
@@ -43,5 +43,5 @@ export async function getIndustries() {
  */
 export async function getRegions() {
   const response = await apiClient.get('/regions');
-  return response.data.data;
+  return response.data.data.regions;
 }
