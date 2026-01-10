@@ -12,7 +12,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { ProfileSkeleton } from '@/components/ui/skeleton';
 import { Camera, Save, Building2, X } from 'lucide-react';
 import { useProfile, useUpdateProfile, useSaveCompany } from '@/hooks/useSalesperson';
-import { useIndustries, useRegions } from '@/hooks/useSearch';
+import { useRegions } from '@/hooks/useSearch';
 import { processImageUpload, formatFileSize } from '@/lib/utils/image';
 import { toast } from 'sonner';
 
@@ -31,7 +31,6 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 // 公司資訊表單驗證
 const companySchema = z.object({
   name: z.string().min(2, '公司名稱至少需要 2 個字元').max(100, '公司名稱不能超過 100 個字元'),
-  industry_id: z.number().min(1, '請選擇產業類別'),
 });
 
 type CompanyFormData = z.infer<typeof companySchema>;
@@ -43,7 +42,6 @@ export default function ProfilePage() {
 
   // 獲取資料
   const { data: profile, isLoading: profileLoading } = useProfile();
-  const { data: industries, isLoading: industriesLoading } = useIndustries();
   const { data: regions, isLoading: regionsLoading } = useRegions();
 
   // Mutations
@@ -80,7 +78,6 @@ export default function ProfilePage() {
     resolver: zodResolver(companySchema),
     defaultValues: {
       name: profile?.company?.name || '',
-      industry_id: profile?.company?.industry_id || undefined,
     },
   });
 
@@ -109,7 +106,6 @@ export default function ProfilePage() {
       });
       resetCompany({
         name: profile.company?.name || '',
-        industry_id: profile.company?.industry_id || undefined,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -171,7 +167,7 @@ export default function ProfilePage() {
     saveCompanyMutation.mutate(data);
   };
 
-  if (profileLoading || industriesLoading || regionsLoading) {
+  if (profileLoading || regionsLoading) {
     return (
       <div className="space-y-6">
         <div className="mb-6">
@@ -392,30 +388,10 @@ export default function ProfilePage() {
       {/* 公司資訊卡片 */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              公司資訊
-            </CardTitle>
-            {profileData?.company && (
-              <Badge
-                variant={
-                  profileData.company.approval_status === 'approved'
-                    ? 'success'
-                    : profileData.company.approval_status === 'pending'
-                    ? 'warning'
-                    : 'error'
-                }
-                size="sm"
-              >
-                {profileData.company.approval_status === 'approved'
-                  ? '已審核'
-                  : profileData.company.approval_status === 'pending'
-                  ? '審核中'
-                  : '已拒絕'}
-              </Badge>
-            )}
-          </div>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            公司資訊
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {profileData?.company && !editMode ? (
@@ -425,21 +401,6 @@ export default function ProfilePage() {
                 <h4 className="text-sm font-semibold text-slate-700 mb-1">公司名稱</h4>
                 <p className="text-slate-900">{profileData.company.name}</p>
               </div>
-              {profileData.company.industry && (
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-700 mb-1">產業類別</h4>
-                  <Badge variant="secondary" size="sm">
-                    {profileData.company.industry.name}
-                  </Badge>
-                </div>
-              )}
-              {profileData.company.approval_status === 'pending' && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                  <p className="text-sm text-yellow-800">
-                    您的公司資訊正在審核中，審核通過後將顯示在您的個人檔案上
-                  </p>
-                </div>
-              )}
             </div>
           ) : (
             // 編輯模式或無公司資訊
@@ -453,32 +414,6 @@ export default function ProfilePage() {
                 {...registerCompany('name')}
               />
 
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">
-                  產業類別
-                  <span className="text-red-500 ml-1">*</span>
-                </label>
-                <select
-                  className="flex w-full h-11 rounded-xl border-2 border-slate-200 bg-white px-4 py-2 text-base placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 hover:border-slate-300 transition-all duration-200"
-                  {...registerCompany('industry_id', { valueAsNumber: true })}
-                >
-                  <option value="">請選擇產業類別</option>
-                  {industries?.map((industry) => (
-                    <option key={industry.id} value={industry.id}>
-                      {industry.name}
-                    </option>
-                  ))}
-                </select>
-                {companyErrors.industry_id && (
-                  <p className="text-sm text-red-600">{companyErrors.industry_id.message}</p>
-                )}
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <p className="text-sm text-blue-800">
-                  公司資訊需要經過管理員審核才會顯示在您的個人檔案上
-                </p>
-              </div>
 
               <Button
                 type="submit"

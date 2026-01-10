@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { login, logout, register, getCurrentUser } from '@/lib/api/auth';
+import { login, logout, register, registerUser, registerSalesperson, getCurrentUser } from '@/lib/api/auth';
 import { queryKeys } from '@/lib/query/keys';
 import { setUserRole } from '@/lib/auth/token';
-import type { LoginRequest, RegisterRequest } from '@/types/api';
+import type { LoginRequest, RegisterRequest, RegisterUserRequest, RegisterSalespersonRequest } from '@/types/api';
 
 /**
  * 取得當前使用者資訊
@@ -82,7 +82,81 @@ export function useLogout() {
 }
 
 /**
- * 註冊 Mutation
+ * 一般使用者註冊 Mutation
+ */
+export function useRegisterUser() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: registerUser,
+    onSuccess: async (data) => {
+      // 預先設定用戶資料到 cache
+      const user = data.data?.user;
+      if (user) {
+        queryClient.setQueryData(queryKeys.auth.me, user);
+        setUserRole(user.role);
+      }
+
+      toast.success(data.message || '註冊成功！');
+
+      // 導向首頁
+      router.push('/');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || '註冊失敗';
+      const errors = error.response?.data?.errors;
+
+      if (errors) {
+        Object.values(errors).flat().forEach((err) => {
+          toast.error(err as string);
+        });
+      } else {
+        toast.error(message);
+      }
+    },
+  });
+}
+
+/**
+ * 業務員註冊 Mutation
+ */
+export function useRegisterSalesperson() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: registerSalesperson,
+    onSuccess: async (data) => {
+      // 預先設定用戶資料到 cache
+      const user = data.data?.user;
+      if (user) {
+        queryClient.setQueryData(queryKeys.auth.me, user);
+        setUserRole(user.role);
+      }
+
+      toast.success(data.message || '註冊成功，請等待管理員審核');
+
+      // 導向 dashboard
+      router.push('/dashboard');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || '註冊失敗';
+      const errors = error.response?.data?.errors;
+
+      if (errors) {
+        Object.values(errors).flat().forEach((err) => {
+          toast.error(err as string);
+        });
+      } else {
+        toast.error(message);
+      }
+    },
+  });
+}
+
+/**
+ * 註冊 Mutation (Legacy)
  */
 export function useRegister() {
   const router = useRouter();

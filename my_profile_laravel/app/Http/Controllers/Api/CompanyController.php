@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCompanyRequest;
+use App\Models\Company;
 use App\Models\User;
 use App\Services\CompanyService;
 use Illuminate\Http\JsonResponse;
@@ -215,21 +217,12 @@ class CompanyController extends Controller
     #[OA\Post(
         path: '/companies',
         summary: '建立新公司',
-        description: '建立新的公司資料，狀態為 pending 需等待管理員審核',
+        description: '建立新的公司資料（僅審核通過的業務員可建立，立即生效無需審核）',
         security: [['bearerAuth' => []]],
         tags: ['公司管理'],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(
-                required: ['name', 'tax_id', 'industry_id'],
-                properties: [
-                    new OA\Property(property: 'name', type: 'string', maxLength: 200, example: 'ABC科技股份有限公司'),
-                    new OA\Property(property: 'tax_id', type: 'string', maxLength: 20, example: '12345678'),
-                    new OA\Property(property: 'industry_id', type: 'integer', example: 1),
-                    new OA\Property(property: 'address', type: 'string', nullable: true, example: '台北市信義區信義路五段7號'),
-                    new OA\Property(property: 'phone', type: 'string', maxLength: 20, nullable: true, example: '02-12345678'),
-                ]
-            )
+            content: new OA\JsonContent(ref: '#/components/schemas/StoreCompanyRequest')
         ),
         responses: [
             new OA\Response(
@@ -238,64 +231,44 @@ class CompanyController extends Controller
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'success', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'Company created successfully'),
-                        new OA\Property(
-                            property: 'data',
-                            properties: [
-                                new OA\Property(property: 'company', ref: '#/components/schemas/Company'),
-                            ],
-                            type: 'object'
-                        ),
+                        new OA\Property(property: 'message', type: 'string', example: '公司建立成功'),
+                        new OA\Property(property: 'data', properties: [
+                            new OA\Property(property: 'company', ref: '#/components/schemas/Company'),
+                        ], type: 'object'),
                     ]
                 )
             ),
             new OA\Response(
-                response: 401,
-                description: '未認證',
+                response: 403,
+                description: '權限不足',
                 content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
-            ),
-            new OA\Response(
-                response: 422,
-                description: '驗證失敗',
-                content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')
             ),
         ]
     )]
-    public function store(Request $request): JsonResponse
+    public function store(StoreCompanyRequest $request): JsonResponse
     {
-        $user = $request->get('auth_user');
+        /** @var User $user */
+        $user = $request->user();
 
-        if (! $user instanceof User) {
+        // Only approved salespeople can create companies
+        if (!$user->isApprovedSalesperson()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized',
-            ], 401);
+                'error' => '僅審核通過的業務員可建立公司',
+            ], 403);
         }
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:200',
-            'tax_id' => 'required|string|max:20|unique:companies,tax_id',
-            'industry_id' => 'required|integer|exists:industries,id',
-            'address' => 'nullable|string',
-            'phone' => 'nullable|string|max:20',
+        $company = Company::create([
+            'name' => $request->input('name'),
+            'tax_id' => $request->input('tax_id'),
+            'is_personal' => $request->input('is_personal', false),
+            'created_by' => $user->id,
         ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $company = $this->companyService->create($user, $validator->validated());
 
         return response()->json([
             'success' => true,
-            'message' => 'Company created successfully',
-            'data' => [
-                'company' => $company,
-            ],
+            'company' => $company,
+            'message' => '公司建立成功',
         ], 201);
     }
 
@@ -421,6 +394,70 @@ class CompanyController extends Controller
             'data' => [
                 'company' => $company,
             ],
+        ]);
+    }
+
+    /**
+     * Search companies by tax_id or name.
+     *
+     * GET /api/companies/search
+     */
+    #[OA\Get(
+        path: '/companies/search',
+        summary: '搜尋公司',
+        description: '根據統編或名稱搜尋公司（用於防止重複建立）',
+        tags: ['公司管理'],
+        parameters: [
+            new OA\Parameter(
+                name: 'tax_id',
+                in: 'query',
+                description: '統一編號',
+                required: false,
+                schema: new OA\Schema(type: 'string', example: '12345678')
+            ),
+            new OA\Parameter(
+                name: 'name',
+                in: 'query',
+                description: '公司名稱（模糊搜尋）',
+                required: false,
+                schema: new OA\Schema(type: 'string', example: '三商美邦')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: '搜尋結果',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'success', type: 'boolean', example: true),
+                        new OA\Property(property: 'exists', type: 'boolean', example: true),
+                        new OA\Property(property: 'companies', type: 'array', items: new OA\Items(ref: '#/components/schemas/Company')),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function search(Request $request): JsonResponse
+    {
+        $taxId = $request->query('tax_id');
+        $name = $request->query('name');
+
+        $query = Company::query();
+
+        if ($taxId) {
+            $query->where('tax_id', $taxId);
+        }
+
+        if ($name) {
+            $query->where('name', 'like', '%' . $name . '%');
+        }
+
+        $companies = $query->limit(10)->get();
+
+        return response()->json([
+            'success' => true,
+            'exists' => $companies->isNotEmpty(),
+            'companies' => $companies,
         ]);
     }
 

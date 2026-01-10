@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class SalespersonProfile extends Model
 {
+    use HasFactory;
     /**
      * The attributes that are mass assignable.
      *
@@ -26,10 +28,6 @@ class SalespersonProfile extends Model
         'avatar_data',
         'avatar_mime',
         'avatar_size',
-        'approval_status',
-        'rejected_reason',
-        'approved_by',
-        'approved_at',
     ];
 
     /**
@@ -41,7 +39,6 @@ class SalespersonProfile extends Model
     {
         return [
             'service_regions' => 'array',
-            'approved_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -68,22 +65,14 @@ class SalespersonProfile extends Model
     }
 
     /**
-     * Get the admin who approved this profile.
+     * Get the approval status from the user model.
      *
-     * @return BelongsTo<User, $this>
+     * @return Attribute<string|null, never>
      */
-    public function approver(): BelongsTo
+    protected function approvalStatus(): Attribute
     {
-        return $this->belongsTo(User::class, 'approved_by');
-    }
-
-    /**
-     * Get all approval logs for this profile.
-     *
-     * @return MorphMany<ApprovalLog, $this>
-     */
-    public function approvalLogs(): MorphMany
-    {
-        return $this->morphMany(ApprovalLog::class, 'approvable');
+        return Attribute::make(
+            get: fn () => $this->user?->salesperson_status,
+        );
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\IndustryController;
 use App\Http\Controllers\Api\RegionController;
+use App\Http\Controllers\Api\SalespersonController;
 use App\Http\Controllers\Api\SalespersonProfileController;
 use App\Http\Controllers\HealthController;
 use Illuminate\Support\Facades\Route;
@@ -48,6 +49,7 @@ Route::prefix('regions')->group(function (): void {
 // Public authentication routes
 Route::prefix('auth')->group(function (): void {
     Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register-salesperson', [AuthController::class, 'registerSalesperson']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
 });
@@ -60,6 +62,9 @@ Route::middleware('jwt.auth')->prefix('auth')->group(function (): void {
 
 // Company routes (specific routes before wildcards)
 Route::prefix('companies')->group(function (): void {
+    // Public search route
+    Route::get('/search', [CompanyController::class, 'search']);
+
     // Protected specific routes first
     Route::middleware('jwt.auth')->group(function (): void {
         Route::get('/my', [CompanyController::class, 'myCompanies']);
@@ -87,11 +92,27 @@ Route::middleware('jwt.auth')->prefix('profile')->group(function (): void {
     Route::delete('/', [SalespersonProfileController::class, 'destroy']);
 });
 
+// Salesperson routes
+Route::prefix('salesperson')->group(function (): void {
+    // Public route
+    Route::get('/status', [SalespersonController::class, 'status']);
+
+    // Protected routes
+    Route::middleware('jwt.auth')->group(function (): void {
+        Route::post('/upgrade', [SalespersonController::class, 'upgrade']);
+        Route::put('/profile', [SalespersonController::class, 'updateProfile']);
+    });
+});
+
+// Public salespeople search
+Route::get('/salespeople', [SalespersonController::class, 'index']);
+
 // Admin routes
-Route::middleware(['jwt.auth', 'role:admin'])->prefix('admin')->group(function (): void {
+Route::middleware(['jwt.auth', 'admin'])->prefix('admin')->group(function (): void {
     Route::get('/pending-approvals', [AdminController::class, 'pendingApprovals']);
-    Route::post('/companies/{id}/approve', [AdminController::class, 'approveCompany']);
-    Route::post('/companies/{id}/reject', [AdminController::class, 'rejectCompany']);
-    Route::post('/profiles/{id}/approve', [AdminController::class, 'approveProfile']);
-    Route::post('/profiles/{id}/reject', [AdminController::class, 'rejectProfile']);
+
+    // Salesperson application management
+    Route::get('/salesperson-applications', [AdminController::class, 'salespersonApplications']);
+    Route::post('/salesperson-applications/{id}/approve', [AdminController::class, 'approveSalesperson']);
+    Route::post('/salesperson-applications/{id}/reject', [AdminController::class, 'rejectSalesperson']);
 });

@@ -6,12 +6,47 @@ import * as salespersonApi from '@/lib/api/salesperson';
 
 export const salespersonKeys = {
   profile: ['salesperson', 'profile'] as const,
+  status: ['salesperson', 'status'] as const,
   experiences: ['salesperson', 'experiences'] as const,
   certifications: ['salesperson', 'certifications'] as const,
   approvalStatus: ['salesperson', 'approval-status'] as const,
 };
 
 // ========== Profile Hooks ==========
+
+/**
+ * 取得業務員狀態
+ */
+export function useSalespersonStatus() {
+  return useQuery({
+    queryKey: salespersonKeys.status,
+    queryFn: async () => {
+      const response = await salespersonApi.getSalespersonStatus();
+      return response.data;
+    },
+  });
+}
+
+/**
+ * 升級為業務員（一般使用者 → 業務員）
+ */
+export function useUpgradeToSalesperson() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: salespersonApi.upgradeToSalesperson,
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      queryClient.invalidateQueries({ queryKey: salespersonKeys.profile });
+      queryClient.invalidateQueries({ queryKey: salespersonKeys.status });
+      toast.success(response.message || '升級申請已送出，請等待審核');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || error.response?.data?.error || '升級失敗，請稍後再試';
+      toast.error(message);
+    },
+  });
+}
 
 /**
  * 取得個人檔案

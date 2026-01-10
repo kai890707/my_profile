@@ -6,6 +6,31 @@
 
 ---
 
+## 🔴 重要：使用專門的 Agent
+
+### Laravel 後端開發
+
+**所有 Laravel 相關開發必須使用 `laravel-specialist` agent**：
+
+```
+當處理 Laravel 後端任務時，必須使用 Task tool 啟動 laravel-specialist agent
+```
+
+**laravel-specialist 負責**：
+- ✅ Controllers、Models、Migrations、Middleware、Policies
+- ✅ Eloquent 關聯、Query 優化、Form Requests
+- ✅ 確保遵循 Laravel 框架最佳實踐
+- ✅ 實作完整的驗證和授權邏輯
+
+**範例**：
+```
+Task tool:
+- subagent_type: laravel-specialist
+- prompt: 根據 openspec/changes/<feature-name>/specs/ 實作 Laravel 後端程式碼
+```
+
+---
+
 ## 前置條件
 
 - ✅ Proposal 已完成

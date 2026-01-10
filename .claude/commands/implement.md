@@ -6,6 +6,27 @@
 
 ---
 
+## 🔴 重要：Laravel 開發必須使用專門 Agent
+
+**所有 Laravel 後端開發必須在 Step 5 (Implement) 階段使用 `laravel-specialist` agent**
+
+```
+當功能涉及 Laravel 後端時：
+1. Step 1-4: 正常執行（Proposal → Specs → Tasks → Validate）
+2. Step 5 (Implement): 必須啟動 laravel-specialist agent
+3. Step 6: 正常執行（Archive）
+```
+
+**laravel-specialist 確保**：
+- ✅ Controllers、Models、Migrations、Middleware、Policies 遵循最佳實踐
+- ✅ Eloquent 關聯正確實作、Query 優化、防止 N+1
+- ✅ Form Requests 驗證完整、Policy 授權邏輯正確
+- ✅ 所有程式碼符合 Laravel 框架規範
+
+詳見：`.claude/agents/laravel-specialist.md`
+
+---
+
 ## 核心理念
 
 **規範先行，程式碼後行**
@@ -33,7 +54,9 @@
 └────────────────────────────────────────────┘
 
 Step 1: Create Proposal ✋ 用戶確認
-    → 使用 AskUserQuestion 確認需求
+    → 使用 requirements-analyst agent 進行需求訪談
+    → 系統化提問確保需求完整性
+    → 考慮邊界情境和異常狀況
     → openspec/changes/<feature-name>/proposal.md
 
 Step 2: Write Specifications ⚡ 自動執行

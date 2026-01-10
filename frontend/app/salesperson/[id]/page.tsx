@@ -148,11 +148,6 @@ export default function SalespersonDetailPage() {
                         <div className="flex items-center gap-2 text-slate-600 mb-3">
                           <Building2 className="h-5 w-5" />
                           <span className="text-lg">{salesperson.company.name}</span>
-                          {salesperson.company.industry && (
-                            <Badge variant="secondary" size="sm">
-                              {salesperson.company.industry.name}
-                            </Badge>
-                          )}
                         </div>
                       )}
 
@@ -318,18 +313,6 @@ export default function SalespersonDetailPage() {
                     </div>
                   )}
 
-                  {/* 公司地址 */}
-                  {salesperson.company?.address && (
-                    <div className="flex items-start gap-3">
-                      <Building2 className="h-5 w-5 text-slate-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm text-slate-500 mb-1">公司地址</p>
-                        <p className="text-slate-900">
-                          {salesperson.company.address}
-                        </p>
-                      </div>
-                    </div>
-                  )}
 
                   {/* 註冊時間 */}
                   <div className="pt-4 border-t border-slate-200">

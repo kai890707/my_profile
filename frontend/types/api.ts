@@ -46,6 +46,24 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface RegisterUserRequest {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface RegisterSalespersonRequest {
+  name: string;
+  email: string;
+  password: string;
+  full_name: string;
+  phone: string;
+  bio?: string;
+  specialties?: string;
+  service_regions?: string[];
+}
+
+// Legacy type for backward compatibility
 export interface RegisterRequest {
   username: string;
   email: string;
@@ -91,17 +109,11 @@ export interface SalespersonProfile {
 export interface Company {
   id: number;
   name: string;
-  tax_id: string;
-  industry_id: number;
-  address: string | null;
-  phone: string | null;
-  approval_status: ApprovalStatus;
+  tax_id: string | null;
+  is_personal: boolean;
   created_by: number;
-  approved_by: number | null;
-  approved_at: string | null;
   created_at: string;
   updated_at: string;
-  industry?: Industry;
 }
 
 export interface Experience {

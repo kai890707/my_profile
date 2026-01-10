@@ -8,13 +8,13 @@ import {
 } from '@/types/api';
 
 /**
- * 搜尋業務員
+ * 搜尋業務員（僅返回已審核通過的業務員）
  */
 export async function searchSalespersons(
   params: SearchParams
 ): Promise<PaginatedResponse<SalespersonSearchResult>> {
   const response = await apiClient.get<ApiResponse<PaginatedResponse<SalespersonSearchResult>>>(
-    '/search/salespersons',
+    '/salespeople',
     { params }
   );
   return response.data.data!;

@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Company extends Model
 {
+    use HasFactory;
     /**
      * The attributes that are mass assignable.
      *
@@ -19,14 +21,8 @@ class Company extends Model
     protected $fillable = [
         'name',
         'tax_id',
-        'industry_id',
-        'address',
-        'phone',
-        'approval_status',
-        'rejected_reason',
+        'is_personal',
         'created_by',
-        'approved_by',
-        'approved_at',
     ];
 
     /**
@@ -37,20 +33,10 @@ class Company extends Model
     protected function casts(): array
     {
         return [
-            'approved_at' => 'datetime',
+            'is_personal' => 'boolean',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
-    }
-
-    /**
-     * Get the industry that this company belongs to.
-     *
-     * @return BelongsTo<Industry, $this>
-     */
-    public function industry(): BelongsTo
-    {
-        return $this->belongsTo(Industry::class);
     }
 
     /**
@@ -64,16 +50,6 @@ class Company extends Model
     }
 
     /**
-     * Get the admin who approved this company.
-     *
-     * @return BelongsTo<User, $this>
-     */
-    public function approver(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'approved_by');
-    }
-
-    /**
      * Get the salesperson profiles for this company.
      *
      * @return HasMany<SalespersonProfile, $this>
@@ -84,12 +60,25 @@ class Company extends Model
     }
 
     /**
-     * Get all approval logs for this company.
+     * Scope to get only registered companies (with tax_id).
      *
-     * @return MorphMany<ApprovalLog, $this>
+     * @param Builder<Company> $query
+     * @return Builder<Company>
      */
-    public function approvalLogs(): MorphMany
+    public function scopeRegistered(Builder $query): Builder
     {
-        return $this->morphMany(ApprovalLog::class, 'approvable');
+        return $query->where('is_personal', false)
+            ->whereNotNull('tax_id');
+    }
+
+    /**
+     * Scope to get only personal companies (without tax_id).
+     *
+     * @param Builder<Company> $query
+     * @return Builder<Company>
+     */
+    public function scopePersonal(Builder $query): Builder
+    {
+        return $query->where('is_personal', true);
     }
 }

@@ -7,11 +7,68 @@ import { toast } from 'sonner';
 export const adminKeys = {
   all: ['admin'] as const,
   pendingApprovals: ['admin', 'pending-approvals'] as const,
+  salespersonApplications: ['admin', 'salesperson-applications'] as const,
   users: ['admin', 'users'] as const,
   statistics: ['admin', 'statistics'] as const,
   industries: ['admin', 'industries'] as const,
   regions: ['admin', 'regions'] as const,
 };
+
+// ========== Salesperson Application Management Hooks ==========
+
+/**
+ * 查詢待審核的業務員申請
+ */
+export function useSalespersonApplications() {
+  return useQuery({
+    queryKey: adminKeys.salespersonApplications,
+    queryFn: async () => {
+      const response = await adminApi.getSalespersonApplications();
+      return response.data;
+    },
+  });
+}
+
+/**
+ * 批准業務員申請
+ */
+export function useApproveSalesperson() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: number) => adminApi.approveSalesperson(userId),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.salespersonApplications });
+      queryClient.invalidateQueries({ queryKey: adminKeys.users });
+      queryClient.invalidateQueries({ queryKey: adminKeys.statistics });
+      toast.success(response.message || '已批准業務員申請');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || error.response?.data?.error || '批准失敗');
+    },
+  });
+}
+
+/**
+ * 拒絕業務員申請
+ */
+export function useRejectSalesperson() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, data }: { userId: number; data: adminApi.RejectSalespersonRequest }) =>
+      adminApi.rejectSalesperson(userId, data),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.salespersonApplications });
+      queryClient.invalidateQueries({ queryKey: adminKeys.users });
+      queryClient.invalidateQueries({ queryKey: adminKeys.statistics });
+      toast.success(response.message || '已拒絕業務員申請');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || error.response?.data?.error || '拒絕失敗');
+    },
+  });
+}
 
 // ========== Pending Approvals Hooks ==========
 

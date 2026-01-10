@@ -102,6 +102,52 @@ export async function rejectExperience(expId: number, reason?: string): Promise<
   return response.data;
 }
 
+// ========== Salesperson Application Management APIs ==========
+
+export interface SalespersonApplication {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  salesperson_status: 'pending' | 'approved' | 'rejected';
+  salesperson_applied_at: string;
+  salesperson_profile?: {
+    full_name: string;
+    phone: string;
+    bio: string | null;
+    specialties: string | null;
+  };
+}
+
+/**
+ * 取得待審核的業務員申請列表
+ */
+export async function getSalespersonApplications(): Promise<ApiResponse<SalespersonApplication[]>> {
+  const response = await apiClient.get<ApiResponse<SalespersonApplication[]>>('/admin/salesperson-applications');
+  return response.data;
+}
+
+/**
+ * 批准業務員申請
+ */
+export async function approveSalesperson(userId: number): Promise<ApiResponse> {
+  const response = await apiClient.post<ApiResponse>(`/admin/salesperson-applications/${userId}/approve`);
+  return response.data;
+}
+
+/**
+ * 拒絕業務員申請
+ */
+export interface RejectSalespersonRequest {
+  rejection_reason: string;
+  reapply_days?: number;
+}
+
+export async function rejectSalesperson(userId: number, data: RejectSalespersonRequest): Promise<ApiResponse> {
+  const response = await apiClient.post<ApiResponse>(`/admin/salesperson-applications/${userId}/reject`, data);
+  return response.data;
+}
+
 // ========== User Management APIs ==========
 
 export interface GetUsersParams {

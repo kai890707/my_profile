@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\RegisterSalespersonRequest;
+use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use OpenApi\Attributes as OA;
 
@@ -347,5 +351,122 @@ class AuthController extends Controller
                 ],
             ],
         ]);
+    }
+
+    /**
+     * Register directly as salesperson.
+     *
+     * POST /api/auth/register-salesperson
+     */
+    #[OA\Post(
+        path: '/auth/register-salesperson',
+        summary: '業務員直接註冊',
+        description: '建立新的業務員帳號並自動建立業務員檔案（狀態為 pending）',
+        tags: ['認證'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/RegisterSalespersonRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: '註冊成功',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'success', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string'),
+                        new OA\Property(property: 'data', properties: [
+                            new OA\Property(property: 'user', ref: '#/components/schemas/User'),
+                            new OA\Property(property: 'access_token', type: 'string'),
+                            new OA\Property(property: 'token_type', type: 'string', example: 'Bearer'),
+                        ], type: 'object'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: '驗證失敗',
+                content: new OA\JsonContent(ref: '#/components/schemas/ValidationError')
+            ),
+        ]
+    )]
+    public function registerSalesperson(RegisterSalespersonRequest $request): JsonResponse
+    {
+        DB::beginTransaction();
+
+        try {
+            // Generate username from email (part before @) + random suffix
+            $emailPrefix = explode('@', $request->input('email'))[0];
+            $username = $emailPrefix . '_' . \Illuminate\Support\Str::random(4);
+
+            // Ensure username is unique (should be very unlikely to collide)
+            while (User::where('username', $username)->exists()) {
+                $username = $emailPrefix . '_' . \Illuminate\Support\Str::random(4);
+            }
+
+            // Create user
+            $user = User::create([
+                'username' => $username,
+                'name' => $request->input('name'),
+                'email' => $request->input('email'),
+                'password_hash' => Hash::make($request->input('password')),
+                'role' => User::ROLE_SALESPERSON,
+                'salesperson_status' => User::STATUS_PENDING,
+                'salesperson_applied_at' => now(),
+                'status' => 'active', // User must be active for JWT auth
+            ]);
+
+            // Create salesperson profile
+            $user->salespersonProfile()->create([
+                'full_name' => $request->input('full_name'),
+                'phone' => $request->input('phone'),
+                'bio' => $request->input('bio'),
+                'specialties' => $request->input('specialties'),
+                'service_regions' => $request->input('service_regions'),
+            ]);
+
+            DB::commit();
+
+            // Generate token using AuthService
+            $loginResult = $this->authService->login([
+                'email' => $request->input('email'),
+                'password' => $request->input('password'),
+            ]);
+
+            if ($loginResult === null) {
+                throw new \Exception('Failed to generate authentication token');
+            }
+
+            // Reload user with profile
+            $user->load('salespersonProfile');
+
+            return response()->json([
+                'success' => true,
+                'message' => '註冊成功！您的業務員資料正在審核中，預計 1-3 個工作天完成。',
+                'data' => [
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'role' => $user->role,
+                        'salesperson_status' => $user->salesperson_status,
+                        'salesperson_applied_at' => $user->salesperson_applied_at?->toIso8601String(),
+                    ],
+                    'profile' => $user->salespersonProfile,
+                    'access_token' => $loginResult['access_token'],
+                    'refresh_token' => $loginResult['refresh_token'],
+                    'token_type' => $loginResult['token_type'],
+                    'expires_in' => $loginResult['expires_in'],
+                ],
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => '註冊失敗：' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

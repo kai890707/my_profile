@@ -252,9 +252,6 @@ export default function AdminDashboardPage() {
                         <div>
                           <h4 className="font-semibold text-slate-900">{company.name}</h4>
                           <p className="text-sm text-slate-600">統編：{company.tax_id}</p>
-                          {company.address && (
-                            <p className="text-xs text-slate-500 mt-1">{company.address}</p>
-                          )}
                         </div>
                       </div>
 

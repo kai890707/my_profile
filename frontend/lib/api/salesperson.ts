@@ -11,6 +11,41 @@ import type {
 // ========== Profile APIs ==========
 
 /**
+ * 取得業務員狀態（包含審核狀態和重新申請資訊）
+ */
+export interface SalespersonStatusResponse {
+  role: 'user' | 'salesperson' | 'admin';
+  salesperson_status: 'pending' | 'approved' | 'rejected' | null;
+  salesperson_applied_at: string | null;
+  salesperson_approved_at: string | null;
+  rejection_reason: string | null;
+  can_reapply: boolean;
+  can_reapply_at: string | null;
+  days_until_reapply: number | null;
+}
+
+export async function getSalespersonStatus(): Promise<ApiResponse<SalespersonStatusResponse>> {
+  const response = await apiClient.get<ApiResponse<SalespersonStatusResponse>>('/salesperson/status');
+  return response.data;
+}
+
+/**
+ * 升級為業務員（一般使用者 → 業務員）
+ */
+export interface UpgradeToSalespersonRequest {
+  full_name: string;
+  phone: string;
+  bio?: string;
+  specialties?: string;
+  service_regions?: string[];
+}
+
+export async function upgradeToSalesperson(data: UpgradeToSalespersonRequest): Promise<ApiResponse<{ user: any; profile: SalespersonProfile }>> {
+  const response = await apiClient.post<ApiResponse<{ user: any; profile: SalespersonProfile }>>('/salesperson/upgrade', data);
+  return response.data;
+}
+
+/**
  * 取得個人檔案
  */
 export async function getProfile(): Promise<ApiResponse<SalespersonProfile>> {
@@ -28,6 +63,7 @@ export interface UpdateProfileRequest {
   specialties?: string;
   service_regions?: string[]; // JSON array of region names
   avatar?: string; // Base64 encoded image
+  company_id?: number; // Company ID to join
 }
 
 export async function updateProfile(data: UpdateProfileRequest): Promise<ApiResponse<SalespersonProfile>> {
@@ -38,11 +74,10 @@ export async function updateProfile(data: UpdateProfileRequest): Promise<ApiResp
 // ========== Company APIs ==========
 
 /**
- * 儲存公司資訊（等待審核）
+ * 儲存公司資訊
  */
 export interface SaveCompanyRequest {
   name: string;
-  industry_id: number;
 }
 
 export async function saveCompany(data: SaveCompanyRequest): Promise<ApiResponse<Company>> {

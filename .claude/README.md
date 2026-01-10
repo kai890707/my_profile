@@ -77,6 +77,9 @@ YAMU/
     ├── workflows/              # 工作流程文檔
     │   ├── GIT_FLOW.md
     │   └── DEVELOPMENT.md
+    ├── agents/                 # 專業 Agents
+    │   ├── laravel-specialist.md    # Laravel 框架專家
+    │   └── requirements-analyst.md  # 需求分析專家（PM）
     └── skills/                 # 專業技能
         ├── php-pro/
         ├── frontend-design/
@@ -450,6 +453,32 @@ YAMU/
 - ✅ Policy Authorization 權限管理
 - ✅ Form Request 驗證
 - ❌ 禁止 SQL Injection, XSS, CSRF
+
+**🔴 重要：Laravel 開發必須使用 laravel-specialist Agent**
+
+所有 Laravel 後端開發任務必須使用 `laravel-specialist` agent：
+
+```bash
+# ✅ 正確做法：使用 laravel-specialist agent
+Task tool 啟動 laravel-specialist agent 處理 Laravel 任務
+```
+
+**必須使用 laravel-specialist 的場景**：
+- ✅ 建立或修改 Controllers、Models、Migrations
+- ✅ 實作 Eloquent 關聯（hasOne、hasMany、belongsTo 等）
+- ✅ 建立 Form Requests、Policies、Middleware
+- ✅ 撰寫 API Resources、Service Classes
+- ✅ 資料庫查詢優化、防止 N+1 問題
+- ✅ 任何 Laravel 架構或最佳實踐相關問題
+
+**laravel-specialist 確保**：
+- 遵循 Laravel 框架最佳實踐
+- 使用適當的 Eloquent 模式
+- 實作完整的驗證和授權
+- 優化資料庫查詢效能
+- 保持程式碼一致性和可維護性
+
+詳見：`.claude/agents/laravel-specialist.md`
 
 **Frontend (Next.js 15)**:
 - ✅ TypeScript 嚴格模式
