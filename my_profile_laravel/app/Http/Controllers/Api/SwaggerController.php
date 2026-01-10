@@ -139,6 +139,7 @@ HTML;
         try {
             $openapi = \OpenApi\Generator::scan([
                 app_path('Http/Controllers/Api'),
+                app_path('Http/Requests'),
             ]);
 
             return response()->json(

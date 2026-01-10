@@ -142,6 +142,38 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'total', type: 'integer', example: 150),
     ]
 )]
+#[OA\Schema(
+    schema: 'RegisterSalespersonRequest',
+    required: ['name', 'email', 'password', 'password_confirmation', 'full_name', 'phone'],
+    properties: [
+        new OA\Property(property: 'name', type: 'string', maxLength: 255, example: 'Jane Smith'),
+        new OA\Property(property: 'email', type: 'string', format: 'email', maxLength: 255, example: 'jane@example.com'),
+        new OA\Property(property: 'password', type: 'string', format: 'password', minLength: 8, example: 'password123'),
+        new OA\Property(property: 'password_confirmation', type: 'string', format: 'password', example: 'password123'),
+        new OA\Property(property: 'full_name', type: 'string', maxLength: 255, example: 'Jane Elizabeth Smith'),
+        new OA\Property(property: 'phone', type: 'string', pattern: '^09\d{8}$', example: '0912345678'),
+        new OA\Property(property: 'bio', type: 'string', maxLength: 1000, example: 'Experienced insurance salesperson'),
+        new OA\Property(property: 'specialties', type: 'string', maxLength: 500, example: 'Life Insurance, Health Insurance'),
+        new OA\Property(property: 'service_regions', type: 'array', items: new OA\Items(type: 'string'), example: ['台北市', '新北市']),
+    ]
+)]
+#[OA\Schema(
+    schema: 'StoreCompanyRequest',
+    required: ['name'],
+    properties: [
+        new OA\Property(property: 'name', type: 'string', maxLength: 200, example: '三商美邦人壽股份有限公司'),
+        new OA\Property(property: 'tax_id', type: 'string', maxLength: 50, example: '12345678', nullable: true),
+        new OA\Property(property: 'is_personal', type: 'boolean', example: false),
+    ]
+)]
+#[OA\Schema(
+    schema: 'RejectSalespersonRequest',
+    required: ['rejection_reason'],
+    properties: [
+        new OA\Property(property: 'rejection_reason', type: 'string', maxLength: 500, example: '資料不完整，請補充專業證照'),
+        new OA\Property(property: 'reapply_days', type: 'integer', minimum: 0, maximum: 90, example: 7),
+    ]
+)]
 final class OpenApiSchemas
 {
     // This class only exists to hold OpenAPI schema definitions
