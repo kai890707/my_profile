@@ -12,10 +12,19 @@ import { SalespersonCard } from '@/components/features/search/salesperson-card';
 import { SalespersonCardSkeleton } from '@/components/ui/skeleton';
 import { Search, Users, Shield, TrendingUp, ArrowRight } from 'lucide-react';
 import { useSearchSalespersons } from '@/hooks/useSearch';
+import { useAuth, useLogout } from '@/hooks/useAuth';
 
 export default function HomePage() {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
+
+  // 獲取當前用戶資訊
+  const { data: user } = useAuth();
+  const logoutMutation = useLogout();
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
   // 載入熱門業務員 (最新註冊的 6 位)
   const { data: popularSalespersons, isLoading } = useSearchSalespersons({
@@ -52,7 +61,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <Header user={user} onLogout={handleLogout} />
 
       <main className="flex-1">
         {/* Hero Section */}
