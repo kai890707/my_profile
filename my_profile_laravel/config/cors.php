@@ -21,6 +21,7 @@ return [
 
     'allowed_origins' => [
         'http://localhost:3000',  // Next.js Frontend
+        'http://localhost:3001',  // Next.js Frontend (alternative port)
         'http://localhost:5173',  // Vite Dev Server
         'http://localhost:8080',  // CI4 API (for testing)
     ],
