@@ -78,8 +78,9 @@ YAMU/
     │   ├── GIT_FLOW.md
     │   └── DEVELOPMENT.md
     ├── agents/                 # 專業 Agents
-    │   ├── laravel-specialist.md    # Laravel 框架專家
-    │   └── requirements-analyst.md  # 需求分析專家（PM）
+    │   ├── requirements-analyst.md  # 需求分析專家（PM）
+    │   ├── software-architect.md    # 軟體架構師
+    │   └── laravel-specialist.md    # Laravel 框架專家
     └── skills/                 # 專業技能
         ├── php-pro/
         ├── frontend-design/
@@ -184,6 +185,129 @@ YAMU/
 | | `/docs` | 生成文檔 |
 
 **詳細說明**: 請參考 [commands/README.md](./commands/README.md)
+
+---
+
+## 🤖 專業 Agents 系統
+
+### 為什麼需要專業 Agents？
+
+在開發過程中，不同階段需要不同領域的專業知識：
+- **需求分析**需要 PM 的系統化思維和邊界分析能力
+- **架構設計**需要資深架構師的系統設計經驗
+- **Laravel 開發**需要框架專家的最佳實踐
+
+專業 Agents 確保每個階段都有對應的專業能力支援，從需求到實作全程品質保證。
+
+### 可用的 Agents
+
+#### 1. requirements-analyst（需求分析專家）
+
+**角色**: 產品經理（PM）
+
+**負責階段**: Step 1 - Proposal（需求訪談）
+
+**核心能力**:
+- ✅ 結構化需求訪談（背景、目標、使用情境）
+- ✅ 系統化提問確保需求完整性
+- ✅ 邊界情境分析（Edge Cases）
+- ✅ 需求優先級評估（Must/Should/Could/Won't Have）
+- ✅ 制定清晰驗收標準
+- ✅ 識別技術風險和依賴
+
+**使用時機**:
+```bash
+# 執行 /implement 或 /proposal 時自動使用
+/implement 新增業務員評分功能
+# → Step 1 會自動啟動 requirements-analyst agent
+```
+
+**詳細文檔**: [.claude/agents/requirements-analyst.md](./agents/requirements-analyst.md)
+
+#### 2. software-architect（軟體架構師）
+
+**角色**: 資深軟體架構師
+
+**負責階段**: Step 2 - Specifications（技術規格設計）
+
+**核心能力**:
+- ✅ 系統架構設計（分層架構、清潔架構、微服務）
+- ✅ 資料庫設計與優化（索引、分片、快取策略）
+- ✅ API 設計（RESTful、版本控制、安全性）
+- ✅ 效能設計（QPS 目標、回應時間、擴展策略）
+- ✅ 安全架構（認證、授權、加密、OWASP Top 10）
+- ✅ 領域驅動設計（DDD）原則應用
+
+**使用時機**:
+```bash
+# 執行 /spec 時自動使用
+/spec user-registration-refactor
+# → Step 2 會自動啟動 software-architect agent
+```
+
+**詳細文檔**: [.claude/agents/software-architect.md](./agents/software-architect.md)
+
+#### 3. laravel-specialist（Laravel 框架專家）
+
+**角色**: Laravel 資深開發者
+
+**負責階段**: Step 5 - Implement（程式碼實作）
+
+**核心能力**:
+- ✅ Controllers、Models、Migrations、Middleware、Policies 最佳實踐
+- ✅ Eloquent 關聯、Query 優化、防止 N+1
+- ✅ Form Requests 驗證、Policy 授權
+- ✅ 確保符合 Laravel 框架規範
+
+**使用時機**:
+```bash
+# 當功能涉及 Laravel 後端時
+/implement 新增 API 端點和資料庫
+# → Step 5 實作階段會使用 laravel-specialist agent
+```
+
+**詳細文檔**: [.claude/agents/laravel-specialist.md](./agents/laravel-specialist.md)
+
+### Agents 工作流程整合
+
+```
+/implement [功能描述]
+    ↓
+Step 1: Proposal
+    🤖 requirements-analyst agent
+    → 進行需求訪談
+    → 分析邊界情境
+    → 輸出完整 proposal.md
+    ↓
+Step 2: Specifications
+    🤖 software-architect agent
+    → 設計系統架構
+    → 設計資料庫結構
+    → 設計 API 介面
+    → 輸出技術規格文件
+    ↓
+Step 3-4: Tasks → Validate
+    ⚡ 自動執行
+    ↓
+Step 5: Implement
+    🤖 laravel-specialist agent (如涉及 Laravel)
+    → 實作 Controllers、Models、Migrations
+    → 確保遵循最佳實踐
+    ↓
+Step 6: Archive
+    ⚡ 自動歸檔
+```
+
+### 如何判斷使用哪個 Agent？
+
+系統會**自動判斷**並使用適當的 agent：
+
+| 階段 | 判斷條件 | 使用 Agent |
+|------|---------|-----------|
+| Step 1: Proposal | 任何需求 | requirements-analyst |
+| Step 2: Specifications | 任何技術設計 | software-architect |
+| Step 5: Implement | Laravel 後端相關 | laravel-specialist |
+| Step 5: Implement | Frontend 相關 | 直接實作 |
 
 ---
 

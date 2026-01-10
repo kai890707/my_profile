@@ -86,6 +86,12 @@
       "namedRegex": "^/admin/users(?:/)?$"
     },
     {
+      "page": "/companies/create",
+      "regex": "^/companies/create(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/companies/create(?:/)?$"
+    },
+    {
       "page": "/dashboard",
       "regex": "^/dashboard(?:/)?$",
       "routeKeys": {},
@@ -120,6 +126,18 @@
       "regex": "^/register(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/register(?:/)?$"
+    },
+    {
+      "page": "/salesperson/upgrade",
+      "regex": "^/salesperson/upgrade(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/salesperson/upgrade(?:/)?$"
+    },
+    {
+      "page": "/salesperson-applications",
+      "regex": "^/salesperson\\-applications(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/salesperson\\-applications(?:/)?$"
     },
     {
       "page": "/search",

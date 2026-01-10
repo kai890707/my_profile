@@ -499,12 +499,36 @@ __turbopack_context__.s([
     "logout",
     ()=>logout,
     "register",
-    ()=>register
+    ()=>register,
+    "registerSalesperson",
+    ()=>registerSalesperson,
+    "registerUser",
+    ()=>registerUser
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/api/client.ts [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$auth$2f$token$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/auth/token.ts [app-ssr] (ecmascript)");
 ;
 ;
+async function registerUser(data) {
+    const response = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["apiClient"].post('/auth/register', data);
+    // 儲存 Token
+    if (response.data.data) {
+        const { access_token, refresh_token } = response.data.data;
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$auth$2f$token$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setAccessToken"])(access_token);
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$auth$2f$token$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setRefreshToken"])(refresh_token);
+    }
+    return response.data;
+}
+async function registerSalesperson(data) {
+    const response = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["apiClient"].post('/auth/register-salesperson', data);
+    // 儲存 Token
+    if (response.data.data) {
+        const { access_token, refresh_token } = response.data.data;
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$auth$2f$token$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setAccessToken"])(access_token);
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$auth$2f$token$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setRefreshToken"])(refresh_token);
+    }
+    return response.data;
+}
 async function register(data) {
     const response = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["apiClient"].post('/auth/register', data);
     return response.data;
@@ -613,7 +637,11 @@ __turbopack_context__.s([
     "useLogout",
     ()=>useLogout,
     "useRegister",
-    ()=>useRegister
+    ()=>useRegister,
+    "useRegisterSalesperson",
+    ()=>useRegisterSalesperson,
+    "useRegisterUser",
+    ()=>useRegisterUser
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useQuery$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@tanstack/react-query/build/modern/useQuery.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@tanstack/react-query/build/modern/useMutation.js [app-ssr] (ecmascript)");
@@ -684,6 +712,64 @@ function useLogout() {
             // 即使登出失敗也清除本地資料並導向登入頁
             queryClient.clear();
             router.push('/login');
+        }
+    });
+}
+function useRegisterUser() {
+    const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRouter"])();
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$auth$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["registerUser"],
+        onSuccess: async (data)=>{
+            // 預先設定用戶資料到 cache
+            const user = data.data?.user;
+            if (user) {
+                queryClient.setQueryData(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$query$2f$keys$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["queryKeys"].auth.me, user);
+                (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$auth$2f$token$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setUserRole"])(user.role);
+            }
+            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].success(data.message || '註冊成功！');
+            // 導向首頁
+            router.push('/');
+        },
+        onError: (error)=>{
+            const message = error.response?.data?.message || '註冊失敗';
+            const errors = error.response?.data?.errors;
+            if (errors) {
+                Object.values(errors).flat().forEach((err)=>{
+                    __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error(err);
+                });
+            } else {
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error(message);
+            }
+        }
+    });
+}
+function useRegisterSalesperson() {
+    const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRouter"])();
+    const queryClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$QueryClientProvider$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useQueryClient"])();
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$tanstack$2f$react$2d$query$2f$build$2f$modern$2f$useMutation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMutation"])({
+        mutationFn: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2f$auth$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["registerSalesperson"],
+        onSuccess: async (data)=>{
+            // 預先設定用戶資料到 cache
+            const user = data.data?.user;
+            if (user) {
+                queryClient.setQueryData(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$query$2f$keys$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["queryKeys"].auth.me, user);
+                (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$auth$2f$token$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setUserRole"])(user.role);
+            }
+            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].success(data.message || '註冊成功，請等待管理員審核');
+            // 導向 dashboard
+            router.push('/dashboard');
+        },
+        onError: (error)=>{
+            const message = error.response?.data?.message || '註冊失敗';
+            const errors = error.response?.data?.errors;
+            if (errors) {
+                Object.values(errors).flat().forEach((err)=>{
+                    __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error(err);
+                });
+            } else {
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error(message);
+            }
         }
     });
 }

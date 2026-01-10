@@ -69,7 +69,9 @@
       "Bash(npx tsc:*)",
       "Bash(npm run lint:*)",
       "Bash(npx next lint:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(kill:*)",
+      "Bash(mysql:*)"
     ]
   }
 }

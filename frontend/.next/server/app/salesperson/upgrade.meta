@@ -1,0 +1,17 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/(dashboard)/layout,_N_T_/(dashboard)/salesperson/layout,_N_T_/(dashboard)/salesperson/upgrade/layout,_N_T_/(dashboard)/salesperson/upgrade/page,_N_T_/salesperson/upgrade"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/!KGRhc2hib2FyZCk/salesperson/upgrade/__PAGE__",
+    "/!KGRhc2hib2FyZCk/salesperson/upgrade",
+    "/!KGRhc2hib2FyZCk/salesperson",
+    "/!KGRhc2hib2FyZCk",
+    "/_index",
+    "/_head"
+  ]
+}

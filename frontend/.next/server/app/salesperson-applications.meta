@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/(admin)/layout,_N_T_/(admin)/salesperson-applications/layout,_N_T_/(admin)/salesperson-applications/page,_N_T_/salesperson-applications"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/!KGFkbWluKQ/salesperson-applications/__PAGE__",
+    "/!KGFkbWluKQ/salesperson-applications",
+    "/!KGFkbWluKQ",
+    "/_index",
+    "/_head"
+  ]
+}

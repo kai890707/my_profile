@@ -6,6 +6,38 @@
 
 ---
 
+## 🔴 重要：使用軟體架構師 Agent
+
+**所有 Specification 階段必須使用 `software-architect` agent 進行技術設計**
+
+```
+啟動 software-architect agent 進行系統架構設計：
+- 將業務需求轉化為技術方案
+- 設計資料庫結構與索引策略
+- 設計 API 架構與介面
+- 考慮效能、安全性、可擴展性
+- 輸出完整的技術規格文件
+```
+
+**software-architect 負責**：
+- ✅ 系統架構設計（分層架構、清潔架構、微服務等）
+- ✅ 資料庫設計與優化（索引、分片、快取策略）
+- ✅ API 設計（RESTful、版本控制、安全性）
+- ✅ 效能設計（QPS 目標、回應時間、擴展策略）
+- ✅ 安全架構（認證、授權、加密、OWASP Top 10）
+- ✅ 領域驅動設計（DDD）原則應用
+
+**工作流程**：
+```
+Task tool:
+- subagent_type: software-architect
+- prompt: 根據 proposal.md 設計技術架構和規格
+```
+
+詳見：`.claude/agents/software-architect.md`
+
+---
+
 ## 前置條件
 
 - ✅ Proposal 已完成並通過確認
@@ -21,11 +53,11 @@
 1. **API 規格** - 所有端點的完整定義
 2. **資料模型** - 資料庫結構和 Migration 程式碼
 3. **業務規則** - 所有驗證邏輯和約束條件
-4. **任務清單** - 實作步驟拆解
+4. **架構設計** - 系統架構和技術選型
 
 ---
 
-## 工作流程
+## 工作流程（由 software-architect agent 執行）
 
 ### Step 1: 撰寫 API 規格
 

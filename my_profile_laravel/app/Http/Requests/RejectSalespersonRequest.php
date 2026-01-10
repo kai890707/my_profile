@@ -6,7 +6,16 @@ namespace App\Http\Requests;
 
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use OpenApi\Attributes as OA;
 
+#[OA\Schema(
+    schema: 'RejectSalespersonRequest',
+    required: ['rejection_reason'],
+    properties: [
+        new OA\Property(property: 'rejection_reason', type: 'string', maxLength: 500, example: '資料不完整，請補充專業證照'),
+        new OA\Property(property: 'reapply_days', type: 'integer', minimum: 0, maximum: 90, example: 7),
+    ]
+)]
 class RejectSalespersonRequest extends FormRequest
 {
     /**

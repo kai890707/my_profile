@@ -60,10 +60,13 @@ Step 1: Create Proposal ✋ 用戶確認
     → openspec/changes/<feature-name>/proposal.md
 
 Step 2: Write Specifications ⚡ 自動執行
+    → 使用 software-architect agent 進行技術設計
+    → 將業務需求轉化為技術架構
     → openspec/changes/<feature-name>/specs/
         ├── api.md              # API 端點規格
         ├── data-model.md       # 資料模型設計
-        └── business-rules.md   # 業務規則定義
+        ├── business-rules.md   # 業務規則定義
+        └── architecture.md     # 系統架構設計
 
 Step 3: Break Down Tasks ⚡ 自動執行
     → openspec/changes/<feature-name>/tasks.md

@@ -1,7 +1,5 @@
 {
   "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/(auth)/register/page": "app/(auth)/register/page.js",
-  "/(dashboard)/dashboard/approval-status/page": "app/(dashboard)/dashboard/approval-status/page.js",
   "/page": "app/page.js",
-  "/search/page": "app/search/page.js"
+  "/ui-demo/page": "app/ui-demo/page.js"
 }
