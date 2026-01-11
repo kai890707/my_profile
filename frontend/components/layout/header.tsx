@@ -19,7 +19,7 @@ interface HeaderProps {
     id: number;
     username?: string;
     name?: string;
-    email: string;
+    email?: string;
     role: 'admin' | 'salesperson' | 'user';
     full_name?: string;
     avatar?: string | null;
@@ -96,13 +96,14 @@ export function Header({ user, onLogout }: HeaderProps) {
                           user.full_name?.substring(0, 2) ||
                           user.name?.substring(0, 2).toUpperCase() ||
                           user.username?.substring(0, 2).toUpperCase() ||
-                          user.email.substring(0, 2).toUpperCase()
+                          user.email?.substring(0, 2).toUpperCase() ||
+                          'U'
                         }
                         size="sm"
                       />
                       <div className="hidden md:block text-left">
                         <p className="text-sm font-medium text-slate-900">
-                          {user.full_name || user.name || user.username || user.email}
+                          {user.full_name || user.name || user.username || user.email || '使用者'}
                         </p>
                         <p className="text-xs text-slate-500">
                           {user.role === 'admin' ? '管理員' : user.role === 'salesperson' ? '業務員' : '使用者'}
