@@ -122,13 +122,21 @@ export function Header({ user, onLogout }: HeaderProps) {
                         </Link>
                       </DropdownMenuItem>
                     ))}
+
+                    {/* 設定選項 - 僅管理員顯示 */}
+                    {user.role === 'admin' && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/settings" className="cursor-pointer">
+                            <Settings className="mr-2 h-4 w-4" />
+                            設定
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/settings" className="cursor-pointer">
-                        <Settings className="mr-2 h-4 w-4" />
-                        設定
-                      </Link>
-                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={onLogout}
                       className="cursor-pointer text-error-600"
