@@ -52,4 +52,19 @@
     - ✅ Backend API 正確返回 200 OK (有 profile) 或 404 (無 profile)，不再返回 401
     - ✅ Frontend Dashboard 無 TypeError，Avatar 正常顯示
 
+- **Header Menu 404 Error** (fix-header-menu-404)
+  - 修復業務員選單「設定」選項導向不存在的頁面
+  - 問題: 業務員點擊「設定」跳轉到 `/settings`（404 錯誤）
+  - 解決方案: 根據 `user.role` 條件渲染「設定」選項
+    - 業務員 (salesperson): 不顯示「設定」選項
+    - 管理員 (admin): 顯示「設定」選項，跳轉到 `/admin/settings`
+  - Desktop Dropdown Menu 使用條件渲染 `{user.role === 'admin' && <設定選項>}`
+  - Mobile Menu 已正確使用 `getDashboardLinks()` 動態生成選項
+  - 影響範圍: 1 個 Frontend 檔案 (`components/layout/header.tsx`)
+  - 測試驗證:
+    - ✅ 業務員選單不顯示「設定」選項
+    - ✅ 管理員選單正常顯示「設定」選項並跳轉到 `/admin/settings`
+    - ✅ 所有連結正確跳轉，無 404 錯誤
+    - ✅ Desktop 和 Mobile 選單同步
+
 ---
