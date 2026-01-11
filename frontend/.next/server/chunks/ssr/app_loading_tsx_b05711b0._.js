@@ -1,3 +1,0 @@
-module.exports=[63588,a=>{"use strict";var b=a.i(7997);function c(){return(0,b.jsx)("div",{className:"min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50",children:(0,b.jsxs)("div",{className:"text-center",children:[(0,b.jsx)("div",{className:"inline-flex items-center justify-center w-16 h-16 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"}),(0,b.jsx)("p",{className:"mt-4 text-lg font-medium text-slate-700",children:"載入中..."})]})})}a.s(["default",()=>c])}];
-
-//# sourceMappingURL=app_loading_tsx_b05711b0._.js.map
