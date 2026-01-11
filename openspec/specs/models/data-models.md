@@ -371,3 +371,239 @@ All models are located in `app/Models/`:
 
 ---
 
+
+---
+
+## Feature: User Registration Refactor
+
+**Added**: 2026-01-11
+**Change**: user-registration-refactor
+
+### Database Schema
+
+#### 1. Users Table Migration
+
+**檔案**: `database/migrations/YYYY_MM_DD_HHMMSS_add_salesperson_fields_to_users_table.php`
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table): void {
+            // 使用者角色
+            $table->enum('role', ['user', 'salesperson', 'admin'])
+                ->default('user')
+                ->after('password');
+
+            // 業務員審核狀態
+            $table->enum('salesperson_status', ['pending', 'approved', 'rejected'])
+                ->nullable()
+                ->after('role')
+                ->comment('null=一般使用者, pending=未審核, approved=已審核, rejected=已拒絕');
+
+            // 業務員申請/升級時間
+            $table->timestamp('salesperson_applied_at')
+                ->nullable()
+                ->after('salesperson_status');
+
+            // 業務員審核通過時間
+            $table->timestamp('salesperson_approved_at')
+                ->nullable()
+                ->after('salesperson_applied_at');
+
+            // 審核拒絕原因
+            $table->text('rejection_reason')
+                ->nullable()
+                ->after('salesperson_approved_at');
+
+            // 可重新申請的時間
+            $table->timestamp('can_reapply_at')
+                ->nullable()
+                ->after('rejection_reason');
+
+            // 付費會員標記（預留）
+            $table->boolean('is_paid_member')
+                ->default(false)
+                ->after('can_reapply_at');
+
+            // Indexes
+            $table->index('role');
+            $table->index('salesperson_status');
+            $table->index(['role', 'salesperson_status'], 'idx_role_status');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table): void {
+            $table->dropIndex('idx_role_status');
+            $table->dropIndex(['salesperson_status']);
+            $table->dropIndex(['role']);
+
+            $table->dropColumn([
+                'role',
+                'salesperson_status',
+                'salesperson_applied_at',
+                'salesperson_approved_at',
+                'rejection_reason',
+                'can_reapply_at',
+                'is_paid_member',
+            ]);
+        });
+    }
+};
+```
+
+#### 2. Companies Table Migration (簡化)
+
+**檔案**: `database/migrations/YYYY_MM_DD_HHMMSS_simplify_companies_table.php`
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('companies', function (Blueprint $table): void {
+            // 1. 新增 is_personal 欄位
+            $table->boolean('is_personal')
+                ->default(false)
+                ->after('tax_id')
+                ->comment('是否為個人工作室');
+
+            // 2. 將 tax_id 改為 nullable
+            $table->string('tax_id', 50)
+                ->nullable()
+                ->change();
+
+            // 3. 移除不需要的欄位
+            $table->dropForeign(['industry_id']);
+            $table->dropForeign(['approved_by']);
+            $table->dropIndex(['industry_id']);
+            $table->dropIndex(['approval_status']);
+
+            $table->dropColumn([
+                'industry_id',
+                'address',
+                'phone',
+                'approval_status',
+                'rejected_reason',
+                'approved_by',
+                'approved_at',
+            ]);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('companies', function (Blueprint $table): void {
+            // 恢復欄位
+            $table->unsignedBigInteger('industry_id')->nullable();
+            $table->string('address', 255)->nullable();
+            $table->string('phone', 20)->nullable();
+            $table->enum('approval_status', ['pending', 'approved', 'rejected'])
+                ->default('pending');
+            $table->text('rejected_reason')->nullable();
+            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->timestamp('approved_at')->nullable();
+
+            // 移除新增的欄位
+            $table->dropColumn('is_personal');
+
+            // 恢復 foreign keys 和 indexes
+            $table->foreign('industry_id')
+                ->references('id')
+                ->on('industries')
+                ->onDelete('set null');
+
+            $table->foreign('approved_by')
+                ->references('id')
+                ->on('users')
+                ->onDelete('set null');
+
+            $table->index('industry_id');
+            $table->index('approval_status');
+
+            // 將 tax_id 改回 not nullable
+            $table->string('tax_id', 50)
+                ->nullable(false)
+                ->change();
+        });
+    }
+};
+```
+
+#### 3. SalespersonProfiles Table Migration
+
+**檔案**: `database/migrations/YYYY_MM_DD_HHMMSS_make_company_id_nullable_in_salesperson_profiles.php`
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('salesperson_profiles', function (Blueprint $table): void {
+            // 將 company_id 改為 nullable（支援獨立業務員）
+            $table->unsignedBigInteger('company_id')
+                ->nullable()
+                ->change();
+
+            // 移除舊的審核欄位（改用 Users table 的 salesperson_status）
+            if (Schema::hasColumn('salesperson_profiles', 'approval_status')) {
+                $table->dropColumn([
+                    'approval_status',
+                    'rejected_reason',
+                    'approved_by',
+                    'approved_at',
+                ]);
+            }
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('salesperson_profiles', function (Blueprint $table): void {
+            // 恢復 company_id 為 not nullable
+            $table->unsignedBigInteger('company_id')
+                ->nullable(false)
+                ->change();
+
+            // 恢復審核欄位
+            $table->enum('approval_status', ['pending', 'approved', 'rejected'])
+                ->default('pending');
+            $table->text('rejected_reason')->nullable();
+            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->timestamp('approved_at')->nullable();
+        });
+    }
+};
+```
+
+---
+
+### Models
+---

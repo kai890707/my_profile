@@ -604,3 +604,197 @@ curl -X GET http://localhost:8080/api/docs \
 
 ---
 
+
+---
+
+## Feature: User Registration Refactor
+
+**Added**: 2026-01-11
+**Change**: user-registration-refactor
+
+### API Endpoints
+
+#### Authentication Endpoints
+
+```
+POST /api/auth/register
+Request:
+{
+    "name": "string",
+    "email": "string|email|unique",
+    "password": "string|min:8"
+}
+Response 201:
+{
+    "user": User,
+    "token": "string"
+}
+
+POST /api/auth/register-salesperson
+Request:
+{
+    "name": "string",
+    "email": "string|email|unique",
+    "password": "string|min:8",
+    "full_name": "string",
+    "phone": "string",
+    "bio": "string|nullable",
+    "specialties": "string|nullable",
+    "service_regions": "array|nullable"
+}
+Response 201:
+{
+    "user": User (with salespersonProfile),
+    "token": "string",
+    "message": "註冊成功！..."
+}
+```
+
+#### Salesperson Endpoints
+
+```
+POST /api/salesperson/upgrade
+Middleware: auth:sanctum
+Request:
+{
+    "full_name": "string",
+    "phone": "string",
+    "bio": "string|nullable",
+    "specialties": "string|nullable",
+    "service_regions": "array|nullable"
+}
+Response 200:
+{
+    "user": User (with salespersonProfile),
+    "message": "升級成功！..."
+}
+Response 429 (Too Early):
+{
+    "error": "請於 YYYY-MM-DD 後重新申請",
+    "can_reapply_at": "datetime"
+}
+
+GET /api/salesperson/status
+Middleware: auth:sanctum
+Response 200:
+{
+    "is_salesperson": boolean,
+    "status": "pending|approved|rejected|null",
+    "applied_at": "datetime|null",
+    "approved_at": "datetime|null",
+    "rejection_reason": "string|null",
+    "can_reapply_at": "datetime|null",
+    "can_reapply": boolean
+}
+
+PUT /api/salesperson/profile
+Middleware: auth:sanctum, salesperson
+Request:
+{
+    "company_id": "integer|nullable|exists:companies,id",
+    "full_name": "string",
+    "phone": "string",
+    "bio": "string|nullable",
+    "specialties": "string|nullable",
+    "service_regions": "array|nullable"
+}
+Response 200:
+{
+    "profile": SalespersonProfile,
+    "message": "個人資料已更新"
+}
+
+GET /api/salespeople
+Response 200:
+{
+    "data": [User (with salespersonProfile)],
+    "links": {...},
+    "meta": {...}
+}
+```
+
+#### Admin Endpoints
+
+```
+GET /api/admin/salesperson-applications
+Middleware: auth:sanctum, admin
+Response 200:
+{
+    "data": [User (with salespersonProfile)],
+    "links": {...},
+    "meta": {...}
+}
+
+POST /api/admin/salesperson-applications/{id}/approve
+Middleware: auth:sanctum, admin
+Response 200:
+{
+    "user": User (with salespersonProfile),
+    "message": "已批准業務員申請"
+}
+
+POST /api/admin/salesperson-applications/{id}/reject
+Middleware: auth:sanctum, admin
+Request:
+{
+    "rejection_reason": "string|required",
+    "reapply_days": "integer|min:0|max:90|nullable"
+}
+Response 200:
+{
+    "user": User,
+    "message": "已拒絕業務員申請"
+}
+```
+
+#### Company Endpoints
+
+```
+GET /api/companies/search
+Query Parameters:
+- tax_id: string (精確搜尋)
+- name: string (模糊搜尋)
+
+Response 200 (tax_id search):
+{
+    "exists": boolean,
+    "company": Company|null
+}
+
+Response 200 (name search):
+[
+    {
+        "id": integer,
+        "name": "string",
+        "tax_id": "string|null",
+        "is_personal": boolean
+    }
+]
+
+POST /api/companies
+Middleware: auth:sanctum, approved_salesperson
+Request:
+{
+    "name": "string|required|max:200",
+    "tax_id": "string|nullable|max:50|unique:companies",
+    "is_personal": "boolean"
+}
+Validation Rules:
+- If is_personal=false, tax_id is required
+Response 201:
+{
+    "company": Company,
+    "message": "公司建立成功"
+}
+Response 422 (tax_id duplicate):
+{
+    "errors": {
+        "tax_id": ["統一編號已被使用"]
+    }
+}
+```
+
+---
+
+## Frontend 規格
+---
