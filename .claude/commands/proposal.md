@@ -47,6 +47,23 @@ Task tool:
 
 ---
 
+## 資料夾命名規範
+
+**格式**: `YYYYMMDD-action-description`
+
+**說明**:
+- `YYYYMMDD`: 8 位數日期（當天日期）
+- `action`: add, fix, update, refactor, remove, optimize, enhance
+- `description`: kebab-case 功能描述
+
+**範例**: `20260111-add-rating-feature`, `20260110-fix-cart-calculation`
+
+**目錄位置**: `openspec/changes/YYYYMMDD-action-description/`
+
+**內部檔案**: 保持 OpenSpec 原有規範（proposal.md, specs/api.md, tasks.md 等）
+
+---
+
 ## 工作流程
 
 ### 1. 理解需求（由 requirements-analyst agent 執行）
@@ -285,7 +302,7 @@ A: 列出主要的「不做的事」即可，不用窮盡所有可能。
    - 是否需要匿名評分？
    - 權限要求（誰可以評分？）
 
-2. 建立目錄: `openspec/changes/rating-feature/`
+2. 建立目錄: `openspec/changes/<feature-name>/` (遵循 YYYYMMDD-action-description 格式)
 
 3. 產出 proposal.md，包含：
    - Why: 用戶需要參考其他人的評價來選擇業務員
@@ -307,7 +324,7 @@ A: 列出主要的「不做的事」即可，不用窮盡所有可能。
    - 重現步驟？
    - 影響範圍？
 
-2. 建立目錄: `openspec/changes/fix-cart-calculation/`
+2. 建立目錄: `openspec/changes/<feature-name>/` (遵循 YYYYMMDD-action-description 格式)
 
 3. 產出 proposal.md，包含：
    - Why: 購物車總價計算錯誤，影響結帳
@@ -320,6 +337,7 @@ A: 列出主要的「不做的事」即可，不用窮盡所有可能。
 ## 完成標準
 
 Proposal 完成時必須:
+- ✅ 資料夾名稱符合 `YYYYMMDD-action-description` 格式
 - ✅ 檔案已產出到 `openspec/changes/<feature-name>/proposal.md`
 - ✅ 所有必要章節都已填寫
 - ✅ 無模糊或待確認的問題

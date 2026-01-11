@@ -22,6 +22,23 @@
 
 ---
 
+## 資料夾命名規範
+
+**格式**: `YYYYMMDD-action-description`
+
+**說明**:
+- `YYYYMMDD`: 8 位數日期（建立日期）
+- `action`: add, fix, update, refactor, remove, optimize, enhance
+- `description`: kebab-case 功能描述
+
+**範例**: `20260111-fix-frontend-backend-api-inconsistency`
+
+**歸檔位置**: `openspec/changes/archived/YYYYMMDD-action-description/`
+
+**重要**: 歸檔前確保資料夾名稱已符合命名規範，歸檔後不應再重新命名
+
+---
+
 ## 工作流程
 
 ### Step 1: 合併 API 規格
@@ -231,13 +248,13 @@ echo "📁 Location: openspec/changes/archived/$FEATURE_NAME"
 ```
 
 **執行流程**:
-1. 讀取 `openspec/changes/rating-feature/specs/api.md`
+1. 讀取 `openspec/changes/<feature-name>/specs/api.md`
 2. 合併 7 個 API 端點到 `openspec/specs/api/endpoints.md`
-3. 讀取 `openspec/changes/rating-feature/specs/data-model.md`
+3. 讀取 `openspec/changes/<feature-name>/specs/data-model.md`
 4. 合併 ratings 資料表到 `openspec/specs/models/data-models.md`
-5. 讀取 `openspec/changes/rating-feature/specs/business-rules.md`
+5. 讀取 `openspec/changes/<feature-name>/specs/business-rules.md`
 6. 合併 11 條業務規則到 `openspec/specs/business-rules.md`
-7. 移動 `rating-feature/` 到 `openspec/changes/archived/`
+7. 移動 `<feature-name>/` 到 `openspec/changes/archived/` (確保符合命名規範)
 8. 更新 `openspec/CHANGELOG.md`
 
 **結果**:
@@ -245,8 +262,8 @@ echo "📁 Location: openspec/changes/archived/$FEATURE_NAME"
 ✅ API specs merged (7 endpoints)
 ✅ Data model specs merged (1 table)
 ✅ Business rules merged (11 rules)
-✅ Change archived: rating-feature
-📁 Location: openspec/changes/archived/rating-feature
+✅ Change archived: <feature-name>
+📁 Location: openspec/changes/archived/<feature-name>
 ```
 
 ---
@@ -258,16 +275,16 @@ echo "📁 Location: openspec/changes/archived/$FEATURE_NAME"
 ```
 
 **執行流程**:
-1. 讀取 `openspec/changes/fix-cart-calculation/specs/business-rules.md`
+1. 讀取 `openspec/changes/<feature-name>/specs/business-rules.md`
 2. 更新 `openspec/specs/business-rules.md` 中的相關規則
-3. 移動變更目錄到歸檔
+3. 移動變更目錄到歸檔 (確保符合命名規範)
 4. 記錄變更
 
 **結果**:
 ```
 ✅ Business rules updated
-✅ Change archived: fix-cart-calculation
-📁 Location: openspec/changes/archived/fix-cart-calculation
+✅ Change archived: <feature-name>
+📁 Location: openspec/changes/archived/<feature-name>
 ```
 
 ---
@@ -313,6 +330,7 @@ A: 建議在 `openspec/specs/` 加入變更日期標記。
 ## 完成標準
 
 歸檔完成時：
+- ✅ 資料夾名稱符合 `YYYYMMDD-action-description` 格式
 - ✅ 主規範庫已更新（API, Data Model, Business Rules）
 - ✅ 變更目錄已移動到 archived/
 - ✅ 格式一致、無衝突
