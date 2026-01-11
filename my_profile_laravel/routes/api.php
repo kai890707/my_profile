@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CertificationController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\ExperienceController;
 use App\Http\Controllers\Api\IndustryController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\SalespersonController;
@@ -101,6 +103,23 @@ Route::prefix('salesperson')->group(function (): void {
     Route::middleware('jwt.auth')->group(function (): void {
         Route::post('/upgrade', [SalespersonController::class, 'upgrade']);
         Route::put('/profile', [SalespersonController::class, 'updateProfile']);
+
+        // Profile alias (points to /profile/ endpoint)
+        Route::get('/profile', [SalespersonProfileController::class, 'me']);
+
+        // Approval status (aggregated query)
+        Route::get('/approval-status', [SalespersonController::class, 'approvalStatus']);
+
+        // Experiences CRUD
+        Route::get('/experiences', [ExperienceController::class, 'index']);
+        Route::post('/experiences', [ExperienceController::class, 'store']);
+        Route::put('/experiences/{id}', [ExperienceController::class, 'update']);
+        Route::delete('/experiences/{id}', [ExperienceController::class, 'destroy']);
+
+        // Certifications CRUD
+        Route::get('/certifications', [CertificationController::class, 'index']);
+        Route::post('/certifications', [CertificationController::class, 'store']);
+        Route::delete('/certifications/{id}', [CertificationController::class, 'destroy']);
     });
 });
 

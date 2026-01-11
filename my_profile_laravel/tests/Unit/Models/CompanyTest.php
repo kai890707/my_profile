@@ -16,15 +16,24 @@ class CompanyTest extends TestCase
     /** @test */
     public function it_has_correct_fillable_fields(): void
     {
-        $fillable = (new Company())->getFillable();
+        $fillable = (new Company)->getFillable();
 
-        $expectedFields = ['name', 'tax_id', 'is_personal', 'created_by'];
+        $expectedFields = [
+            'name',
+            'tax_id',
+            'is_personal',
+            'created_by',
+            'approval_status',
+            'rejected_reason',
+            'approved_by',
+            'approved_at',
+        ];
 
         foreach ($expectedFields as $field) {
             $this->assertContains($field, $fillable);
         }
 
-        $this->assertCount(4, $fillable);
+        $this->assertCount(8, $fillable);
     }
 
     /** @test */

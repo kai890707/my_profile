@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
 use App\Models\Company;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -22,7 +22,7 @@ class CompanyControllerTest extends TestCase
         ]);
         $token = auth()->login($user);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/companies', [
                 'name' => 'Test Company Ltd.',
                 'tax_id' => '12345678',
@@ -49,7 +49,7 @@ class CompanyControllerTest extends TestCase
         ]);
         $token = auth()->login($user);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/companies', [
                 'name' => 'John Personal Studio',
                 'is_personal' => true,
@@ -73,7 +73,7 @@ class CompanyControllerTest extends TestCase
         ]);
         $token = auth()->login($user);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/companies', [
                 'name' => 'Test Company',
                 'is_personal' => false,
@@ -93,7 +93,7 @@ class CompanyControllerTest extends TestCase
         ]);
         $token = auth()->login($user);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/companies', [
                 'name' => 'Test Company',
                 'tax_id' => '12345678',
@@ -109,7 +109,7 @@ class CompanyControllerTest extends TestCase
         $user = User::factory()->create(['role' => User::ROLE_USER]);
         $token = auth()->login($user);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/companies', [
                 'name' => 'Test Company',
                 'tax_id' => '12345678',
@@ -184,7 +184,7 @@ class CompanyControllerTest extends TestCase
             'is_personal' => false,
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/companies', [
                 'name' => 'Another Company',
                 'tax_id' => '12345678',

@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\Company;
-use App\Models\Industry;
 use App\Models\User;
+
 use function Pest\Laravel\getJson;
 
 beforeEach(function (): void {
@@ -17,17 +17,6 @@ beforeEach(function (): void {
         'role' => 'salesperson',
         'status' => 'active',
     ]);
-
-    // Create industries
-    $this->industry1 = Industry::create([
-        'name' => 'Technology',
-        'slug' => 'technology',
-    ]);
-
-    $this->industry2 = Industry::create([
-        'name' => 'Finance',
-        'slug' => 'finance',
-    ]);
 });
 
 test('can get list of approved companies', function (): void {
@@ -35,7 +24,6 @@ test('can get list of approved companies', function (): void {
     Company::create([
         'name' => 'Tech Company',
         'tax_id' => '12345678',
-        'industry_id' => $this->industry1->id,
         'approval_status' => 'approved',
         'created_by' => $this->user->id,
     ]);
@@ -43,7 +31,6 @@ test('can get list of approved companies', function (): void {
     Company::create([
         'name' => 'Finance Company',
         'tax_id' => '87654321',
-        'industry_id' => $this->industry2->id,
         'approval_status' => 'approved',
         'created_by' => $this->user->id,
     ]);
@@ -60,9 +47,7 @@ test('can get list of approved companies', function (): void {
                             'id',
                             'name',
                             'tax_id',
-                            'industry_id',
-                            'address',
-                            'phone',
+                            'is_personal',
                             'approval_status',
                             'created_by',
                             'created_at',
@@ -84,7 +69,6 @@ test('only shows approved companies', function (): void {
     Company::create([
         'name' => 'Approved Company',
         'tax_id' => '12345678',
-        'industry_id' => $this->industry1->id,
         'approval_status' => 'approved',
         'created_by' => $this->user->id,
     ]);
@@ -92,7 +76,6 @@ test('only shows approved companies', function (): void {
     Company::create([
         'name' => 'Pending Company',
         'tax_id' => '87654321',
-        'industry_id' => $this->industry1->id,
         'approval_status' => 'pending',
         'created_by' => $this->user->id,
     ]);
@@ -106,37 +89,10 @@ test('only shows approved companies', function (): void {
     expect($companies[0]['name'])->toBe('Approved Company');
 });
 
-test('can filter companies by industry', function (): void {
-    Company::create([
-        'name' => 'Tech Company',
-        'tax_id' => '12345678',
-        'industry_id' => $this->industry1->id,
-        'approval_status' => 'approved',
-        'created_by' => $this->user->id,
-    ]);
-
-    Company::create([
-        'name' => 'Finance Company',
-        'tax_id' => '87654321',
-        'industry_id' => $this->industry2->id,
-        'approval_status' => 'approved',
-        'created_by' => $this->user->id,
-    ]);
-
-    $response = getJson("/api/companies?industry_id={$this->industry1->id}");
-
-    $response->assertStatus(200);
-
-    $companies = $response->json('data.companies.data');
-    expect($companies)->toHaveCount(1);
-    expect($companies[0]['industry_id'])->toBe($this->industry1->id);
-});
-
 test('can search companies by name', function (): void {
     Company::create([
         'name' => 'ABC Technology Inc',
         'tax_id' => '12345678',
-        'industry_id' => $this->industry1->id,
         'approval_status' => 'approved',
         'created_by' => $this->user->id,
     ]);
@@ -144,7 +100,6 @@ test('can search companies by name', function (): void {
     Company::create([
         'name' => 'XYZ Finance Corp',
         'tax_id' => '87654321',
-        'industry_id' => $this->industry2->id,
         'approval_status' => 'approved',
         'created_by' => $this->user->id,
     ]);
@@ -164,7 +119,6 @@ test('pagination works correctly', function (): void {
         Company::create([
             'name' => "Company {$i}",
             'tax_id' => "TAX{$i}",
-            'industry_id' => $this->industry1->id,
             'approval_status' => 'approved',
             'created_by' => $this->user->id,
         ]);
@@ -202,7 +156,6 @@ test('can customize per page parameter', function (): void {
         Company::create([
             'name' => "Company {$i}",
             'tax_id' => "TAX{$i}",
-            'industry_id' => $this->industry1->id,
             'approval_status' => 'approved',
             'created_by' => $this->user->id,
         ]);

@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\Company;
-use App\Models\Industry;
 use App\Models\User;
+
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
 
@@ -29,12 +29,6 @@ beforeEach(function (): void {
         'status' => 'active',
     ]);
 
-    // Create industry
-    $this->industry = Industry::create([
-        'name' => 'Technology',
-        'slug' => 'technology',
-    ]);
-
     // Login to get token
     $loginResponse = postJson('/api/auth/login', [
         'email' => 'test@example.com',
@@ -49,7 +43,6 @@ test('authenticated user can get their own companies', function (): void {
     Company::create([
         'name' => 'My Company 1',
         'tax_id' => '12345678',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'approved',
         'created_by' => $this->user->id,
     ]);
@@ -57,7 +50,6 @@ test('authenticated user can get their own companies', function (): void {
     Company::create([
         'name' => 'My Company 2',
         'tax_id' => '87654321',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'pending',
         'created_by' => $this->user->id,
     ]);
@@ -66,7 +58,6 @@ test('authenticated user can get their own companies', function (): void {
     Company::create([
         'name' => 'Other Company',
         'tax_id' => '11111111',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'approved',
         'created_by' => $this->otherUser->id,
     ]);
@@ -84,7 +75,6 @@ test('authenticated user can get their own companies', function (): void {
                         'id',
                         'name',
                         'tax_id',
-                        'industry_id',
                         'approval_status',
                         'created_by',
                     ],
@@ -105,7 +95,6 @@ test('my companies includes all approval statuses', function (): void {
     Company::create([
         'name' => 'Approved Company',
         'tax_id' => '12345678',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'approved',
         'created_by' => $this->user->id,
     ]);
@@ -113,7 +102,6 @@ test('my companies includes all approval statuses', function (): void {
     Company::create([
         'name' => 'Pending Company',
         'tax_id' => '87654321',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'pending',
         'created_by' => $this->user->id,
     ]);
@@ -121,7 +109,6 @@ test('my companies includes all approval statuses', function (): void {
     Company::create([
         'name' => 'Rejected Company',
         'tax_id' => '11111111',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'rejected',
         'rejected_reason' => 'Invalid data',
         'created_by' => $this->user->id,
@@ -165,7 +152,6 @@ test('companies are ordered by created_at desc', function (): void {
     $company1 = Company::create([
         'name' => 'First Company',
         'tax_id' => '12345678',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'approved',
         'created_by' => $this->user->id,
     ]);
@@ -175,7 +161,6 @@ test('companies are ordered by created_at desc', function (): void {
     $company2 = Company::create([
         'name' => 'Second Company',
         'tax_id' => '87654321',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'approved',
         'created_by' => $this->user->id,
     ]);

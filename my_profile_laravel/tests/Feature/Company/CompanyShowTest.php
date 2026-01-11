@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\Company;
-use App\Models\Industry;
 use App\Models\User;
+
 use function Pest\Laravel\getJson;
 
 beforeEach(function (): void {
@@ -18,19 +18,10 @@ beforeEach(function (): void {
         'status' => 'active',
     ]);
 
-    // Create industry
-    $this->industry = Industry::create([
-        'name' => 'Technology',
-        'slug' => 'technology',
-    ]);
-
     // Create approved company
     $this->company = Company::create([
         'name' => 'Test Company',
         'tax_id' => '12345678',
-        'industry_id' => $this->industry->id,
-        'address' => '123 Test St',
-        'phone' => '0912345678',
         'approval_status' => 'approved',
         'created_by' => $this->user->id,
     ]);
@@ -47,14 +38,11 @@ test('can get single company by id', function (): void {
                     'id',
                     'name',
                     'tax_id',
-                    'industry_id',
-                    'address',
-                    'phone',
+                    'is_personal',
                     'approval_status',
                     'created_by',
                     'created_at',
                     'updated_at',
-                    'industry',
                     'creator',
                 ],
             ],
@@ -69,16 +57,6 @@ test('can get single company by id', function (): void {
                 ],
             ],
         ]);
-});
-
-test('company includes industry relationship', function (): void {
-    $response = getJson("/api/companies/{$this->company->id}");
-
-    $response->assertStatus(200);
-
-    $company = $response->json('data.company');
-    expect($company['industry'])->not->toBeNull();
-    expect($company['industry']['name'])->toBe('Technology');
 });
 
 test('company includes creator relationship', function (): void {
@@ -105,7 +83,6 @@ test('can access pending company by id', function (): void {
     $pendingCompany = Company::create([
         'name' => 'Pending Company',
         'tax_id' => '87654321',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'pending',
         'created_by' => $this->user->id,
     ]);
@@ -128,7 +105,6 @@ test('can access rejected company by id', function (): void {
     $rejectedCompany = Company::create([
         'name' => 'Rejected Company',
         'tax_id' => '87654321',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'rejected',
         'rejected_reason' => 'Invalid tax ID',
         'created_by' => $this->user->id,

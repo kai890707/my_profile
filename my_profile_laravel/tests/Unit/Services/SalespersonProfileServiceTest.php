@@ -17,13 +17,15 @@ class SalespersonProfileServiceTest extends TestCase
     use RefreshDatabase;
 
     private SalespersonProfileService $profileService;
+
     private User $user;
+
     private Company $company;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->profileService = new SalespersonProfileService();
+        $this->profileService = new SalespersonProfileService;
 
         $this->user = User::create([
             'username' => 'testuser',

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Controllers;
 
-use App\Models\User;
 use App\Models\SalespersonProfile;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -32,7 +32,7 @@ class AdminControllerTest extends TestCase
         ]);
         SalespersonProfile::factory()->create(['user_id' => $pending2->id]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/admin/salesperson-applications');
 
         $response->assertStatus(200)
@@ -45,7 +45,7 @@ class AdminControllerTest extends TestCase
         $user = User::factory()->create(['role' => User::ROLE_USER]);
         $token = auth()->login($user);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/admin/salesperson-applications');
 
         $response->assertStatus(403);
@@ -62,7 +62,7 @@ class AdminControllerTest extends TestCase
             'salesperson_status' => User::STATUS_PENDING,
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson("/api/admin/salesperson-applications/{$applicant->id}/approve");
 
         $response->assertStatus(200);
@@ -83,7 +83,7 @@ class AdminControllerTest extends TestCase
             'salesperson_status' => User::STATUS_PENDING,
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson("/api/admin/salesperson-applications/{$applicant->id}/reject", [
                 'rejection_reason' => 'Insufficient experience',
                 'reapply_days' => 7,
@@ -109,7 +109,7 @@ class AdminControllerTest extends TestCase
             'salesperson_status' => User::STATUS_PENDING,
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson("/api/admin/salesperson-applications/{$applicant->id}/reject", [
                 'rejection_reason' => '',
             ]);
@@ -129,7 +129,7 @@ class AdminControllerTest extends TestCase
             'salesperson_status' => User::STATUS_PENDING,
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson("/api/admin/salesperson-applications/{$applicant->id}/reject", [
                 'rejection_reason' => 'Please resubmit documents',
                 'reapply_days' => 0,

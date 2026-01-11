@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\Company;
-use App\Models\Industry;
 use App\Models\User;
+
 use function Pest\Laravel\postJson;
 use function Pest\Laravel\putJson;
 
@@ -29,19 +29,10 @@ beforeEach(function (): void {
         'status' => 'active',
     ]);
 
-    // Create industry
-    $this->industry = Industry::create([
-        'name' => 'Technology',
-        'slug' => 'technology',
-    ]);
-
     // Create company for user
     $this->company = Company::create([
         'name' => 'Original Company',
         'tax_id' => '12345678',
-        'industry_id' => $this->industry->id,
-        'address' => 'Original Address',
-        'phone' => '0912345678',
         'approval_status' => 'approved',
         'approved_by' => 1,
         'approved_at' => now(),
@@ -60,8 +51,6 @@ beforeEach(function (): void {
 test('authenticated user can update their own company', function (): void {
     $updateData = [
         'name' => 'Updated Company',
-        'address' => 'Updated Address',
-        'phone' => '0987654321',
     ];
 
     $response = putJson("/api/companies/{$this->company->id}", $updateData, [
@@ -75,15 +64,12 @@ test('authenticated user can update their own company', function (): void {
             'data' => [
                 'company' => [
                     'name' => 'Updated Company',
-                    'address' => 'Updated Address',
-                    'phone' => '0987654321',
                 ],
             ],
         ]);
 
     $this->company->refresh();
     expect($this->company->name)->toBe('Updated Company');
-    expect($this->company->address)->toBe('Updated Address');
 });
 
 test('update resets approval status to pending', function (): void {
@@ -105,26 +91,6 @@ test('update resets approval status to pending', function (): void {
     expect($this->company->approved_at)->toBeNull();
 });
 
-test('can update industry', function (): void {
-    $newIndustry = Industry::create([
-        'name' => 'Finance',
-        'slug' => 'finance',
-    ]);
-
-    $updateData = [
-        'industry_id' => $newIndustry->id,
-    ];
-
-    $response = putJson("/api/companies/{$this->company->id}", $updateData, [
-        'Authorization' => "Bearer {$this->token}",
-    ]);
-
-    $response->assertStatus(200);
-
-    $this->company->refresh();
-    expect($this->company->industry_id)->toBe($newIndustry->id);
-});
-
 test('can update tax_id to different value', function (): void {
     $updateData = [
         'tax_id' => '87654321',
@@ -141,8 +107,7 @@ test('can update tax_id to different value', function (): void {
 });
 
 test('partial update works correctly', function (): void {
-    $originalAddress = $this->company->address;
-    $originalPhone = $this->company->phone;
+    $originalTaxId = $this->company->tax_id;
 
     $updateData = [
         'name' => 'Only Name Updated',
@@ -156,8 +121,7 @@ test('partial update works correctly', function (): void {
 
     $this->company->refresh();
     expect($this->company->name)->toBe('Only Name Updated');
-    expect($this->company->address)->toBe($originalAddress);
-    expect($this->company->phone)->toBe($originalPhone);
+    expect($this->company->tax_id)->toBe($originalTaxId);
 });
 
 test('cannot update to duplicate tax_id', function (): void {
@@ -165,7 +129,6 @@ test('cannot update to duplicate tax_id', function (): void {
     Company::create([
         'name' => 'Other Company',
         'tax_id' => '87654321',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'approved',
         'created_by' => $this->user->id,
     ]);
@@ -190,7 +153,6 @@ test('cannot update other users company', function (): void {
     $otherCompany = Company::create([
         'name' => 'Other Company',
         'tax_id' => '87654321',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'approved',
         'created_by' => $this->otherUser->id,
     ]);

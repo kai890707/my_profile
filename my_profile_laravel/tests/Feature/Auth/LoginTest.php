@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+
 use function Pest\Laravel\postJson;
 
 beforeEach(function (): void {

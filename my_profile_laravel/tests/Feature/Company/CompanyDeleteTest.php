@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\Company;
-use App\Models\Industry;
 use App\Models\User;
+
 use function Pest\Laravel\deleteJson;
 use function Pest\Laravel\postJson;
 
@@ -29,17 +29,10 @@ beforeEach(function (): void {
         'status' => 'active',
     ]);
 
-    // Create industry
-    $this->industry = Industry::create([
-        'name' => 'Technology',
-        'slug' => 'technology',
-    ]);
-
     // Create company for user
     $this->company = Company::create([
         'name' => 'Test Company',
         'tax_id' => '12345678',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'approved',
         'created_by' => $this->user->id,
     ]);
@@ -71,7 +64,6 @@ test('cannot delete other users company', function (): void {
     $otherCompany = Company::create([
         'name' => 'Other Company',
         'tax_id' => '87654321',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'approved',
         'created_by' => $this->otherUser->id,
     ]);
@@ -117,7 +109,6 @@ test('can delete pending company', function (): void {
     $pendingCompany = Company::create([
         'name' => 'Pending Company',
         'tax_id' => '87654321',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'pending',
         'created_by' => $this->user->id,
     ]);
@@ -134,7 +125,6 @@ test('can delete rejected company', function (): void {
     $rejectedCompany = Company::create([
         'name' => 'Rejected Company',
         'tax_id' => '87654321',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'rejected',
         'rejected_reason' => 'Invalid data',
         'created_by' => $this->user->id,

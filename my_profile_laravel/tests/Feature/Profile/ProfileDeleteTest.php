@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\Industry;
 use App\Models\SalespersonProfile;
 use App\Models\User;
+
 use function Pest\Laravel\deleteJson;
 use function Pest\Laravel\postJson;
 

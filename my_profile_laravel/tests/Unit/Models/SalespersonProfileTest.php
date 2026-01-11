@@ -43,7 +43,7 @@ class SalespersonProfileTest extends TestCase
     /** @test */
     public function approval_status_accessor_returns_null_when_no_user(): void
     {
-        $profile = new SalespersonProfile();
+        $profile = new SalespersonProfile;
 
         $this->assertNull($profile->approval_status);
     }
@@ -51,7 +51,7 @@ class SalespersonProfileTest extends TestCase
     /** @test */
     public function it_has_correct_fillable_fields(): void
     {
-        $fillable = (new SalespersonProfile())->getFillable();
+        $fillable = (new SalespersonProfile)->getFillable();
 
         $expectedFields = [
             'user_id',

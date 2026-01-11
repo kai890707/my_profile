@@ -18,7 +18,7 @@ class SalespersonPolicyTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->policy = new SalespersonPolicy();
+        $this->policy = new SalespersonPolicy;
     }
 
     /** @test */

@@ -18,7 +18,7 @@ class CompanyPolicyTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->policy = new CompanyPolicy();
+        $this->policy = new CompanyPolicy;
     }
 
     /** @test */
