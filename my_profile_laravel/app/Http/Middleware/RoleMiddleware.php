@@ -18,7 +18,8 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        $user = $request->get('auth_user');
+        // Get authenticated user using Laravel standard method
+        $user = $request->user();
 
         if (! $user instanceof User) {
             return response()->json([

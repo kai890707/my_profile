@@ -40,8 +40,13 @@ class JwtAuthMiddleware
                 ], 403);
             }
 
-            // Attach user to request
-            $request->merge(['auth_user' => $authenticatedUser]);
+            // Set authenticated user on the request (Laravel standard way)
+            $request->setUserResolver(function () use ($authenticatedUser) {
+                return $authenticatedUser;
+            });
+
+            // Also set on auth guard for consistency
+            auth()->setUser($authenticatedUser);
 
         } catch (TokenExpiredException $e) {
             return response()->json([

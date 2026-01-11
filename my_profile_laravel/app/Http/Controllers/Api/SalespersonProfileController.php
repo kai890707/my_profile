@@ -202,7 +202,8 @@ class SalespersonProfileController extends Controller
     )]
     public function me(Request $request): JsonResponse
     {
-        $user = $request->get('auth_user');
+        // Get authenticated user using Laravel standard method
+        $user = $request->user();
 
         if (! $user instanceof User) {
             return response()->json([
@@ -290,7 +291,8 @@ class SalespersonProfileController extends Controller
     )]
     public function store(Request $request): JsonResponse
     {
-        $user = $request->get('auth_user');
+        // Get authenticated user using Laravel standard method
+        $user = $request->user();
 
         if (! $user instanceof User) {
             return response()->json([
@@ -399,7 +401,8 @@ class SalespersonProfileController extends Controller
     )]
     public function update(Request $request): JsonResponse
     {
-        $user = $request->get('auth_user');
+        // Get authenticated user using Laravel standard method
+        $user = $request->user();
 
         if (! $user instanceof User) {
             return response()->json([
@@ -481,7 +484,8 @@ class SalespersonProfileController extends Controller
     )]
     public function destroy(Request $request): JsonResponse
     {
-        $user = $request->get('auth_user');
+        // Get authenticated user using Laravel standard method
+        $user = $request->user();
 
         if (! $user instanceof User) {
             return response()->json([

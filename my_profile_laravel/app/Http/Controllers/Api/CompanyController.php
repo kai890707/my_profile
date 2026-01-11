@@ -191,7 +191,7 @@ class CompanyController extends Controller
     )]
     public function myCompanies(Request $request): JsonResponse
     {
-        $user = $request->get('auth_user');
+        $user = $request->user();
 
         if (! $user instanceof User) {
             return response()->json([
@@ -343,7 +343,7 @@ class CompanyController extends Controller
     )]
     public function update(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('auth_user');
+        $user = $request->user();
 
         if (! $user instanceof User) {
             return response()->json([
@@ -508,7 +508,7 @@ class CompanyController extends Controller
     )]
     public function destroy(Request $request, int $id): JsonResponse
     {
-        $user = $request->get('auth_user');
+        $user = $request->user();
 
         if (! $user instanceof User) {
             return response()->json([
