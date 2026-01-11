@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Services;
 
 use App\Models\Company;
-use App\Models\Industry;
 use App\Models\User;
 use App\Services\CompanyService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,13 +15,13 @@ class CompanyServiceTest extends TestCase
     use RefreshDatabase;
 
     private CompanyService $companyService;
+
     private User $user;
-    private Industry $industry;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->companyService = new CompanyService();
+        $this->companyService = new CompanyService;
 
         $this->user = User::create([
             'username' => 'testuser',
@@ -32,11 +31,6 @@ class CompanyServiceTest extends TestCase
             'role' => 'salesperson',
             'status' => 'active',
         ]);
-
-        $this->industry = Industry::create([
-            'name' => 'Technology',
-            'slug' => 'technology',
-        ]);
     }
 
     public function test_get_all_returns_only_approved_companies(): void
@@ -44,7 +38,6 @@ class CompanyServiceTest extends TestCase
         Company::create([
             'name' => 'Approved Company',
             'tax_id' => '12345678',
-            'industry_id' => $this->industry->id,
             'approval_status' => 'approved',
             'created_by' => $this->user->id,
         ]);
@@ -52,7 +45,6 @@ class CompanyServiceTest extends TestCase
         Company::create([
             'name' => 'Pending Company',
             'tax_id' => '87654321',
-            'industry_id' => $this->industry->id,
             'approval_status' => 'pending',
             'created_by' => $this->user->id,
         ]);
@@ -65,31 +57,8 @@ class CompanyServiceTest extends TestCase
 
     public function test_get_all_filters_by_industry(): void
     {
-        $industry2 = Industry::create([
-            'name' => 'Finance',
-            'slug' => 'finance',
-        ]);
-
-        Company::create([
-            'name' => 'Tech Company',
-            'tax_id' => '12345678',
-            'industry_id' => $this->industry->id,
-            'approval_status' => 'approved',
-            'created_by' => $this->user->id,
-        ]);
-
-        Company::create([
-            'name' => 'Finance Company',
-            'tax_id' => '87654321',
-            'industry_id' => $industry2->id,
-            'approval_status' => 'approved',
-            'created_by' => $this->user->id,
-        ]);
-
-        $result = $this->companyService->getAll(['industry_id' => $this->industry->id]);
-
-        $this->assertEquals(1, $result->total());
-        $this->assertEquals('Tech Company', $result->items()[0]->name);
+        // Industry filtering removed from Company model
+        $this->markTestSkipped('Industry filtering removed from Company model');
     }
 
     public function test_get_all_filters_by_search(): void
@@ -97,7 +66,6 @@ class CompanyServiceTest extends TestCase
         Company::create([
             'name' => 'ABC Technology Inc',
             'tax_id' => '12345678',
-            'industry_id' => $this->industry->id,
             'approval_status' => 'approved',
             'created_by' => $this->user->id,
         ]);
@@ -105,7 +73,6 @@ class CompanyServiceTest extends TestCase
         Company::create([
             'name' => 'XYZ Finance Corp',
             'tax_id' => '87654321',
-            'industry_id' => $this->industry->id,
             'approval_status' => 'approved',
             'created_by' => $this->user->id,
         ]);
@@ -121,7 +88,6 @@ class CompanyServiceTest extends TestCase
         $company = Company::create([
             'name' => 'Test Company',
             'tax_id' => '12345678',
-            'industry_id' => $this->industry->id,
             'approval_status' => 'approved',
             'created_by' => $this->user->id,
         ]);
@@ -154,7 +120,6 @@ class CompanyServiceTest extends TestCase
         Company::create([
             'name' => 'My Company',
             'tax_id' => '12345678',
-            'industry_id' => $this->industry->id,
             'approval_status' => 'approved',
             'created_by' => $this->user->id,
         ]);
@@ -162,7 +127,6 @@ class CompanyServiceTest extends TestCase
         Company::create([
             'name' => 'Other Company',
             'tax_id' => '87654321',
-            'industry_id' => $this->industry->id,
             'approval_status' => 'approved',
             'created_by' => $otherUser->id,
         ]);
@@ -178,7 +142,6 @@ class CompanyServiceTest extends TestCase
         $data = [
             'name' => 'New Company',
             'tax_id' => '12345678',
-            'industry_id' => $this->industry->id,
             'address' => '123 Test St',
             'phone' => '0912345678',
         ];
@@ -197,7 +160,6 @@ class CompanyServiceTest extends TestCase
         $company = Company::create([
             'name' => 'Test Company',
             'tax_id' => '12345678',
-            'industry_id' => $this->industry->id,
             'approval_status' => 'approved',
             'approved_by' => 1,
             'approved_at' => now(),
@@ -219,7 +181,6 @@ class CompanyServiceTest extends TestCase
         $company = Company::create([
             'name' => 'Test Company',
             'tax_id' => '12345678',
-            'industry_id' => $this->industry->id,
             'approval_status' => 'approved',
             'created_by' => $this->user->id,
         ]);
@@ -244,7 +205,6 @@ class CompanyServiceTest extends TestCase
         $company = Company::create([
             'name' => 'Test Company',
             'tax_id' => '12345678',
-            'industry_id' => $this->industry->id,
             'approval_status' => 'pending',
             'created_by' => $this->user->id,
         ]);
@@ -271,7 +231,6 @@ class CompanyServiceTest extends TestCase
         $company = Company::create([
             'name' => 'Test Company',
             'tax_id' => '12345678',
-            'industry_id' => $this->industry->id,
             'approval_status' => 'pending',
             'created_by' => $this->user->id,
         ]);
@@ -289,7 +248,6 @@ class CompanyServiceTest extends TestCase
         Company::create([
             'name' => 'Pending 1',
             'tax_id' => '12345678',
-            'industry_id' => $this->industry->id,
             'approval_status' => 'pending',
             'created_by' => $this->user->id,
         ]);
@@ -297,7 +255,6 @@ class CompanyServiceTest extends TestCase
         Company::create([
             'name' => 'Pending 2',
             'tax_id' => '87654321',
-            'industry_id' => $this->industry->id,
             'approval_status' => 'pending',
             'created_by' => $this->user->id,
         ]);
@@ -305,7 +262,6 @@ class CompanyServiceTest extends TestCase
         Company::create([
             'name' => 'Approved',
             'tax_id' => '11111111',
-            'industry_id' => $this->industry->id,
             'approval_status' => 'approved',
             'created_by' => $this->user->id,
         ]);

@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\Company;
-use App\Models\Industry;
 use App\Models\User;
+
 use function Pest\Laravel\postJson;
 
 beforeEach(function (): void {
@@ -16,12 +16,7 @@ beforeEach(function (): void {
         'password_hash' => bcrypt('password123'),
         'role' => 'salesperson',
         'status' => 'active',
-    ]);
-
-    // Create industry
-    $this->industry = Industry::create([
-        'name' => 'Technology',
-        'slug' => 'technology',
+        'salesperson_status' => 'approved',
     ]);
 
     // Login to get token
@@ -37,9 +32,6 @@ test('authenticated user can create company', function (): void {
     $companyData = [
         'name' => 'New Company',
         'tax_id' => '12345678',
-        'industry_id' => $this->industry->id,
-        'address' => '123 Test St',
-        'phone' => '0912345678',
     ];
 
     $response = postJson('/api/companies', $companyData, [
@@ -50,29 +42,19 @@ test('authenticated user can create company', function (): void {
         ->assertJsonStructure([
             'success',
             'message',
-            'data' => [
-                'company' => [
-                    'id',
-                    'name',
-                    'tax_id',
-                    'industry_id',
-                    'address',
-                    'phone',
-                    'approval_status',
-                    'created_by',
-                ],
+            'company' => [
+                'id',
+                'name',
+                'tax_id',
+                'created_by',
             ],
         ])
         ->assertJson([
             'success' => true,
-            'message' => 'Company created successfully',
-            'data' => [
-                'company' => [
-                    'name' => 'New Company',
-                    'tax_id' => '12345678',
-                    'approval_status' => 'pending',
-                    'created_by' => $this->user->id,
-                ],
+            'company' => [
+                'name' => 'New Company',
+                'tax_id' => '12345678',
+                'created_by' => $this->user->id,
             ],
         ]);
 
@@ -83,7 +65,6 @@ test('company is created with pending status', function (): void {
     $companyData = [
         'name' => 'New Company',
         'tax_id' => '12345678',
-        'industry_id' => $this->industry->id,
     ];
 
     $response = postJson('/api/companies', $companyData, [
@@ -103,21 +84,17 @@ test('fails with missing required fields', function (): void {
 
     $response->assertStatus(422)
         ->assertJsonStructure([
-            'success',
             'message',
             'errors' => [
                 'name',
-                'tax_id',
-                'industry_id',
             ],
         ]);
 });
 
-test('can create company without optional fields', function (): void {
+test('can create personal studio without tax_id', function (): void {
     $companyData = [
-        'name' => 'Minimal Company',
-        'tax_id' => '12345678',
-        'industry_id' => $this->industry->id,
+        'name' => 'Personal Studio',
+        'is_personal' => true,
     ];
 
     $response = postJson('/api/companies', $companyData, [
@@ -127,11 +104,10 @@ test('can create company without optional fields', function (): void {
     $response->assertStatus(201)
         ->assertJson([
             'success' => true,
-            'data' => [
-                'company' => [
-                    'address' => null,
-                    'phone' => null,
-                ],
+            'company' => [
+                'name' => 'Personal Studio',
+                'tax_id' => null,
+                'is_personal' => true,
             ],
         ]);
 });
@@ -141,7 +117,6 @@ test('fails with duplicate tax_id', function (): void {
     Company::create([
         'name' => 'Existing Company',
         'tax_id' => '12345678',
-        'industry_id' => $this->industry->id,
         'approval_status' => 'approved',
         'created_by' => $this->user->id,
     ]);
@@ -149,7 +124,6 @@ test('fails with duplicate tax_id', function (): void {
     $companyData = [
         'name' => 'New Company',
         'tax_id' => '12345678',
-        'industry_id' => $this->industry->id,
     ];
 
     $response = postJson('/api/companies', $companyData, [
@@ -164,30 +138,10 @@ test('fails with duplicate tax_id', function (): void {
         ]);
 });
 
-test('fails with invalid industry_id', function (): void {
-    $companyData = [
-        'name' => 'New Company',
-        'tax_id' => '12345678',
-        'industry_id' => 99999,
-    ];
-
-    $response = postJson('/api/companies', $companyData, [
-        'Authorization' => "Bearer {$this->token}",
-    ]);
-
-    $response->assertStatus(422)
-        ->assertJsonStructure([
-            'errors' => [
-                'industry_id',
-            ],
-        ]);
-});
-
 test('name cannot exceed 200 characters', function (): void {
     $companyData = [
         'name' => str_repeat('a', 201),
         'tax_id' => '12345678',
-        'industry_id' => $this->industry->id,
     ];
 
     $response = postJson('/api/companies', $companyData, [
@@ -202,11 +156,10 @@ test('name cannot exceed 200 characters', function (): void {
         ]);
 });
 
-test('tax_id cannot exceed 20 characters', function (): void {
+test('tax_id cannot exceed 50 characters', function (): void {
     $companyData = [
         'name' => 'Test Company',
-        'tax_id' => str_repeat('1', 21),
-        'industry_id' => $this->industry->id,
+        'tax_id' => str_repeat('1', 51),
     ];
 
     $response = postJson('/api/companies', $companyData, [
@@ -225,7 +178,6 @@ test('unauthenticated user cannot create company', function (): void {
     $companyData = [
         'name' => 'New Company',
         'tax_id' => '12345678',
-        'industry_id' => $this->industry->id,
     ];
 
     $response = postJson('/api/companies', $companyData);

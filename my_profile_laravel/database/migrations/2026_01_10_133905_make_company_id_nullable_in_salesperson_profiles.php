@@ -50,7 +50,7 @@ return new class extends Migration
                 ->change();
 
             // 恢復審核欄位
-            if (!Schema::hasColumn('salesperson_profiles', 'approval_status')) {
+            if (! Schema::hasColumn('salesperson_profiles', 'approval_status')) {
                 $table->enum('approval_status', ['pending', 'approved', 'rejected'])
                     ->default('pending');
                 $table->text('rejected_reason')->nullable();

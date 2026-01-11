@@ -34,11 +34,11 @@ return new class extends Migration
         ");
 
         // 3. Set existing companies to is_personal=false
-        DB::statement("
+        DB::statement('
             UPDATE companies
             SET is_personal = false
             WHERE is_personal IS NULL
-        ");
+        ');
 
         // 4. Set admin role for specific users (if any admins exist)
         // This should be done manually or via seeder based on your business logic
@@ -61,9 +61,9 @@ return new class extends Migration
             WHERE role IN ('user', 'salesperson')
         ");
 
-        DB::statement("
+        DB::statement('
             UPDATE companies
             SET is_personal = NULL
-        ");
+        ');
     }
 };

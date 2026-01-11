@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Company extends Model
 {
     use HasFactory;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -23,6 +25,10 @@ class Company extends Model
         'tax_id',
         'is_personal',
         'created_by',
+        'approval_status',
+        'rejected_reason',
+        'approved_by',
+        'approved_at',
     ];
 
     /**
@@ -34,6 +40,7 @@ class Company extends Model
     {
         return [
             'is_personal' => 'boolean',
+            'approved_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -62,7 +69,7 @@ class Company extends Model
     /**
      * Scope to get only registered companies (with tax_id).
      *
-     * @param Builder<Company> $query
+     * @param  Builder<Company>  $query
      * @return Builder<Company>
      */
     public function scopeRegistered(Builder $query): Builder
@@ -74,11 +81,31 @@ class Company extends Model
     /**
      * Scope to get only personal companies (without tax_id).
      *
-     * @param Builder<Company> $query
+     * @param  Builder<Company>  $query
      * @return Builder<Company>
      */
     public function scopePersonal(Builder $query): Builder
     {
         return $query->where('is_personal', true);
+    }
+
+    /**
+     * Get the admin who approved this company.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Get all approval logs for this company.
+     *
+     * @return MorphMany<ApprovalLog, $this>
+     */
+    public function approvalLogs(): MorphMany
+    {
+        return $this->morphMany(ApprovalLog::class, 'approvable');
     }
 }

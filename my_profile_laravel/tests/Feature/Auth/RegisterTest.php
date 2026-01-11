@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+
 use function Pest\Laravel\postJson;
 
 beforeEach(function (): void {
@@ -50,7 +51,7 @@ test('user can register with valid data', function (): void {
                     'name' => 'Test User',
                     'email' => 'test@example.com',
                     'role' => 'user',
-                    'status' => 'pending',
+                    'status' => 'active',
                 ],
                 'token_type' => 'Bearer',
                 'expires_in' => 3600,

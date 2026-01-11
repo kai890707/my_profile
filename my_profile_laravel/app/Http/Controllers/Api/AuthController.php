@@ -19,8 +19,7 @@ class AuthController extends Controller
 {
     public function __construct(
         private readonly AuthService $authService
-    ) {
-    }
+    ) {}
 
     /**
      * Register a new user.
@@ -397,11 +396,11 @@ class AuthController extends Controller
         try {
             // Generate username from email (part before @) + random suffix
             $emailPrefix = explode('@', $request->input('email'))[0];
-            $username = $emailPrefix . '_' . \Illuminate\Support\Str::random(4);
+            $username = $emailPrefix.'_'.\Illuminate\Support\Str::random(4);
 
             // Ensure username is unique (should be very unlikely to collide)
             while (User::where('username', $username)->exists()) {
-                $username = $emailPrefix . '_' . \Illuminate\Support\Str::random(4);
+                $username = $emailPrefix.'_'.\Illuminate\Support\Str::random(4);
             }
 
             // Create user
@@ -465,7 +464,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => '註冊失敗：' . $e->getMessage(),
+                'message' => '註冊失敗：'.$e->getMessage(),
             ], 500);
         }
     }

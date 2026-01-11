@@ -23,10 +23,13 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        // Use en_US locale for faker to avoid transliteration issues
+        $faker = \Faker\Factory::create('en_US');
+
         return [
-            'name' => fake()->name(),
-            'username' => fake()->unique()->userName(),
-            'email' => fake()->unique()->safeEmail(),
+            'name' => $faker->name(),
+            'username' => $faker->unique()->numerify('user####'),
+            'email' => $faker->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password_hash' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),

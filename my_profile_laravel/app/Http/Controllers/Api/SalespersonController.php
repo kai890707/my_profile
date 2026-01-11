@@ -32,10 +32,10 @@ class SalespersonController extends Controller
         }
 
         // Check if rejected and can reapply
-        if ($user->salesperson_status === User::STATUS_REJECTED && !$user->canReapply()) {
+        if ($user->salesperson_status === User::STATUS_REJECTED && ! $user->canReapply()) {
             return response()->json([
                 'success' => false,
-                'error' => '請於 ' . $user->can_reapply_at?->format('Y-m-d') . ' 後重新申請',
+                'error' => '請於 '.$user->can_reapply_at?->format('Y-m-d').' 後重新申請',
                 'can_reapply_at' => $user->can_reapply_at,
             ], 429);
         }
@@ -64,7 +64,7 @@ class SalespersonController extends Controller
 
             return response()->json([
                 'success' => false,
-                'error' => '升級失敗：' . $e->getMessage(),
+                'error' => '升級失敗：'.$e->getMessage(),
             ], 500);
         }
     }
@@ -79,22 +79,111 @@ class SalespersonController extends Controller
         /** @var User|null $user */
         $user = auth()->user();
 
-        if (!$user || !$user->isSalesperson()) {
+        // If user is not logged in or has never applied to be a salesperson
+        if (! $user || $user->salesperson_status === null) {
             return response()->json([
                 'success' => true,
-                'is_salesperson' => false,
+                'data' => [
+                    'role' => $user?->role ?? 'user',
+                    'salesperson_status' => null,
+                    'salesperson_applied_at' => null,
+                    'salesperson_approved_at' => null,
+                    'rejection_reason' => null,
+                    'can_reapply' => false,
+                    'can_reapply_at' => null,
+                    'days_until_reapply' => null,
+                ],
             ]);
+        }
+
+        // Calculate days until reapply
+        $daysUntilReapply = null;
+        if ($user->can_reapply_at) {
+            $diff = now()->diffInDays($user->can_reapply_at, false);
+            // Use ceil to round up partial days, or 0 if past date
+            $daysUntilReapply = $diff < 0 ? 0 : (int) ceil($diff);
         }
 
         return response()->json([
             'success' => true,
-            'is_salesperson' => true,
-            'status' => $user->salesperson_status,
-            'applied_at' => $user->salesperson_applied_at,
-            'approved_at' => $user->salesperson_approved_at,
-            'rejection_reason' => $user->rejection_reason,
-            'can_reapply_at' => $user->can_reapply_at,
-            'can_reapply' => $user->canReapply(),
+            'data' => [
+                'role' => $user->role,
+                'salesperson_status' => $user->salesperson_status,
+                'salesperson_applied_at' => $user->salesperson_applied_at,
+                'salesperson_approved_at' => $user->salesperson_approved_at,
+                'rejection_reason' => $user->rejection_reason,
+                'can_reapply' => $user->canReapply(),
+                'can_reapply_at' => $user->can_reapply_at,
+                'days_until_reapply' => $daysUntilReapply,
+            ],
+        ]);
+    }
+
+    /**
+     * Get approval status for all resources.
+     *
+     * GET /api/salesperson/approval-status
+     */
+    public function approvalStatus(\Illuminate\Http\Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        // Check if user is a salesperson
+        if (! $user->isSalesperson()) {
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => 'FORBIDDEN',
+                    'message' => 'Only salespeople can access approval status',
+                ],
+            ], 403);
+        }
+
+        // Eager load relationships to avoid N+1 queries
+        $user->load([
+            'salespersonProfile',
+            'salespersonProfile.company',
+            'certifications',
+            'experiences',
+        ]);
+
+        // Get profile status
+        $profileStatus = $user->salespersonProfile?->approval_status ?? 'pending';
+
+        // Get company status
+        $companyStatus = $user->salespersonProfile?->company?->approval_status ?? null;
+
+        // Get certifications with approval status
+        $certifications = $user->certifications->map(function ($cert) {
+            return [
+                'id' => $cert->id,
+                'name' => $cert->name,
+                'approval_status' => $cert->approval_status,
+                'rejected_reason' => $cert->rejected_reason,
+            ];
+        });
+
+        // Get experiences with approval status
+        $experiences = $user->experiences->map(function ($exp) {
+            return [
+                'id' => $exp->id,
+                'company' => $exp->company,
+                'position' => $exp->position,
+                'approval_status' => $exp->approval_status,
+                'rejected_reason' => $exp->rejected_reason,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'profile_status' => $profileStatus,
+                'company_status' => $companyStatus,
+                'certifications' => $certifications,
+                'experiences' => $experiences,
+            ],
+            'message' => 'Approval status retrieved successfully',
         ]);
     }
 
@@ -108,7 +197,7 @@ class SalespersonController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        if (!$user->isSalesperson()) {
+        if (! $user->isSalesperson()) {
             return response()->json([
                 'success' => false,
                 'error' => '僅業務員可更新個人資料',

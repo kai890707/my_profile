@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Certification extends Model
 {
+    use HasFactory;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -75,5 +78,101 @@ class Certification extends Model
     public function approvalLogs(): MorphMany
     {
         return $this->morphMany(ApprovalLog::class, 'approvable');
+    }
+
+    /**
+     * Scope a query to only include approved certifications.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeApproved($query)
+    {
+        return $query->where('approval_status', 'approved');
+    }
+
+    /**
+     * Scope a query to only include pending certifications.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopePending($query)
+    {
+        return $query->where('approval_status', 'pending');
+    }
+
+    /**
+     * Scope a query to only include rejected certifications.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeRejected($query)
+    {
+        return $query->where('approval_status', 'rejected');
+    }
+
+    /**
+     * Check if the certification has a file attached.
+     */
+    public function hasFile(): bool
+    {
+        return ! is_null($this->file_data) && ! is_null($this->file_mime);
+    }
+
+    /**
+     * Get the file extension from the MIME type.
+     */
+    public function getFileExtension(): ?string
+    {
+        if (! $this->file_mime) {
+            return null;
+        }
+
+        $mimeToExtension = [
+            'application/pdf' => 'pdf',
+            'image/jpeg' => 'jpg',
+            'image/jpg' => 'jpg',
+            'image/png' => 'png',
+        ];
+
+        return $mimeToExtension[$this->file_mime] ?? null;
+    }
+
+    /**
+     * Get the file size in megabytes.
+     */
+    public function getFileSizeInMB(): ?float
+    {
+        if (! $this->file_size) {
+            return null;
+        }
+
+        return round($this->file_size / 1024 / 1024, 2);
+    }
+
+    /**
+     * Check if the certification is approved.
+     */
+    public function isApproved(): bool
+    {
+        return $this->approval_status === 'approved';
+    }
+
+    /**
+     * Check if the certification is pending.
+     */
+    public function isPending(): bool
+    {
+        return $this->approval_status === 'pending';
+    }
+
+    /**
+     * Check if the certification is rejected.
+     */
+    public function isRejected(): bool
+    {
+        return $this->approval_status === 'rejected';
     }
 }

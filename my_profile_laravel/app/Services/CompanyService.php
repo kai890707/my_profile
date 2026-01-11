@@ -19,19 +19,12 @@ class CompanyService
      */
     public function getAll(array $filters = []): \Illuminate\Pagination\LengthAwarePaginator
     {
-        $query = Company::with(['industry', 'creator'])
+        $query = Company::with(['creator'])
             ->where('approval_status', 'approved');
-
-        if (isset($filters['industry_id'])) {
-            $query->where('industry_id', $filters['industry_id']);
-        }
 
         if (isset($filters['search']) && is_string($filters['search'])) {
             $search = $filters['search'];
-            $query->where(function ($q) use ($search): void {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('address', 'like', "%{$search}%");
-            });
+            $query->where('name', 'like', "%{$search}%");
         }
 
         $perPage = 15;
@@ -49,7 +42,7 @@ class CompanyService
      */
     public function getById(int $id): ?Company
     {
-        return Company::with(['industry', 'creator', 'approver', 'approvalLogs'])
+        return Company::with(['creator', 'approver', 'approvalLogs'])
             ->find($id);
     }
 
@@ -60,8 +53,7 @@ class CompanyService
      */
     public function getByCreator(User $user): Collection
     {
-        return Company::with(['industry'])
-            ->where('created_by', $user->id)
+        return Company::where('created_by', $user->id)
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -75,10 +67,8 @@ class CompanyService
     {
         return Company::create([
             'name' => $data['name'],
-            'tax_id' => $data['tax_id'],
-            'industry_id' => $data['industry_id'],
-            'address' => $data['address'] ?? null,
-            'phone' => $data['phone'] ?? null,
+            'tax_id' => $data['tax_id'] ?? null,
+            'is_personal' => $data['is_personal'] ?? false,
             'approval_status' => 'pending',
             'created_by' => $user->id,
         ]);
@@ -102,16 +92,8 @@ class CompanyService
                 $updateData['tax_id'] = $data['tax_id'];
             }
 
-            if (isset($data['industry_id'])) {
-                $updateData['industry_id'] = $data['industry_id'];
-            }
-
-            if (isset($data['address'])) {
-                $updateData['address'] = $data['address'];
-            }
-
-            if (isset($data['phone'])) {
-                $updateData['phone'] = $data['phone'];
+            if (isset($data['is_personal'])) {
+                $updateData['is_personal'] = $data['is_personal'];
             }
 
             // Reset approval status if data changed
@@ -144,7 +126,7 @@ class CompanyService
      */
     public function getPendingApprovals(): Collection
     {
-        return Company::with(['industry', 'creator'])
+        return Company::with(['creator'])
             ->where('approval_status', 'pending')
             ->orderBy('created_at', 'asc')
             ->get();

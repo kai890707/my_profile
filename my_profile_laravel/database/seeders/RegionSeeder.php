@@ -52,6 +52,6 @@ class RegionSeeder extends Seeder
             Region::create($region);
         }
 
-        $this->command->info('✓ 已新增 ' . count($regions) . ' 個地區');
+        $this->command->info('✓ 已新增 '.count($regions).' 個地區');
     }
 }

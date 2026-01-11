@@ -19,12 +19,16 @@ class User extends Authenticatable implements JWTSubject
 
     // Roles
     public const ROLE_USER = 'user';
+
     public const ROLE_SALESPERSON = 'salesperson';
+
     public const ROLE_ADMIN = 'admin';
 
     // Salesperson Status
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_APPROVED = 'approved';
+
     public const STATUS_REJECTED = 'rejected';
 
     // Default reapply days
@@ -211,7 +215,7 @@ class User extends Authenticatable implements JWTSubject
             return false;
         }
 
-        if (!$this->can_reapply_at) {
+        if (! $this->can_reapply_at) {
             return true;
         }
 
@@ -221,7 +225,7 @@ class User extends Authenticatable implements JWTSubject
     /**
      * Upgrade user to salesperson.
      *
-     * @param array<string, mixed> $profileData
+     * @param  array<string, mixed>  $profileData
      */
     public function upgradeToSalesperson(array $profileData): void
     {

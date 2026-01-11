@@ -63,7 +63,7 @@ final class SwaggerController extends Controller
     public function index(): Response
     {
         // Only show in development/staging
-        if (config('app.env') === 'production' && !config('app.debug')) {
+        if (config('app.env') === 'production' && ! config('app.debug')) {
             abort(404);
         }
 
@@ -132,7 +132,7 @@ HTML;
     public function json(): JsonResponse
     {
         // Only show in development/staging
-        if (config('app.env') === 'production' && !config('app.debug')) {
+        if (config('app.env') === 'production' && ! config('app.debug')) {
             abort(404);
         }
 

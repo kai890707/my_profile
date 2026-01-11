@@ -31,6 +31,6 @@ class IndustrySeeder extends Seeder
             Industry::create($industry);
         }
 
-        $this->command->info('✓ 已新增 ' . count($industries) . ' 個產業類別');
+        $this->command->info('✓ 已新增 '.count($industries).' 個產業類別');
     }
 }

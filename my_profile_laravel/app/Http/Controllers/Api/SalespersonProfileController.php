@@ -16,8 +16,7 @@ class SalespersonProfileController extends Controller
 {
     public function __construct(
         private readonly SalespersonProfileService $profileService
-    ) {
-    }
+    ) {}
 
     /**
      * Get all approved salesperson profiles (public).

@@ -18,8 +18,7 @@ class CompanyController extends Controller
 {
     public function __construct(
         private readonly CompanyService $companyService
-    ) {
-    }
+    ) {}
 
     /**
      * Get all approved companies (public).
@@ -251,7 +250,7 @@ class CompanyController extends Controller
         $user = $request->user();
 
         // Only approved salespeople can create companies
-        if (!$user->isApprovedSalesperson()) {
+        if (! $user->isApprovedSalesperson()) {
             return response()->json([
                 'success' => false,
                 'error' => '僅審核通過的業務員可建立公司',
@@ -372,7 +371,7 @@ class CompanyController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:200',
-            'tax_id' => 'sometimes|required|string|max:20|unique:companies,tax_id,' . $id,
+            'tax_id' => 'sometimes|required|string|max:20|unique:companies,tax_id,'.$id,
             'industry_id' => 'sometimes|required|integer|exists:industries,id',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
@@ -449,7 +448,7 @@ class CompanyController extends Controller
         }
 
         if ($name) {
-            $query->where('name', 'like', '%' . $name . '%');
+            $query->where('name', 'like', '%'.$name.'%');
         }
 
         $companies = $query->limit(10)->get();

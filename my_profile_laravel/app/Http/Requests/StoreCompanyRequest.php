@@ -33,8 +33,6 @@ class StoreCompanyRequest extends FormRequest
 
     /**
      * Configure the validator instance.
-     *
-     * @param Validator $validator
      */
     public function withValidator(Validator $validator): void
     {

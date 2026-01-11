@@ -7,12 +7,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RejectSalespersonRequest;
 use App\Models\User;
-use App\Services\CertificationService;
 use App\Services\CompanyService;
 use App\Services\SalespersonProfileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use OpenApi\Attributes as OA;
 
 class AdminController extends Controller
@@ -20,8 +18,7 @@ class AdminController extends Controller
     public function __construct(
         private readonly CompanyService $companyService,
         private readonly SalespersonProfileService $profileService
-    ) {
-    }
+    ) {}
 
     /**
      * Get all pending approvals.

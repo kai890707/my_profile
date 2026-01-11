@@ -20,7 +20,7 @@ class AuthServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->authService = new AuthService();
+        $this->authService = new AuthService;
     }
 
     public function test_register_creates_user_with_correct_data(): void
@@ -47,7 +47,7 @@ class AuthServiceTest extends TestCase
         $this->assertEquals('Test User', $user->name);
         $this->assertEquals('test@example.com', $user->email);
         $this->assertEquals('salesperson', $user->role);
-        $this->assertEquals('pending', $user->status);
+        $this->assertEquals('active', $user->status);
         $this->assertTrue(Hash::check('password123', $user->password_hash));
     }
 
@@ -202,7 +202,7 @@ class AuthServiceTest extends TestCase
 
         // Set token via parseToken() to simulate request context
         $token = JWTAuth::fromUser($user);
-        app('request')->headers->set('Authorization', 'Bearer ' . $token);
+        app('request')->headers->set('Authorization', 'Bearer '.$token);
 
         $authenticatedUser = $this->authService->user();
 

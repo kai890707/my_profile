@@ -40,7 +40,7 @@ final class HealthController extends Controller
             'cache' => $this->checkCache(),
         ];
 
-        $isHealthy = !in_array(false, array_column($checks, 'status'), true);
+        $isHealthy = ! in_array(false, array_column($checks, 'status'), true);
         $statusCode = $isHealthy ? 200 : 503;
 
         return response()->json([
@@ -104,7 +104,7 @@ final class HealthController extends Controller
     private function checkCache(): array
     {
         try {
-            $key = 'health_check_' . time();
+            $key = 'health_check_'.time();
             $value = 'test';
 
             Cache::put($key, $value, 10);
