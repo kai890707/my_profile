@@ -29,6 +29,29 @@ Task tool:
 - prompt: 根據 openspec/changes/<feature-name>/specs/ 實作 Laravel 後端程式碼
 ```
 
+### React/Next.js 前端開發
+
+**所有 React/Next.js 相關開發必須使用 `react-specialist` agent**：
+
+```
+當處理 React/Next.js 前端任務時，必須使用 Task tool 啟動 react-specialist agent
+```
+
+**react-specialist 負責**：
+- ✅ React/Next.js 組件和頁面實作
+- ✅ TypeScript 型別安全（避免 any，使用高階類型）
+- ✅ 效能優化（React.memo、useMemo、useCallback、虛擬化）
+- ✅ React Internals 深度理解（Fiber、Reconciliation）
+- ✅ Next.js App Router、Server Components、Server Actions
+- ✅ React Query 整合、狀態管理優化
+
+**範例**：
+```
+Task tool:
+- subagent_type: react-specialist
+- prompt: 根據 openspec/changes/<feature-name>/specs/ 實作 React/Next.js 前端程式碼
+```
+
 ---
 
 ## 前置條件

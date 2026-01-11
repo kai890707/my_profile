@@ -71,7 +71,17 @@
       "Bash(npx next lint:*)",
       "Bash(npx eslint:*)",
       "Bash(kill:*)",
-      "Bash(mysql:*)"
+      "Bash(mysql:*)",
+      "Bash(grep:*)",
+      "Skill(playwright-skill)",
+      "Bash(node -e:*)",
+      "Bash(node run.js:*)",
+      "Bash(git restore:*)",
+      "Bash(git rm:*)",
+      "Bash(wc:*)",
+      "Bash(__NEW_LINE_32f269ac1218ac4c__ echo \"現有歸檔資料夾 \\(需要重新命名\\):\")",
+      "Bash(__NEW_LINE_32f269ac1218ac4c__ echo \"\")",
+      "Bash(while read dir)"
     ]
   }
 }

@@ -90,6 +90,16 @@ git push origin feature/<feature-name> --force-with-lease
 
 **重要**: 此步驟為**強制執行**，所有檢查通過才能創建 PR。
 
+**🔴 使用 QA Engineer Agent 執行測試**：
+
+```
+Task tool:
+- subagent_type: qa-engineer
+- prompt: 對當前 feature 執行全面品質檢查，包括 Backend 測試、Frontend 測試、整合測試，並生成測試報告
+```
+
+qa-engineer agent 會自動執行以下所有檢查：
+
 #### 6.1 Backend 檢查 (Laravel)
 
 ```bash

@@ -6,6 +6,37 @@
 
 ---
 
+## 🔴 重要：Frontend 開發使用專門 Agents
+
+**Frontend 開發在不同階段使用不同的專業 agents**
+
+```
+Step 1 (Proposal): requirements-analyst - 需求訪談
+Step 2 (Specifications): product-designer - UI/UX 設計
+Step 5 (Implement): react-specialist - React/Next.js 實作
+```
+
+**product-designer 負責**：
+- ✅ 使用者研究和角色定義
+- ✅ 資訊架構和導航設計
+- ✅ 互動設計和狀態設計
+- ✅ 視覺設計和設計系統
+- ✅ 響應式設計和無障礙設計
+- ✅ 元件規格和使用範例
+
+詳見：`.claude/agents/product-designer.md`
+
+**react-specialist 負責**：
+- ✅ React/Next.js 程式碼實作
+- ✅ TypeScript 型別安全
+- ✅ 效能優化（React.memo、useMemo、虛擬化）
+- ✅ React Internals 深度理解
+- ✅ 確保 Type-Safe 且 High-Performance
+
+詳見：`.claude/agents/react-specialist.md`
+
+---
+
 ## 核心理念
 
 **規範先行，介面後行**
@@ -34,10 +65,13 @@
 └────────────────────────────────────────────┘
 
 Step 1: Create Proposal ✋ 用戶確認
-    → 使用 AskUserQuestion 確認 UI/UX 需求
+    → 使用 requirements-analyst agent 進行需求訪談
+    → 了解 UI/UX 需求和使用者痛點
     → openspec/changes/<feature-name>/proposal.md
 
 Step 2: Write Specifications ⚡ 自動執行
+    → 使用 product-designer agent 進行 UI/UX 設計
+    → 使用者研究、資訊架構、互動設計、視覺設計
     → openspec/changes/<feature-name>/specs/
         ├── ui-ux.md           # UI/UX 設計規格
         ├── components.md      # 組件規格
@@ -60,10 +94,11 @@ Step 4: Validate Specs ✋ 最後確認點
 └────────────────────────────────────────────┘
 
 Step 5: Implement 🤖 自動實作
+    → 使用 react-specialist agent 進行實作
     → 嚴格按照 tasks.md 執行
     → 使用 TodoWrite 追蹤進度
-    → 自動實作組件和頁面
-    → 自動整合 API
+    → 自動實作組件和頁面（Type-Safe + High-Performance）
+    → 自動整合 API（React Query）
     → 自動修復錯誤
     → 不詢問用戶確認
 

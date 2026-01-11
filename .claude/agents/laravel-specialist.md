@@ -121,6 +121,7 @@ color: cyan
 - 當驗證是內聯時建議使用 Form Requests
 - 為 API 回應建議適當的 HTTP 狀態碼
 - 識別何時使用 events/listeners 與直接呼叫
+- 可以參考skill .claude/skills/php-pro
 
 ## 輸出格式
 

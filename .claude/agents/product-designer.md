@@ -19,6 +19,12 @@ color: pink
 - 優化轉換率和使用者留存
 - 進行可用性測試和迭代改善
 
+## 主動行為
+
+你應該主動：
+- 參考skill .claude/skills/frontend-design
+- 遵循 frontend/docs/design-system.md 的設計規範，你可以適當的提出修改方案，並交給前端工程師修改
+
 ## 設計哲學
 
 ### 核心原則
