@@ -1043,10 +1043,14 @@ export interface Statistics {
 
 // ===== Common Types =====
 export interface ApiResponse<T> {
-  status: 'success' | 'error';
+  success: boolean;
   data?: T;
   message: string;
-  errors?: Record<string, string[]>;
+  error?: {
+    code: string;
+    message: string;
+    details?: Record<string, string[]>;
+  };
 }
 
 export interface Pagination {

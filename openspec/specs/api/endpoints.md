@@ -227,56 +227,196 @@
 
 ### GET /salesperson/experiences
 **Description**: Get own work experiences
+**Access**: Protected (salesperson role)
 **Response (200)**:
 ```json
 {
-  "status": "success",
+  "success": true,
   "data": [
     {
       "id": 1,
+      "user_id": 10,
       "company": "ABC公司",
       "position": "業務經理",
       "start_date": "2020-01-01",
       "end_date": "2023-12-31",
-      "description": "..."
+      "description": "管理團隊，達成120%業績目標",
+      "approval_status": "approved",
+      "rejected_reason": null,
+      "sort_order": 0,
+      "created_at": "2026-01-10T12:00:00Z",
+      "updated_at": "2026-01-10T12:00:00Z"
     }
-  ]
+  ],
+  "message": "Experiences retrieved successfully"
+}
+```
+
+### POST /salesperson/experiences
+**Description**: Create new work experience
+**Access**: Protected (salesperson role)
+**Request Body**:
+```json
+{
+  "company": "string (required, max:200)",
+  "position": "string (required, max:200)",
+  "start_date": "YYYY-MM-DD (required)",
+  "end_date": "YYYY-MM-DD (optional, must be after start_date)",
+  "description": "string (optional)"
+}
+```
+**Response (201)**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 3,
+    "user_id": 10,
+    "company": "ABC公司",
+    "position": "業務經理",
+    "start_date": "2020-01-01",
+    "end_date": "2023-12-31",
+    "description": "...",
+    "approval_status": "approved",
+    "sort_order": 0,
+    "created_at": "2026-01-11T10:00:00Z",
+    "updated_at": "2026-01-11T10:00:00Z"
+  },
+  "message": "Experience created successfully"
+}
+```
+
+### PUT /salesperson/experiences/{id}
+**Description**: Update work experience
+**Access**: Protected (salesperson role, owner only)
+**Request Body**: Same as POST
+**Response (200)**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "company": "Updated Company",
+    "position": "Updated Position",
+    ...
+  },
+  "message": "Experience updated successfully"
+}
+```
+
+### DELETE /salesperson/experiences/{id}
+**Description**: Delete work experience
+**Access**: Protected (salesperson role, owner only)
+**Response (200)**:
+```json
+{
+  "success": true,
+  "message": "Experience deleted successfully"
+}
+```
+
+### GET /salesperson/certifications
+**Description**: Get own certifications
+**Access**: Protected (salesperson role)
+**Response (200)**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "user_id": 10,
+      "name": "Certified Sales Professional",
+      "issuer": "Sales Institute",
+      "issue_date": "2022-01-15",
+      "expiry_date": "2025-01-15",
+      "description": "Advanced sales certification",
+      "file_path": "certifications/abc123.pdf",
+      "file_url": "https://example.com/storage/certifications/abc123.pdf",
+      "file_size": 1024000,
+      "approval_status": "approved",
+      "rejected_reason": null,
+      "created_at": "2026-01-10T12:00:00Z",
+      "updated_at": "2026-01-10T12:00:00Z"
+    }
+  ],
+  "message": "Certifications retrieved successfully"
 }
 ```
 
 ### POST /salesperson/certifications
 **Description**: Upload certification (requires approval)
+**Access**: Protected (salesperson role)
 **Request Body**:
 ```json
 {
-  "name": "string",
-  "issuer": "string",
-  "issue_date": "YYYY-MM-DD",
+  "name": "string (required, max:200)",
+  "issuer": "string (required, max:200)",
+  "issue_date": "YYYY-MM-DD (required)",
   "expiry_date": "YYYY-MM-DD (optional)",
-  "file": "base64 encoded file (JPG/PNG/PDF, max 5MB)"
+  "description": "string (optional)",
+  "file_data": "base64 encoded file (optional, JPG/PNG/PDF, max 5MB)"
+}
+```
+**Response (201)**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 2,
+    "user_id": 10,
+    "name": "Certified Sales Professional",
+    "issuer": "Sales Institute",
+    "issue_date": "2022-01-15",
+    "expiry_date": "2025-01-15",
+    "file_path": "certifications/xyz789.pdf",
+    "file_url": "https://example.com/storage/certifications/xyz789.pdf",
+    "approval_status": "pending",
+    "created_at": "2026-01-11T10:00:00Z",
+    "updated_at": "2026-01-11T10:00:00Z"
+  },
+  "message": "Certification created successfully and pending approval"
+}
+```
+
+### DELETE /salesperson/certifications/{id}
+**Description**: Delete certification
+**Access**: Protected (salesperson role, owner only)
+**Response (200)**:
+```json
+{
+  "success": true,
+  "message": "Certification deleted successfully"
 }
 ```
 
 ### GET /salesperson/approval-status
-**Description**: Check approval status
+**Description**: Get aggregated approval status for profile, company, experiences, and certifications
+**Access**: Protected (salesperson role)
 **Response (200)**:
 ```json
 {
-  "status": "success",
+  "success": true,
   "data": {
-    "profile": {
-      "id": 1,
-      "approval_status": "approved",
-      "approved_at": "2026-01-08 12:00:00"
-    },
+    "profile_status": "approved",
+    "company_status": "pending",
+    "experiences": [
+      {
+        "id": 1,
+        "company": "ABC公司",
+        "position": "業務經理",
+        "approval_status": "approved"
+      }
+    ],
     "certifications": [
       {
         "id": 1,
-        "name": "證照名稱",
+        "name": "Certified Sales Professional",
         "approval_status": "pending"
       }
     ]
-  }
+  },
+  "message": "Approval status retrieved successfully"
 }
 ```
 
@@ -431,7 +571,7 @@ All endpoints may return these error responses:
 
 ---
 
-## Complete Endpoint List (35 total)
+## Complete Endpoint List (37 total)
 
 **Authentication (5)**:
 - POST /auth/register
@@ -444,15 +584,17 @@ All endpoints may return these error responses:
 - GET /search/salespersons
 - GET /search/salespersons/:id
 
-**Salesperson (9)**:
+**Salesperson (11)**:
 - GET /salesperson/profile
 - PUT /salesperson/profile
 - POST /salesperson/company
 - GET /salesperson/experiences
 - POST /salesperson/experiences
+- PUT /salesperson/experiences/:id
 - DELETE /salesperson/experiences/:id
 - GET /salesperson/certifications
 - POST /salesperson/certifications
+- DELETE /salesperson/certifications/:id
 - GET /salesperson/approval-status
 
 **Admin (19)**:
