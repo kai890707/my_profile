@@ -7,7 +7,7 @@ const USER_ROLE_KEY = 'user_role';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080/api';
 
 interface RefreshResponse {
-  status: 'success';
+  success: boolean;
   data: {
     access_token: string;
     expires_in: number;

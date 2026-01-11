@@ -3,7 +3,7 @@
 // ============================================
 
 export interface ApiResponse<T = any> {
-  status: 'success' | 'error';
+  success: boolean;
   message: string;
   data?: T;
   errors?: Record<string, string[]>;

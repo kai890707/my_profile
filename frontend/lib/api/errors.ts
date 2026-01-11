@@ -5,7 +5,7 @@ import type { AxiosError } from 'axios';
  * API 錯誤響應類型
  */
 export interface ApiErrorResponse {
-  status: 'error';
+  success: boolean;
   message: string;
   errors?: Record<string, string[]>;
 }

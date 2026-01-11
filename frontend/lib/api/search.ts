@@ -25,7 +25,7 @@ export async function searchSalespersons(
  */
 export async function getSalespersonDetail(id: number): Promise<SalespersonProfile> {
   const response = await apiClient.get<ApiResponse<SalespersonProfile>>(
-    `/search/salespersons/${id}`
+    `/profiles/${id}`
   );
   return response.data.data!;
 }
