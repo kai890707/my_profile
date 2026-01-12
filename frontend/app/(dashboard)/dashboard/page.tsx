@@ -195,7 +195,12 @@ export default function ProfilePage() {
           <p className="text-slate-600 mt-1">管理您的個人資訊</p>
         </div>
         {!editMode && (
-          <Button onClick={() => setEditMode(true)}>編輯資料</Button>
+          <Button
+            onClick={() => setEditMode(true)}
+            disabled={profileLoading}
+          >
+            編輯資料
+          </Button>
         )}
       </div>
 
@@ -269,7 +274,7 @@ export default function ProfilePage() {
                 <div className="relative">
                   <Avatar
                     src={avatarPreview || profileData?.avatar}
-                    fallback={getAvatarFallback(profileData || {})}
+                    fallback={profileData ? getAvatarFallback(profileData) : 'U'}
                     size="2xl"
                   />
                   <button
