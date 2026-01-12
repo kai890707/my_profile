@@ -75,10 +75,13 @@ Task tool:
 - 猜測或假設未明確定義的行為
 
 **✅ 必須**:
+- 建立開發分支，嚴格遵循 `feature-start.md` 的定義
+- 開發分支管理，嚴格遵循 `feature-finish.md` 的定義
 - 嚴格遵循 `specs/api.md` 的定義
 - 嚴格遵循 `specs/data-model.md` 的結構
 - 實現所有 `specs/business-rules.md` 的規則
 - 按照 `tasks.md` 的順序執行
+- 管理分支，嚴格遵循 `pr-review.md` 的定義
 
 ---
 
