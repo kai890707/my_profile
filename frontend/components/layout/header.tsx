@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Menu, X, User, LogOut, Settings, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
+import { getAvatarFallback } from '@/lib/utils/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -92,13 +93,7 @@ export function Header({ user, onLogout }: HeaderProps) {
                     <button className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
                       <Avatar
                         src={user.avatar}
-                        fallback={
-                          user.full_name?.substring(0, 2) ||
-                          user.name?.substring(0, 2).toUpperCase() ||
-                          user.username?.substring(0, 2).toUpperCase() ||
-                          user.email?.substring(0, 2).toUpperCase() ||
-                          'U'
-                        }
+                        fallback={getAvatarFallback(user)}
                         size="sm"
                       />
                       <div className="hidden md:block text-left">

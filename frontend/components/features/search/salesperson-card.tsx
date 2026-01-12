@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Briefcase } from 'lucide-react';
 import { SalespersonSearchResult } from '@/types/api';
+import { getAvatarFallback } from '@/lib/utils/avatar';
 
 interface SalespersonCardProps {
   salesperson: SalespersonSearchResult;
@@ -40,7 +41,7 @@ export function SalespersonCard({ salesperson }: SalespersonCardProps) {
           <div className="flex items-start gap-4 mb-4">
             <Avatar
               src={salesperson.avatar}
-              fallback={salesperson.full_name.substring(0, 2)}
+              fallback={getAvatarFallback(salesperson)}
               size="lg"
             />
             <div className="flex-1 min-w-0">

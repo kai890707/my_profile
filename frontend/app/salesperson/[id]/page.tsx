@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/footer';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { getAvatarFallback } from '@/lib/utils/avatar';
 import { Button } from '@/components/ui/button';
 import { ProfileSkeleton } from '@/components/ui/skeleton';
 import {
@@ -130,7 +131,7 @@ export default function SalespersonDetailPage() {
                   <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-6">
                     <Avatar
                       src={salesperson.avatar}
-                      fallback={salesperson.full_name.substring(0, 2)}
+                      fallback={getAvatarFallback(salesperson)}
                       size="2xl"
                     />
                     <div className="flex-1">

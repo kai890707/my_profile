@@ -90,7 +90,7 @@ export interface SalespersonProfile {
   id: number;
   user_id: number;
   company_id: number | null;
-  full_name: string;
+  full_name: string | null;
   phone: string;
   bio: string | null;
   specialties: string | null;
@@ -183,7 +183,7 @@ export interface SearchParams {
 
 export interface SalespersonSearchResult {
   id: number;
-  full_name: string;
+  full_name: string | null;
   phone: string;
   bio: string | null;
   specialties: string | null;

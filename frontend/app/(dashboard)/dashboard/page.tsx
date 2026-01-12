@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
 import { ProfileSkeleton } from '@/components/ui/skeleton';
 import { Camera, Save, Building2, X } from 'lucide-react';
+import { getAvatarFallback } from '@/lib/utils/avatar';
 import { useProfile, useUpdateProfile, useSaveCompany } from '@/hooks/useSalesperson';
 import { useRegions } from '@/hooks/useSearch';
 import { processImageUpload, formatFileSize } from '@/lib/utils/image';
@@ -211,7 +212,7 @@ export default function ProfilePage() {
               <div className="flex items-center gap-6">
                 <Avatar
                   src={profileData?.avatar}
-                  fallback={profileData?.full_name?.substring(0, 2) || 'U'}
+                  fallback={getAvatarFallback(profileData || {})}
                   size="2xl"
                 />
                 <div>
@@ -268,7 +269,7 @@ export default function ProfilePage() {
                 <div className="relative">
                   <Avatar
                     src={avatarPreview || profileData?.avatar}
-                    fallback={profileData?.full_name?.substring(0, 2) || 'U'}
+                    fallback={getAvatarFallback(profileData || {})}
                     size="2xl"
                   />
                   <button
