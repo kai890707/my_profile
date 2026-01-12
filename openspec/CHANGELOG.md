@@ -4,6 +4,34 @@
 
 ---
 
+## [2026-01-12]
+
+### Fixed
+- **Avatar Fallback TypeError** (20260112-fix-avatar-fallback-typeerror)
+  - 修復 Frontend Avatar 組件缺少統一 fallback 策略導致的 TypeError
+  - 問題: SalespersonCard 組件直接呼叫 `salesperson.full_name.substring()` 缺少 null 檢查
+    - 當 `full_name` 為 undefined/null 時拋出 "Cannot read properties of undefined (reading 'substring')" 錯誤
+    - 多個頁面存在類似問題（Header, Dashboard, Salesperson Detail）
+    - 每個組件使用不同的 fallback 邏輯，導致體驗不一致
+  - 解決方案: 建立統一的 `getAvatarFallback()` 工具函數
+    - 5-tier fallback 策略: full_name → name → username → email → 'U'
+    - 所有輸入都經過 null/undefined 檢查和 trim 處理
+    - 支援中英文名字，單字元名字特殊處理
+    - Pure function 設計，易於測試和維護
+  - 實作範圍:
+    - 新建: `frontend/lib/utils/avatar.ts` (60 lines)
+    - 新建: `frontend/lib/utils/__tests__/avatar.test.ts` (270 lines, 27 tests)
+    - 修改: 4 個組件檔案 (SalespersonCard, Header, Dashboard, Salesperson Detail)
+    - 修改: TypeScript 類型定義 (`full_name: string | null`)
+  - 測試驗證:
+    - ✅ 27 個單元測試，100% 覆蓋率
+    - ✅ 所有邊界情況已覆蓋 (null, undefined, empty string, single character)
+    - ✅ TypeScript strict mode 通過
+    - ✅ 效能驗證 (< 1ms 執行時間)
+    - ✅ 所有頁面的 Avatar 正常顯示，無 TypeError
+
+---
+
 ## [2026-01-11]
 
 ### Added
