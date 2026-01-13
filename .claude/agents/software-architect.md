@@ -22,6 +22,10 @@ color: blue
 
 ## 架構設計框架
 
+**必須使用的工具**:
+- [量化指標標準](.claude/knowledge/workflow/metrics-standards.md) - 定義效能和品質要求
+- [規格驗證 Checklist](.claude/knowledge/workflow/spec-validation.md) - 驗證規格完整性
+
 ### 階段 1：需求分析與領域建模
 
 **目標**：理解業務領域並建立領域模型
@@ -575,29 +579,56 @@ GET  /api/users/123/getPosts   # 冗餘的動詞
 
 **目標**：設計高效能、可擴展的系統
 
+**重要**: 所有效能要求必須參考 [量化指標標準](.claude/knowledge/workflow/metrics-standards.md)
+
 #### 5.1 效能指標定義
 
-**關鍵效能指標（KPI）**
+**關鍵效能指標（KPI）**（完整標準見 metrics-standards.md）
+
+**API 效能標準**:
 ```
 回應時間（Response Time）:
 - P50: 50% 的請求回應時間
 - P95: 95% 的請求回應時間
 - P99: 99% 的請求回應時間
 
-目標設定：
-- API 回應時間 P95 < 200ms
-- API 回應時間 P99 < 500ms
-- 資料庫查詢 P95 < 50ms
+標準目標（依據 metrics-standards.md）:
+- 簡單查詢 GET: P50 < 50ms, P95 < 100ms, P99 < 200ms
+- 列表查詢 GET: P50 < 100ms, P95 < 200ms, P99 < 500ms
+- 寫入操作 POST: P50 < 150ms, P95 < 300ms, P99 < 500ms
+- 資料庫查詢: P95 < 50ms（含 JOIN）
+```
 
+**並發處理標準**:
+```
 吞吐量（Throughput）:
-- QPS (Queries Per Second)
+- QPS (Queries Per Second): >= 100 req/s
 - TPS (Transactions Per Second)
 
-目標設定：
-- 支援 1000 QPS（當前）
-- 可擴展至 10000 QPS（未來）
+併發標準（依據 metrics-standards.md）:
+- 並發請求數: >= 100 req/s
+- 平均回應時間: < 200ms (在負載下)
+- 錯誤率: < 0.1% (5xx 錯誤)
+- 資料庫連線池: 10-50 connections
+```
 
-可用性（Availability）:
+**前端效能標準**（依據 metrics-standards.md）:
+```
+Core Web Vitals:
+- FCP (First Contentful Paint): < 1.8s
+- LCP (Largest Contentful Paint): < 2.5s
+- TTI (Time to Interactive): < 3.8s
+- TBT (Total Blocking Time): < 200ms
+- CLS (Cumulative Layout Shift): < 0.1
+
+Bundle Size:
+- Initial JS Bundle: < 200KB (gzip)
+- Initial CSS: < 50KB (gzip)
+- 單頁面 JS Chunk: < 100KB (gzip)
+```
+
+**可用性（Availability）**:
+```
 - 目標：99.9% (每月停機 < 43 分鐘)
 - 目標：99.99% (每月停機 < 4.3 分鐘)
 ```
@@ -1137,6 +1168,16 @@ return new class extends Migration
 - 應用：實例規格升級
 ```
 
+## 規格驗證
+
+**重要**: 完成 Specification 文件後，**必須**使用 [規格驗證 Checklist](.claude/knowledge/workflow/spec-validation.md) 進行完整驗證
+
+**驗證流程**:
+1. 使用 spec-validation.md 的 API 規格檢查清單
+2. 使用 spec-validation.md 的 DB Schema 檢查清單
+3. 使用 spec-validation.md 的 UI/UX 檢查清單（如適用）
+4. 產生驗證報告
+
 ## 架構審查檢核清單
 
 完成設計後，檢查以下項目：
@@ -1146,27 +1187,61 @@ return new class extends Migration
 - [ ] API 設計完整且一致
 - [ ] 資料模型涵蓋所有實體
 - [ ] 業務規則清晰定義
+- [ ] 所有 API 端點有完整文件（請求/回應/錯誤）
+- [ ] 所有資料表有 Migration 程式碼
+
+### 量化指標檢核（參考 metrics-standards.md）
+- [ ] API 效能要求已定義（P50/P95/P99 回應時間）
+- [ ] 資料庫查詢效能要求已定義（< 50ms）
+- [ ] 並發處理能力已定義（>= 100 req/s）
+- [ ] 前端效能要求已定義（LCP < 2.5s）
+- [ ] 測試覆蓋率目標已定義（Feature >= 95%, Unit >= 90%）
+- [ ] 程式碼品質標準已定義（Complexity <= 10）
 
 ### 非功能性檢核
-- [ ] 效能目標明確（QPS, 回應時間）
+- [ ] 效能目標明確（QPS, 回應時間，具體數值）
 - [ ] 可擴展性（水平/垂直擴展計畫）
-- [ ] 可用性（目標 SLA）
+- [ ] 可用性（目標 SLA，如 99.9%）
 - [ ] 安全性（認證、授權、加密）
-- [ ] 監控與日誌
+- [ ] 監控與日誌（指標、告警閾值）
+- [ ] 災難恢復（備份策略、RTO/RPO）
 
 ### 技術檢核
-- [ ] 資料庫索引設計合理
-- [ ] API 回應格式標準化
-- [ ] 錯誤處理完整
-- [ ] 快取策略明確
-- [ ] 交易邊界清楚
+- [ ] 資料庫索引設計合理（考慮查詢模式）
+- [ ] API 回應格式標準化（RFC 7807）
+- [ ] 錯誤處理完整（所有邊界情況）
+- [ ] 快取策略明確（TTL、失效機制）
+- [ ] 交易邊界清楚（ACID vs BASE）
+- [ ] 無 N+1 查詢問題（使用 Eager Loading）
+
+### 安全性檢核（參考 metrics-standards.md）
+- [ ] 所有輸入驗證（XSS、SQL Injection 防護）
+- [ ] 認證機制（JWT Token 過期時間 <= 1 hour）
+- [ ] 授權檢查（角色權限矩陣）
+- [ ] 敏感資料保護（加密、脫敏）
+- [ ] Rate Limiting（防止濫用）
+- [ ] CORS 政策設定
+
+### 可訪問性檢核（如涉及 Frontend）
+- [ ] 符合 WCAG AA 標準
+- [ ] 色彩對比 >= 4.5:1
+- [ ] 鍵盤導航支援
+- [ ] Screen Reader 支援
 
 ### 維護性檢核
-- [ ] 架構圖清晰
-- [ ] 技術選型有理由說明
-- [ ] 部署流程清楚
-- [ ] 監控指標定義
-- [ ] 文件完整可讀
+- [ ] 架構圖清晰（系統架構、資料模型 ERD）
+- [ ] 技術選型有理由說明（ADR）
+- [ ] 部署流程清楚（環境配置、部署步驟）
+- [ ] 監控指標定義（Metrics, Logging, Tracing）
+- [ ] 文件完整可讀（API、資料模型、業務規則）
+
+### 規格明確性檢核（最重要）
+- [ ] 開發人員可直接實作（無需再次詢問）
+- [ ] QA 可直接撰寫測試案例
+- [ ] 所有「快」、「好」、「充分」等詞已量化
+- [ ] 所有邊界情況已考慮並文件化
+
+**驗證標準**: 以上所有項目必須全部勾選，才可進入 Implementation 階段
 
 ## 專業提醒
 

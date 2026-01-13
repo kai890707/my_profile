@@ -88,10 +88,11 @@ Step 3: Break Down Tasks ⚡ 自動執行
     → openspec/changes/<feature-name>/tasks.md
 
 Step 4: Validate Specs ✋ 最後確認點
-    ✓ 檢查 UI/UX 設計是否完整
-    ✓ 檢查組件規格是否可實作
-    ✓ 檢查 API 整合是否明確
-    ✓ 檢查狀態管理是否合理
+    ✓ 使用 spec-validation.md 完整檢查
+    ✓ UI/UX 規格檢查（完整性、明確性、可實作性）
+    ✓ 組件規格檢查（Props、變體、範例）
+    ✓ API 整合檢查（TypeScript 類型、React Query）
+    ✓ 量化指標檢查（效能、可訪問性、Bundle Size）
     ✋ 用戶確認是否啟動 AUTO-RUN
 
 ┌────────────────────────────────────────────┐
@@ -758,33 +759,119 @@ import Link from 'next/link';
 
 ---
 
-## 驗證清單
+## Step 4: 規格驗證清單
 
-### UI/UX 規格驗證
-- [ ] 色彩方案完整定義
-- [ ] 字體系統清晰
-- [ ] 間距系統一致
-- [ ] 響應式斷點明確
-- [ ] 互動行為詳細說明
+**重要**: 必須使用 `.claude/knowledge/workflow/spec-validation.md` 進行完整驗證
 
-### 組件規格驗證
-- [ ] Props 類型完整
-- [ ] 所有變體都有說明
-- [ ] 使用範例完整
-- [ ] 檔案位置明確
+**驗證流程**:
 
-### 頁面規格驗證
-- [ ] 路由定義清楚
-- [ ] 頁面結構完整
-- [ ] 功能需求明確
-- [ ] API 整合方式清晰
-- [ ] 狀態管理合理
+### 4.1 UI/UX 規格驗證（參考 spec-validation.md）
 
-### API 整合驗證
-- [ ] API Client 配置完整
-- [ ] TypeScript 類型定義完整
-- [ ] React Query 整合合理
-- [ ] 錯誤處理統一
+**完整性**:
+- [ ] 色彩方案完整定義（Primary, Secondary, Success, Error, etc.）
+- [ ] 字體系統清晰（Font Family, Size Scale, Weight, Line Height）
+- [ ] 間距系統一致（4px/8px/16px/24px/32px...）
+- [ ] 圓角系統定義（sm/md/lg/xl）
+- [ ] 陰影系統定義（sm/md/lg）
+- [ ] 響應式斷點明確（mobile/tablet/desktop）
+- [ ] 互動行為詳細說明（Loading/Error/Success 狀態）
+
+**明確性**:
+- [ ] 設計 Token 可直接轉為 CSS Variables
+- [ ] 組件變體清楚定義（variant, size, color）
+- [ ] 狀態轉換邏輯明確
+- [ ] 動畫效果有具體參數（duration, easing）
+
+**可實作性**:
+- [ ] 設計可用現有組件庫實作（shadcn/ui, Radix UI）
+- [ ] 無技術不可行的設計
+- [ ] 響應式設計可用 Tailwind 實作
+
+### 4.2 組件規格驗證（參考 spec-validation.md）
+
+**完整性**:
+- [ ] Props 類型完整（名稱、型別、必填/可選、預設值）
+- [ ] 所有變體都有說明和範例
+- [ ] 事件處理函式定義（onClick, onChange, etc.）
+- [ ] Children 類型定義（ReactNode, ReactElement, etc.）
+- [ ] Ref forwarding 說明（如需要）
+- [ ] 檔案位置明確（components/ui/, components/features/）
+
+**可測試性**:
+- [ ] 可直接撰寫 Component Test
+- [ ] 互動行為可測試
+- [ ] 狀態變化可驗證
+
+### 4.3 頁面規格驗證（參考 spec-validation.md）
+
+**完整性**:
+- [ ] 路由定義清楚（路徑、參數、Query）
+- [ ] 頁面結構完整（Layout + 所有 Section）
+- [ ] 功能需求明確（CRUD、搜尋、篩選、排序）
+- [ ] API 整合方式清晰（使用哪些 hooks）
+- [ ] 狀態管理合理（React Query + Zustand）
+- [ ] 載入狀態處理（Skeleton, Spinner）
+- [ ] 錯誤狀態處理（Error Boundary, Fallback UI）
+- [ ] 空狀態處理（Empty State + CTA）
+
+**導航與權限**:
+- [ ] Route Guards 定義（認證、授權）
+- [ ] 重定向邏輯明確
+- [ ] Breadcrumb 結構定義
+
+### 4.4 API 整合驗證（參考 spec-validation.md）
+
+**完整性**:
+- [ ] API Client 配置完整（Base URL, Interceptors）
+- [ ] TypeScript 類型定義完整（Request + Response）
+- [ ] React Query hooks 定義（query key, queryFn, options）
+- [ ] Mutation hooks 定義（mutationFn, onSuccess, onError）
+- [ ] 錯誤處理統一（Error Interceptor + Error Boundary）
+- [ ] Loading 狀態處理（isLoading, isFetching）
+- [ ] Cache 策略定義（staleTime, cacheTime）
+
+**類型安全**:
+- [ ] 無 `any` 類型
+- [ ] API 回應類型與後端一致
+- [ ] 欄位映射正確（camelCase vs snake_case）
+
+### 4.5 量化指標驗證（參考 metrics-standards.md）
+
+**前端效能標準**:
+- [ ] Core Web Vitals 目標定義
+  - LCP (Largest Contentful Paint) < 2.5s
+  - FID (First Input Delay) < 100ms
+  - CLS (Cumulative Layout Shift) < 0.1
+- [ ] Bundle Size 限制定義
+  - Initial JS Bundle < 200KB (gzip)
+  - Page Chunk < 100KB (gzip)
+- [ ] Runtime 效能要求
+  - 元件渲染時間 < 16ms (60 FPS)
+  - 列表渲染時間 < 100ms (100 項)
+
+**可訪問性標準**（參考 metrics-standards.md）:
+- [ ] 符合 WCAG AA 標準
+- [ ] 色彩對比 >= 4.5:1
+- [ ] 鍵盤導航支援
+- [ ] Screen Reader 支援（ARIA 標籤）
+- [ ] Focus 可見性明確
+
+**測試覆蓋率**:
+- [ ] Component Tests >= 80%
+- [ ] E2E Tests 100% (關鍵流程)
+- [ ] TypeScript strict mode 啟用
+
+### 4.6 通過標準
+
+**必須全部通過**:
+- ✅ 所有上述檢查項目全部勾選
+- ✅ 無任何模糊或未定義項目
+- ✅ 開發人員可直接實作（無需再次詢問）
+- ✅ QA 可直接撰寫測試案例
+
+**若未通過**:
+- ❌ 返回 Step 2，補充規格
+- ❌ 不允許進入 Step 5 (Implement)
 
 ---
 
