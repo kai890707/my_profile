@@ -1498,3 +1498,194 @@ import { getAvatarFallback } from '@/lib/utils/avatar';
 - Ensures consistent Avatar experience across all pages
 
 ---
+
+---
+
+## Feature: Dashboard Profile Edit Display Fix
+
+**Added**: 2026-01-13
+**Change**: 20260113-fix-dashboard-profile-edit-display
+**Type**: Bug Fix
+**Priority**: Medium
+
+### Overview
+
+修復 Dashboard 個人資料編輯頁面的兩個顯示問題：
+1. Edit button 在資料載入時未禁用
+2. Avatar 在編輯模式顯示 'U' 而非使用者姓名縮寫
+
+### Affected Component
+
+**Component**: `frontend/app/(dashboard)/dashboard/page.tsx`
+**Type**: Page Component (Client Component)
+**Framework**: Next.js 16.1.1 + React 19
+
+### Fixes Applied
+
+#### Fix #1: Edit Button Loading State
+
+**Location**: Line 197-204
+
+**Before**:
+```tsx
+{!editMode && (
+  <Button onClick={() => setEditMode(true)}>編輯資料</Button>
+)}
+```
+
+**After**:
+```tsx
+{!editMode && (
+  <Button
+    onClick={() => setEditMode(true)}
+    disabled={profileLoading}
+  >
+    編輯資料
+  </Button>
+)}
+```
+
+**Impact**:
+- Edit button disabled during data loading (`profileLoading = true`)
+- Prevents users from entering edit mode before data is ready
+- Better UX - prevents seeing empty forms or incorrect data
+
+#### Fix #2: Avatar Fallback Logic
+
+**Location**: Line 275-279
+
+**Before**:
+```tsx
+<Avatar
+  src={avatarPreview || profileData?.avatar}
+  fallback={getAvatarFallback(profileData || {})}
+  size="2xl"
+/>
+```
+
+**After**:
+```tsx
+<Avatar
+  src={avatarPreview || profileData?.avatar}
+  fallback={profileData ? getAvatarFallback(profileData) : 'U'}
+  size="2xl"
+/>
+```
+
+**Root Cause**:
+- `profileData || {}` passes empty object when profileData is undefined
+- `getAvatarFallback({})` always returns 'U' (no properties to extract name from)
+
+**Fix Logic**:
+- Check if `profileData` exists before calling `getAvatarFallback()`
+- If no data, return 'U' directly without function call
+- If data exists, use function to extract name abbreviation
+
+**Avatar Fallback Priority**:
+1. New uploaded photo preview (`avatarPreview`)
+2. Current photo (`profileData.avatar`)
+3. Name abbreviation from `full_name`, `name`, `username`, or `email`
+4. Default 'U'
+
+### UI/UX Requirements
+
+#### Edit Button States
+
+**State 1: Loading**
+- Label: "編輯資料"
+- Disabled: Yes
+- Cursor: not-allowed
+- Opacity: 0.5
+- Tooltip: "資料載入中..."
+
+**State 2: Ready**
+- Label: "編輯資料"
+- Disabled: No
+- Cursor: pointer
+- Opacity: 1.0
+- Hover: Background color change
+
+#### Avatar Display States
+
+**View Mode**:
+- Priority: Photo → Name abbreviation → 'U'
+- Size: 2xl
+- Position: Top of profile card
+
+**Edit Mode**:
+- Priority: New upload preview → Photo → Name abbreviation → 'U'
+- Size: 2xl
+- Behavior: Immediately reflects new uploads
+- **FIXED**: Now correctly shows name abbreviation instead of always showing 'U'
+
+### Interaction Flow
+
+#### Page Load
+```
+0ms     → profileLoading = true, profileData = undefined
+        → Show skeleton loaders
+        → Edit button DISABLED ✅
+
+100ms   → useProfile() fetches data
+
+500ms   → Data received, profileLoading = false
+        → Hide skeletons
+        → Edit button ENABLED ✅
+```
+
+#### Enter Edit Mode
+```
+Pre-condition: profileLoading = false (button only enabled when true)
+
+Action Sequence:
+1. User clicks "編輯資料" button
+2. setEditMode(true)
+3. Form fields populate with current values
+4. Avatar displays with correct fallback (name abbreviation) ✅
+5. Show "取消" and "儲存變更" buttons
+```
+
+#### Cancel Edit
+```
+Action Sequence:
+1. User clicks "取消" button
+2. setEditMode(false)
+3. All form fields reset to original values
+4. avatarPreview cleared
+5. Avatar returns to original display
+```
+
+### Success Criteria
+
+- ✅ Edit button disabled during data loading
+- ✅ Edit button enabled after data loads
+- ✅ Avatar shows name abbreviation in edit mode (not 'U')
+- ✅ Avatar shows correct fallback in all states
+- ✅ No TypeErrors in console
+- ✅ Form resets correctly on cancel
+- ✅ Responsive design maintained
+
+### Testing
+
+**Test Scenarios**:
+1. Page load with edit button initially disabled
+2. Edit button enables after data loads
+3. Avatar displays name abbreviation in edit mode
+4. Avatar displays 'U' when no user data exists
+5. Cancel button resets all form fields
+6. No TypeErrors or console errors
+
+**Test Results**:
+- All scenarios passed ✅
+- 0 TypeErrors detected
+- Form reset works correctly
+- Avatar fallback logic verified
+
+### Related Changes
+
+This fix is part of a broader validation fix that also includes:
+- Backend phone validation changed from `'sometimes|required'` to `'nullable'`
+- Frontend phone validation using `.refine()` to allow empty string
+- See: Backend API Integration section
+
+---

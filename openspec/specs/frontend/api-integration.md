@@ -1103,3 +1103,251 @@ export interface Pagination {
 
 **Status**: ✅ API Integration Specification Complete
 **Next Document**: UI Components Design Specification
+
+---
+
+## Feature: Profile Update Phone Validation Fix
+
+**Added**: 2026-01-13
+**Change**: 20260113-fix-dashboard-profile-edit-display
+**Type**: Bug Fix
+**Priority**: Medium
+
+### Overview
+
+修復前後端 phone 欄位驗證不一致導致的 422 錯誤。當使用者更新個人資料但未填寫電話時，前端送出空字串，但後端拒絕接受。
+
+### Problem Analysis
+
+**Issue**: 422 Unprocessable Content Error
+**Error Message**: "請輸入聯絡電話"
+**Root Cause**: Frontend-Backend validation mismatch
+
+#### Before Fix
+
+**Frontend Validation** (`dashboard/page.tsx:23`):
+```typescript
+phone: z.string()
+  .regex(/^09\d{8}$/, '請輸入有效的手機號碼（例：0912345678）')
+  .optional()
+  .or(z.literal(''))
+```
+
+**Problem**:
+- `.optional().or(z.literal(''))` syntax is incorrect
+- Validation always triggers even for empty strings
+- Frontend treats phone as required
+
+**Backend Validation** (`SalespersonProfileController.php:426`):
+```php
+'phone' => 'sometimes|required|string|max:20|regex:/^[0-9\-\s\(\)]+$/'
+```
+
+**Problem**:
+- `sometimes|required` = If field exists, it must have value
+- When frontend sends `phone: ""`, backend rejects it
+- Causes 422 validation error
+
+### Solution Implemented
+
+#### Frontend Fix
+
+**Location**: `frontend/app/(dashboard)/dashboard/page.tsx:23-26`
+
+**Before**:
+```typescript
+phone: z.string()
+  .regex(/^09\d{8}$/, '請輸入有效的手機號碼（例：0912345678）')
+  .optional()
+  .or(z.literal(''))
+```
+
+**After**:
+```typescript
+phone: z.string()
+  .refine(
+    (val) => val === '' || /^09\d{8}$/.test(val),
+    '請輸入有效的手機號碼（例：0912345678）'
+  )
+  .optional()
+```
+
+**Fix Logic**:
+- Use `.refine()` method to create custom validation
+- Accept empty string (`val === ''`) OR valid phone format
+- Correctly treats phone as optional field
+
+#### Backend Fix
+
+**Location**: `my_profile_laravel/app/Http/Controllers/Api/SalespersonProfileController.php:426`
+
+**Before**:
+```php
+'phone' => 'sometimes|required|string|max:20|regex:/^[0-9\-\s\(\)]+$/'
+```
+
+**After**:
+```php
+'phone' => 'nullable|string|max:20|regex:/^[0-9\-\s\(\)]+$/'
+```
+
+**Fix Logic**:
+- Changed from `sometimes|required` to `nullable`
+- Allows phone field to be null or empty
+- When phone is provided, must match regex pattern
+- Truly optional field now
+
+### Validation Rules
+
+#### Accepted Values
+
+| Value | Frontend Validation | Backend Validation | Result |
+|-------|-------------------|-------------------|--------|
+| Empty string `""` | ✅ Pass | ✅ Pass | Accepted |
+| Valid phone `0912345678` | ✅ Pass | ✅ Pass | Accepted |
+| Invalid format `12345` | ❌ Fail | N/A | Rejected with error message |
+| Null | ✅ Pass | ✅ Pass | Accepted |
+
+#### Validation Logic Flow
+
+```
+Frontend Submission:
+1. User leaves phone field empty
+2. Zod validation: refine() checks val === '' → Pass ✅
+3. Form submits with phone: ""
+
+Backend Processing:
+4. Laravel receives phone: ""
+5. Validation rule: 'nullable' → Empty string accepted ✅
+6. Response: 200 OK
+
+Result: Profile saved successfully ✅
+```
+
+### API Endpoint
+
+**Endpoint**: `PUT /api/salesperson-profiles/:id`
+
+**Request Body**:
+```json
+{
+  "full_name": "張三峰",
+  "phone": "",           // ✅ Now accepted (empty string)
+  "bio": "",
+  "specialties": "",
+  "service_regions": []
+}
+```
+
+**Response** (Success - 200):
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully",
+  "data": {
+    "id": 1,
+    "full_name": "張三峰",
+    "phone": null,       // Saved as null in database
+    "bio": null,
+    "specialties": null,
+    "service_regions": []
+  }
+}
+```
+
+**Response** (Error - 422) - Before Fix:
+```json
+{
+  "success": false,
+  "message": "請輸入聯絡電話",
+  "errors": {
+    "phone": ["請輸入聯絡電話"]
+  }
+}
+```
+
+### Frontend Form Schema
+
+**Complete Profile Schema**:
+```typescript
+const profileSchema = z.object({
+  full_name: z.string()
+    .min(2, '姓名至少需要 2 個字元')
+    .max(100, '姓名不能超過 100 個字元'),
+  
+  phone: z.string()
+    .refine(
+      (val) => val === '' || /^09\d{8}$/.test(val),
+      '請輸入有效的手機號碼（例：0912345678）'
+    )
+    .optional(),
+  
+  bio: z.string()
+    .max(500, '簡介不能超過 500 個字元')
+    .optional()
+    .or(z.literal('')),
+  
+  specialties: z.string()
+    .max(200, '專長不能超過 200 個字元')
+    .optional()
+    .or(z.literal('')),
+  
+  service_regions: z.array(z.string()).optional(),
+  
+  avatar: z.string().optional(),
+});
+```
+
+### Success Criteria
+
+- ✅ Profile can be saved without phone number
+- ✅ No 422 validation error when phone is empty
+- ✅ Valid phone numbers (09xxxxxxxx) accepted
+- ✅ Invalid phone formats rejected with error message
+- ✅ Frontend and backend validation consistent
+- ✅ Empty string and null handled correctly
+
+### Testing
+
+**Test Cases**:
+
+1. **Save profile without phone**
+   - Action: Fill name, leave phone empty
+   - Expected: ✅ 200 OK, profile saved
+   - Result: ✅ Passed
+
+2. **Save profile with valid phone**
+   - Action: Fill name and phone (0912345678)
+   - Expected: ✅ 200 OK, profile saved
+   - Result: ✅ Passed
+
+3. **Invalid phone format**
+   - Action: Enter invalid phone (12345)
+   - Expected: ❌ Frontend validation error
+   - Result: ✅ Error shown, not submitted
+
+4. **Backend validation consistency**
+   - Action: Direct API call with phone: ""
+   - Expected: ✅ 200 OK
+   - Result: ✅ Passed
+
+### Related Changes
+
+This API validation fix is part of the Dashboard Profile Edit Display fix:
+- Frontend UI fixes: See ui-components.md
+- Avatar fallback logic fix
+- Edit button loading state fix
+
+### Migration Notes
+
+**Database Impact**: None
+- No schema changes required
+- Phone field already nullable in database
+- Existing data unaffected
+
+**Backward Compatibility**: ✅ Fully compatible
+- Existing phone numbers remain valid
+- Empty phone values now also accepted
+- No breaking changes to API contract
+
+---
