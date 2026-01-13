@@ -29,25 +29,94 @@
 
 ---
 
+## 🔒 內建驗證機制 (確保精確性)
+
+為確保自動化開發的高品質,AUTO-RUN 整合了三大驗證機制:
+
+### 1. 需求分析驗證 (Phase 1)
+**參考**: `.claude/knowledge/workflow/requirements-checklist.md`
+
+- 結構化訪談流程 (12 分鐘)
+- 6 大類需求完整性檢查:
+  * 功能性需求 (核心功能、角色、流程)
+  * 邊界條件 (輸入驗證、極限情況、併發)
+  * 非功能性需求 (效能、安全、可訪問性)
+  * 資料需求 (模型、驗證、生命週期)
+  * 整合需求 (API、第三方、同步)
+  * 使用者體驗 (回饋、互動、狀態)
+
+### 2. 規格驗證 (Step 2.2.1)
+**參考**: `.claude/knowledge/workflow/spec-validation.md`
+
+- 驗證三原則: 完整性、具體性、可測試性
+- API 規格驗證 (端點、Request/Response、測試用例)
+- DB Schema 驗證 (表定義、關係、索引、效能)
+- UI/UX 規格驗證 (狀態、響應式、可訪問性)
+- **通過標準**: 35 項檢查全部通過才可進入開發
+
+### 3. 量化指標驗證 (Step 2.5)
+**參考**: `.claude/knowledge/workflow/metrics-standards.md`
+
+- API 效能: P95 < 200ms
+- Frontend 效能: LCP < 2.5s, FCP < 1.8s
+- 測試覆蓋率: Backend >= 95%, Frontend >= 80%
+- 程式碼品質: Complexity <= 10, PHPStan L9
+- 可訪問性: WCAG AA, 色彩對比 >= 4.5:1
+
+**驗證結果**: 所有指標達標才算完成
+
+---
+
 ## 執行流程
 
 ### 🎯 Phase 1: 需求分析 (唯一需要用戶參與的階段)
 
 **使用 Agent**: `requirements-analyst`
 
+**參考工具**: `.claude/knowledge/workflow/requirements-checklist.md`
+
 ```
 Task tool:
   subagent_type: requirements-analyst
-  prompt: 進行需求訪談，分析「[功能描述]」的完整需求，並判斷開發範圍
+  prompt: 進行結構化需求訪談，分析「[功能描述]」的完整需求，並判斷開發範圍
+```
+
+**結構化訪談流程** (預計 12 分鐘):
+
+```markdown
+階段 1: 核心功能確認 (5 分鐘)
+- 這個功能要解決什麼問題？
+- 誰會使用？使用頻率？
+- 最重要的 3 個功能點是什麼？
+- 成功標準是什麼？(可量化，參考 metrics-standards.md)
+
+階段 2: 邊界情況探索 (3 分鐘)
+- 空值/不存在的資料如何處理？
+- 多人同時操作如何處理？
+- 網路斷線/錯誤如何處理？
+- 極限情況 (最大/最小值) 如何處理？
+
+階段 3: 效能與安全 (2 分鐘)
+- 預期資料量級？
+- 回應時間要求？(參考 metrics-standards.md: API < 200ms, FE LCP < 2.5s)
+- 是否需要權限控制？
+- 是否涉及敏感資料？
+
+階段 4: 使用者體驗 (2 分鐘)
+- 成功後的回饋方式？
+- 失敗時的提示方式？
+- Loading 狀態如何顯示？
+- 是否需要確認對話框？
 ```
 
 **Agent 工作內容**:
-1. 系統化需求訪談
-   - 功能目的
-   - 目標用戶
-   - 使用情境
-   - 技術限制
-   - 優先級
+1. 系統化需求訪談 (使用結構化訪談流程)
+   - 功能性需求 (核心功能、使用者角色、功能流程)
+   - 邊界條件 (輸入驗證、極限情況、併發、錯誤恢復)
+   - 非功能性需求 (效能、安全、可訪問性)
+   - 資料需求 (資料模型、驗證、來源、生命週期)
+   - 整合需求 (API、第三方服務、資料同步)
+   - 使用者體驗 (回饋機制、互動設計、狀態處理)
 
 2. **智能判斷開發範圍**
    - 需要 Backend API？(Y/N)
@@ -56,11 +125,11 @@ Task tool:
    - 需要架構調整？(Y/N)
    - 需要資料庫變更？(Y/N)
 
-3. 制定完整 Proposal
+3. 制定完整 Proposal (包含量化標準)
    - Why / What / Scope
-   - 前端需求清單
-   - 後端需求清單
-   - Success Criteria
+   - 前端需求清單 (含量化指標: LCP < 2.5s, Bundle < 200KB)
+   - 後端需求清單 (含量化指標: P95 < 200ms, 測試覆蓋 >= 95%)
+   - Success Criteria (可測量、可驗證)
 
 **產出**:
 - `openspec/changes/YYYYMMDD-action-description/proposal.md`
@@ -240,6 +309,113 @@ Time elapsed: 5 minutes
 
 ---
 
+#### Step 2.2.1: 自動規格驗證 ⚡ 新增驗證步驟
+
+**參考工具**: `.claude/knowledge/workflow/spec-validation.md`
+
+**執行操作**: 自動驗證規格完整性、具體性、可測試性
+
+```markdown
+驗證項目:
+
+【API 規格驗證】
+完整性檢查:
+  - [ ] 端點定義完整 (URL, Method, Auth, Rate Limit)
+  - [ ] Request 規格完整 (參數, 類型, 必填, 驗證規則, 範例)
+  - [ ] Response 規格完整 (成功, 所有錯誤情況, 範例)
+
+具體性檢查:
+  - [ ] 驗證規則具體化 (不只 "required", 要有具體規則)
+  - [ ] 回應格式一致 (data wrapper, RFC 7807 錯誤格式)
+  - [ ] 分頁參數明確 (預設值, 最大值)
+
+可測試性檢查:
+  - [ ] 每個端點都有測試用例 (正常 + 驗證 + 授權 + 邊界)
+  - [ ] 範例可直接用於測試
+
+【DB Schema 驗證】
+完整性檢查:
+  - [ ] 資料表定義完整 (欄位, 類型, 長度, NULL/NOT NULL, 主鍵, 時間戳)
+  - [ ] 關係定義明確 (外鍵, 級聯行為, Eloquent 關係)
+  - [ ] 索引策略完整 (查詢欄位, 外鍵, 唯一約束, 複合索引)
+
+效能檢查:
+  - [ ] 查詢欄位都有索引
+  - [ ] 避免 N+1 問題 (使用 Eager Loading)
+  - [ ] 資料類型優化 (TINYINT vs INT, VARCHAR 長度)
+
+資料完整性:
+  - [ ] 約束定義完整 (UNIQUE, CHECK, FK, DEFAULT)
+  - [ ] 軟刪除策略明確
+
+【UI/UX 規格驗證】(如有 Frontend)
+完整性檢查:
+  - [ ] 所有狀態有視覺設計 (Loading, Empty, Error, Success)
+  - [ ] 所有互動元素完整 (Disabled, Hover, Focus, 驗證回饋)
+  - [ ] 響應式設計完整 (Mobile, Tablet, Desktop)
+
+可訪問性檢查:
+  - [ ] WCAG AA 標準 (色彩對比 >= 4.5:1)
+  - [ ] 鍵盤導航支援
+  - [ ] ARIA 標籤完整
+
+【量化指標檢查】(參考 metrics-standards.md)
+  - [ ] API 效能標準明確 (P50 < 100ms, P95 < 200ms)
+  - [ ] Frontend 效能標準明確 (LCP < 2.5s, FCP < 1.8s)
+  - [ ] 測試覆蓋率目標明確 (Backend >= 95%, Frontend >= 80%)
+  - [ ] 程式碼品質標準明確 (Complexity <= 10, PHPStan L9)
+```
+
+**自動驗證結果**:
+```
+🤖 AUTO-RUN: Specification Validation
+
+Validation Report:
+  Total Checks: 35
+  Passed: 33
+  Failed: 2
+  Pass Rate: 94.3%
+
+Issues Found:
+  ⚠️  API-001: Response 缺少 429 Too Many Requests 定義
+      → 自動補充: 已新增 Rate Limiting 錯誤回應
+      Status: ✅ Fixed
+
+  ⚠️  DB-002: 缺少 created_at 索引
+      → 自動補充: 已新增 INDEX idx_created_at (created_at)
+      Status: ✅ Fixed
+
+Final Result: ✅ All validations passed
+
+Time elapsed: 2 minutes
+```
+
+**驗證報告產出**:
+- `specs/validation-report.md`
+
+**通過標準**: 所有檢查項目必須全部通過才可進入開發階段
+
+如果驗證未通過:
+```
+❌ 規格驗證未通過，AUTO-RUN 暫停
+
+未通過項目:
+  1. API-001: Response 錯誤情況不完整
+  2. DB-002: 缺少必要索引
+
+處理方式:
+  → 自動調用對應 agent 修復規格
+  → 重新執行驗證
+  → 最多重試 3 次
+
+如仍未通過:
+  → 通知用戶
+  → 提供詳細驗證報告
+  → 用戶確認後繼續或中止
+```
+
+---
+
 #### Step 2.3: 自動任務拆解
 
 **執行操作**:
@@ -374,31 +550,64 @@ Time elapsed: 1 hour 45 minutes
 
 ---
 
-#### Step 2.5: 自動整合測試
+#### Step 2.5: 自動整合測試與量化指標驗證
 
 **使用 Agent**: `qa-engineer`
+
+**參考工具**: `.claude/knowledge/workflow/metrics-standards.md`
 
 ```
 Task tool:
   subagent_type: qa-engineer
-  prompt: 執行完整的整合測試，包括 API、Frontend、整合流程
+  prompt: 執行完整的整合測試，並驗證所有量化指標達標
 ```
 
 **Agent 工作內容**:
 1. 環境檢查（Backend、Frontend 是否運行）
-2. 執行 Backend 測試
+
+2. 執行 Backend 測試與指標驗證
    - PHPUnit tests (100% pass required)
-   - Coverage check (≥80% required)
-   - PHPStan Level 9
-3. 執行 Frontend 測試
-   - E2E tests (Playwright)
-   - TypeScript compilation
-   - ESLint check
+   - Coverage check (Feature >= 95%, Unit >= 90%)
+   - PHPStan Level 9 (0 errors)
+   - API 效能測試:
+     * 簡單查詢 P95 < 100ms
+     * 列表查詢 P95 < 200ms
+     * 寫入操作 P95 < 300ms
+   - 資料庫查詢效能:
+     * 避免 N+1 查詢
+     * 查詢時間 < 50ms (JOIN)
+
+3. 執行 Frontend 測試與指標驗證
+   - E2E tests (Playwright, 100% pass required)
+   - TypeScript compilation (0 errors, strict mode)
+   - ESLint check (0 errors)
+   - Component tests (覆蓋率 >= 80%)
+   - 效能測試 (Lighthouse):
+     * LCP < 2.5s
+     * FCP < 1.8s
+     * TTI < 3.8s
+     * CLS < 0.1
+   - Bundle Size:
+     * Initial JS < 200KB (gzip)
+     * Initial CSS < 50KB (gzip)
+
 4. 執行整合測試
    - Frontend → Backend 資料流
    - 認證流程
    - Error handling
-5. 生成測試報告
+   - 併發測試 (100 req/s)
+
+5. 程式碼品質驗證
+   - Cyclomatic Complexity <= 10
+   - Method Length <= 50 lines
+   - No code duplication (< 3%)
+
+6. 可訪問性驗證 (如有 Frontend)
+   - WCAG AA 標準 (色彩對比 >= 4.5:1)
+   - 鍵盤導航 100% 可操作
+   - Screen Reader 支援
+
+7. 生成完整測試與指標報告
 
 **產出**:
 - `tests/reports/test-report-<timestamp>.md`
@@ -421,20 +630,79 @@ Task tool:
 
 **輸出訊息**:
 ```
-🤖 AUTO-RUN: Testing completed
+🤖 AUTO-RUN: Testing & Metrics Validation Completed
 
-Test Results:
-  ✅ Backend Tests: 201/201 passing (100%)
-  ✅ Coverage: 82% (target: ≥80%)
-  ✅ PHPStan: Level 9 passed (0 errors)
-  ✅ Frontend Tests: 10/10 passing (100%)
-  ✅ TypeScript: 0 errors
-  ✅ Integration Tests: 5/5 passing (100%)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 Test Results
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Total tests: 216
-Pass rate: 100%
+Backend Tests:
+  ✅ PHPUnit: 201/201 passing (100%)
+  ✅ Feature Tests: 97.5% coverage (target: >= 95%) ✓
+  ✅ Unit Tests: 92.3% coverage (target: >= 90%) ✓
+  ✅ PHPStan: Level 9, 0 errors ✓
 
-Time elapsed: 20 minutes
+Frontend Tests:
+  ✅ E2E Tests: 10/10 passing (100%)
+  ✅ Component Tests: 82% coverage (target: >= 80%) ✓
+  ✅ TypeScript: 0 errors, strict mode ✓
+  ✅ ESLint: 0 errors ✓
+
+Integration Tests:
+  ✅ API Integration: 5/5 passing (100%)
+  ✅ Auth Flow: Working ✓
+  ✅ Error Handling: Tested ✓
+
+Total Tests: 216/216 passing (100%)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ Performance Metrics
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Backend API Performance:
+  ✅ GET /api/ratings (P95): 85ms (target: < 200ms) ✓
+  ✅ POST /api/ratings (P95): 145ms (target: < 300ms) ✓
+  ✅ DB Queries: 2 queries, 0 N+1 issues ✓
+  ✅ Query Time: 12ms (target: < 50ms) ✓
+
+Frontend Performance (Lighthouse):
+  ✅ LCP: 2.1s (target: < 2.5s) ✓
+  ✅ FCP: 1.5s (target: < 1.8s) ✓
+  ✅ TTI: 3.2s (target: < 3.8s) ✓
+  ✅ CLS: 0.05 (target: < 0.1) ✓
+
+Bundle Size:
+  ✅ Initial JS: 165KB gzip (target: < 200KB) ✓
+  ✅ Initial CSS: 38KB gzip (target: < 50KB) ✓
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✨ Code Quality Metrics
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Backend:
+  ✅ Cyclomatic Complexity: Max 8 (target: <= 10) ✓
+  ✅ Method Length: Max 42 lines (target: <= 50) ✓
+  ✅ Code Duplication: 1.2% (target: < 3%) ✓
+
+Frontend:
+  ✅ Cyclomatic Complexity: Max 7 (target: <= 10) ✓
+  ✅ Function Length: Max 38 lines (target: <= 50) ✓
+  ✅ Code Duplication: 0.8% (target: < 3%) ✓
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+♿ Accessibility Metrics
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✅ WCAG AA: 100% compliant ✓
+  ✅ Color Contrast: 7.2:1 (target: >= 4.5:1) ✓
+  ✅ Keyboard Navigation: 100% operable ✓
+  ✅ Screen Reader: Fully supported ✓
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Final Result: ALL METRICS PASSED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Time elapsed: 25 minutes
 ```
 
 ---
