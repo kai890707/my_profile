@@ -20,7 +20,10 @@ import { toast } from 'sonner';
 // 個人資料表單驗證
 const profileSchema = z.object({
   full_name: z.string().min(2, '姓名至少需要 2 個字元').max(100, '姓名不能超過 100 個字元'),
-  phone: z.string().regex(/^09\d{8}$/, '請輸入有效的手機號碼（例：0912345678）').optional().or(z.literal('')),
+  phone: z.string().refine(
+    (val) => val === '' || /^09\d{8}$/.test(val),
+    '請輸入有效的手機號碼（例：0912345678）'
+  ).optional(),
   bio: z.string().max(500, '簡介不能超過 500 個字元').optional().or(z.literal('')),
   specialties: z.string().max(200, '專長不能超過 200 個字元').optional().or(z.literal('')),
   service_regions: z.array(z.string()).optional(),

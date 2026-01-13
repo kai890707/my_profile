@@ -423,7 +423,7 @@ class SalespersonProfileController extends Controller
         $validator = Validator::make($request->all(), [
             'company_id' => 'nullable|integer|exists:companies,id',
             'full_name' => 'sometimes|required|string|max:200',
-            'phone' => 'sometimes|required|string|max:20|regex:/^[0-9\-\s\(\)]+$/',
+            'phone' => 'nullable|string|max:20|regex:/^[0-9\-\s\(\)]+$/',
             'bio' => 'nullable|string',
             'specialties' => 'nullable|string',
             'service_regions' => 'nullable|array',
