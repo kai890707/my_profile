@@ -81,7 +81,8 @@
       "Bash(wc:*)",
       "Bash(__NEW_LINE_32f269ac1218ac4c__ echo \"現有歸檔資料夾 \\(需要重新命名\\):\")",
       "Bash(__NEW_LINE_32f269ac1218ac4c__ echo \"\")",
-      "Bash(while read dir)"
+      "Bash(while read dir)",
+      "Bash(git reset:*)"
     ]
   }
 }

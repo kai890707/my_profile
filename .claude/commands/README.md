@@ -10,17 +10,35 @@
 
 1. [快速開始](#快速開始)
 2. [Commands 總覽](#commands-總覽)
-3. [完整流程 Commands](#完整流程-commands)
-4. [單步驟 Commands](#單步驟-commands)
+3. [Git Flow Commands](#git-flow-commands)
+4. [完整流程 Commands](#完整流程-commands)
 5. [輔助工具 Commands](#輔助工具-commands)
-6. [工作流程圖](#工作流程圖)
-7. [使用範例](#使用範例)
+6. [使用範例](#使用範例)
+7. [相關文檔](#相關文檔)
 
 ---
 
 ## 🚀 快速開始
 
-### 開發新功能 (推薦)
+### 🌟 完全自動化開發 (最推薦)
+
+```bash
+# 🚀 一鍵開發任何功能 (Backend/Frontend/全棧)
+/auto-develop [功能描述]
+```
+
+**真正的 AUTO-RUN**:
+- ✅ 只需參與需求分析（10 分鐘）
+- ✅ 自動判斷開發範圍（Backend/Frontend/全棧）
+- ✅ 自動並行開發（前後端同時進行）
+- ✅ 自動測試 + 自動 Git 操作 + 自動部署
+- ✅ 2-4 小時完全自動執行，無需人工介入
+
+**詳見**: [auto-develop.md](./auto-develop.md) | [WORKFLOW.md](./WORKFLOW.md)
+
+---
+
+### 分別開發 Backend/Frontend (進階控制)
 
 ```bash
 # Backend 功能
@@ -30,20 +48,20 @@
 /implement-frontend [功能描述]
 ```
 
-這兩個 commands 會自動完成完整的 SDD 流程 (6 個步驟)。
+這兩個 commands 會自動完成完整的 SDD 流程 (6 個步驟)，但需要分別執行。
 
-### 手動控制每個步驟
+### 更精細的控制
 
-如果需要更精細的控制,可以使用單步驟 commands:
+如果需要更精細的控制每個步驟：
 
-```bash
-/proposal [功能描述]        # Step 1
-/spec <feature-name>         # Step 2
-/tasks <feature-name>        # Step 3 (新增)
-/validate <feature-name>     # Step 4 (新增)
-/develop <feature-name>      # Step 5
-/archive <feature-name>      # Step 6
-```
+⚠️ **注意**: 單步驟 commands 已整合到自動化流程中。
+
+**建議方式**:
+1. 使用 `/implement` 或 `/implement-frontend`，在關鍵階段會有確認點
+2. 直接編輯 `openspec/changes/<feature>/` 中的規格文件
+3. 使用 Git 操作進行版本控制
+
+**不建議**: 使用獨立的單步驟 commands（已移除）
 
 ---
 
@@ -53,24 +71,26 @@
 
 | 分類 | Commands | 用途 |
 |------|----------|------|
-| **Git Flow** | `git-flow-init`, `feature-start`, `feature-finish`, `release-start`, `release-finish`, `hotfix-start`, `hotfix-finish` | Git 分支管理和發布流程 |
-| **代碼審查** | `pr-review` | Pull Request 審查流程 |
-| **自動化流程** | `implement`, `implement-frontend` | 一鍵完成完整 SDD 流程 |
-| **提案階段** | `proposal` | 建立變更提案並確認需求 |
-| **規格階段** | `spec` | 撰寫詳細技術規格 |
-| **任務階段** | `tasks` | 拆解實作任務清單 |
-| **驗證階段** | `validate` | 驗證規格完整性 |
-| **實作階段** | `develop` | 按規格實作程式碼 |
-| **歸檔階段** | `archive` | 歸檔到規範庫 |
-| **輔助工具** | `status`, `test`, `docs` | 查看狀態、測試、生成文檔 |
+| **🌟 完全自動化** | `auto-develop` | 一鍵完成所有開發流程（需求→開發→測試→Git→部署） |
+| **自動化開發** | `implement`, `implement-frontend` | Backend/Frontend SDD 流程 |
+| **Git Flow** | `git-flow-init`, `feature-start`, `feature-finish` | Git 分支管理 |
+| **測試審查** | `test`, `pr-review` | 測試與代碼審查 |
+| **部署設置** | `deploy`, `setup-cicd`, `setup-monitoring` | 部署和環境設置 |
+| **文檔** | 查看 WORKFLOW.md, COMPARISON.md | 工作流程和使用指南 |
 
-### 依開發階段分類
+### 推薦使用順序
 
 ```
-需求階段:  /proposal
-規格階段:  /spec → /tasks → /validate
-實作階段:  /develop → /test
-歸檔階段:  /archive
+完全自動化（推薦）:
+  /auto-develop [功能描述]
+    → 自動完成所有步驟
+
+分開執行（進階）:
+  /feature-start → /implement → /test → /feature-finish → /deploy
+
+  或
+
+  /feature-start → /implement-frontend → /test → /feature-finish → /deploy
 ```
 
 ---
@@ -274,134 +294,6 @@ Step 6: Archive
 - `openspec/changes/rating-ui/tasks.md`
 - 完整的前端程式碼
 - 歸檔到 `openspec/specs/frontend/`
-
----
-
-## 🔧 單步驟 Commands
-
-當需要更精細的控制時,可以使用單步驟 commands。
-
-### Step 1: `/proposal` - 建立變更提案
-
-**文件**: [proposal.md](./proposal.md)
-
-**用途**: 建立清晰的變更提案,明確需求和範圍
-
-**語法**:
-```bash
-/proposal [功能描述]
-```
-
-**產出**: `openspec/changes/<feature>/proposal.md`
-
-**關鍵內容**:
-- Why (問題陳述)
-- What (解決方案)
-- Scope (In Scope / Out of Scope)
-- Success Criteria (驗收標準)
-- Dependencies (相依性)
-- Risks (風險評估)
-
----
-
-### Step 2: `/spec` - 撰寫詳細規格
-
-**文件**: [spec.md](./spec.md)
-
-**用途**: 撰寫詳細到「無需解釋就能實作」的技術規格
-
-**語法**:
-```bash
-/spec <feature-name>
-```
-
-**產出**:
-- Backend: `api.md`, `data-model.md`, `business-rules.md`
-- Frontend: `ui-ux.md`, `components.md`, `pages.md`, `api-integration.md`, `state-routing.md`
-
-**規格要求**:
-- API: 完整的 Request/Response 範例
-- 資料模型: 完整的 Migration 程式碼
-- 業務規則: 明確的驗證邏輯
-- UI/UX: 詳細的設計系統和組件規格
-
----
-
-### Step 3: `/tasks` - 拆解實作任務
-
-**文件**: [tasks.md](./tasks.md) ✨ 新增
-
-**用途**: 將規格拆解為可執行的原子任務
-
-**語法**:
-```bash
-/tasks <feature-name>
-```
-
-**產出**: `openspec/changes/<feature>/tasks.md`
-
-**任務拆解原則**:
-- 每個任務獨立可完成
-- 任務有明確的驗收標準
-- 任務按依賴順序排列
-- 任務預估工作量 (S/M/L)
-
----
-
-### Step 4: `/validate` - 驗證規格完整性
-
-**文件**: [validate.md](./validate.md) ✨ 新增
-
-**用途**: 在實作前驗證規格是否完整、一致、清晰
-
-**語法**:
-```bash
-/validate <feature-name>
-```
-
-**驗證項目**:
-- ✅ 完整性: 所有必要章節都已填寫
-- ✅ 一致性: 規格之間無衝突
-- ✅ 清晰性: 無歧義,可直接實作
-- ✅ 可測性: 有明確的驗收標準
-
----
-
-### Step 5: `/develop` - 實作開發
-
-**文件**: [develop.md](./develop.md)
-
-**用途**: 嚴格按照規格和任務清單實作程式碼
-
-**語法**:
-```bash
-/develop <feature-name>
-```
-
-**實作原則**:
-- ❌ 禁止偏離規格
-- ✅ 使用 TodoWrite 追蹤進度
-- ✅ 每個任務完成立即驗證
-- ✅ 嚴格遵循規格定義
-
----
-
-### Step 6: `/archive` - 歸檔到規範庫
-
-**文件**: [archive.md](./archive.md)
-
-**用途**: 將完成的變更歸檔到 OpenSpec 規範庫
-
-**語法**:
-```bash
-/archive <feature-name>
-```
-
-**執行操作**:
-1. 合併 API 規格到 `openspec/specs/api/endpoints.md`
-2. 合併資料模型到 `openspec/specs/models/data-models.md`
-3. 合併業務規則到 `openspec/specs/business-rules.md`
-4. 移動變更到 `openspec/changes/archived/`
 
 ---
 

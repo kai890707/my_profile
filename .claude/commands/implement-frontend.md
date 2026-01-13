@@ -69,6 +69,11 @@ Step 1: Create Proposal ✋ 用戶確認
     → 了解 UI/UX 需求和使用者痛點
     → openspec/changes/<feature-name>/proposal.md
 
+    📁 資料夾命名規範 (重要):
+       格式: YYYYMMDD-action-description
+       範例: 20260113-add-rating-ui
+       action: add, fix, update, refactor, optimize, enhance
+
 Step 2: Write Specifications ⚡ 自動執行
     → 使用 product-designer agent 進行 UI/UX 設計
     → 使用者研究、資訊架構、互動設計、視覺設計

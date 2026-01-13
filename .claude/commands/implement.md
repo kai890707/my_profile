@@ -184,6 +184,21 @@ Step 6: Archive 🤖 自動歸檔
 
 **產出**: `openspec/changes/<feature-name>/proposal.md`
 
+**資料夾命名規範** (重要):
+```
+格式: YYYYMMDD-action-description
+
+說明:
+- YYYYMMDD: 8 位數日期（當天日期）
+- action: add, fix, update, refactor, remove, optimize, enhance
+- description: kebab-case 功能描述
+
+範例:
+- 20260113-add-rating-feature
+- 20260113-fix-cart-calculation
+- 20260113-optimize-search-performance
+```
+
 **內容檢查清單**:
 - [ ] **Why** - 問題陳述清晰（為什麼需要這個功能）
 - [ ] **What** - 解決方案明確（這個功能的核心價值）
