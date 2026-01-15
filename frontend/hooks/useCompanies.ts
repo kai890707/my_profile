@@ -66,7 +66,10 @@ export function useMyCompanies() {
     queryKey: companyKeys.myCompanies,
     queryFn: async () => {
       const response = await companiesApi.getMyCompanies();
-      return response.data;
+      // Backend 返回 { success: true, data: { companies: [...] } }
+      // 需要解包取出 companies 陣列
+      const data = response.data as { companies?: any[] } | any;
+      return data?.companies ?? data;
     },
   });
 }
@@ -79,7 +82,10 @@ export function useCompany(id: number) {
     queryKey: companyKeys.detail(id),
     queryFn: async () => {
       const response = await companiesApi.getCompany(id);
-      return response.data;
+      // Backend 返回 { success: true, data: { company: {...} } }
+      // 需要解包取出 company 物件
+      const data = response.data as { company?: any } | any;
+      return data?.company ?? data;
     },
     enabled: !!id,
   });
