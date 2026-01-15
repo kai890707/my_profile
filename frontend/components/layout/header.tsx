@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Menu, X, User, LogOut, Settings, LayoutDashboard } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, LayoutDashboard, Home, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { getAvatarFallback } from '@/lib/utils/avatar';
@@ -38,7 +38,7 @@ export function Header({ user, onLogout }: HeaderProps) {
 
   const salespersonLinks = [
     { href: '/dashboard', label: '個人中心', icon: LayoutDashboard },
-    { href: '/dashboard/profile', label: '個人資料', icon: User },
+    { href: '/dashboard/experiences', label: '工作經驗', icon: User },
   ];
 
   const adminLinks = [
@@ -48,10 +48,16 @@ export function Header({ user, onLogout }: HeaderProps) {
     { href: '/admin/statistics', label: '統計報表' },
   ];
 
+  // 一般使用者的選單連結
+  const userLinks = [
+    { href: '/', label: '首頁', icon: Home },
+    { href: '/search', label: '搜尋業務員', icon: Search },
+  ];
+
   const getDashboardLinks = () => {
     if (user?.role === 'admin') return adminLinks;
     if (user?.role === 'salesperson') return salespersonLinks;
-    return [];
+    return userLinks;  // 一般使用者顯示基本導航連結
   };
 
   return (
