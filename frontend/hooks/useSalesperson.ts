@@ -56,7 +56,10 @@ export function useProfile() {
     queryKey: salespersonKeys.profile,
     queryFn: async () => {
       const response = await salespersonApi.getProfile();
-      return response.data;
+      // Backend 返回 { success: true, data: { profile: {...} } }
+      // 需要解包取出 profile
+      const data = response.data as { profile?: any } | any;
+      return data?.profile ?? data;
     },
   });
 }

@@ -85,9 +85,9 @@ export default function ProfilePage() {
     },
   });
 
-  // 當資料載入完成時，重置表單
+  // 當資料載入完成或進入編輯模式時，重置表單
   useEffect(() => {
-    if (profile) {
+    if (profile && editMode) {
       // 確保 service_regions 是陣列
       let serviceRegions: string[] = [];
       if (Array.isArray(profile.service_regions)) {
@@ -102,7 +102,7 @@ export default function ProfilePage() {
       }
 
       resetProfile({
-        full_name: profile.full_name,
+        full_name: profile.full_name || '',
         phone: profile.phone || '',
         bio: profile.bio || '',
         specialties: profile.specialties || '',
@@ -113,7 +113,7 @@ export default function ProfilePage() {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.id]);
+  }, [profile?.id, editMode]);
 
   // 處理頭像上傳
   const handleAvatarChange = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -246,7 +246,7 @@ export default function ProfilePage() {
                 <div>
                   <h4 className="text-sm font-semibold text-slate-700 mb-2">專長領域</h4>
                   <div className="flex flex-wrap gap-2">
-                    {profileData.specialties.split(',').map((specialty, index) => (
+                    {profileData.specialties.split(',').map((specialty: string, index: number) => (
                       <Badge key={index} variant="primary" size="sm">
                         {specialty.trim()}
                       </Badge>
@@ -260,7 +260,7 @@ export default function ProfilePage() {
                 <div>
                   <h4 className="text-sm font-semibold text-slate-700 mb-2">服務地區</h4>
                   <div className="flex flex-wrap gap-2">
-                    {profileData.service_regions.map((regionName, index) => (
+                    {profileData.service_regions.map((regionName: string, index: number) => (
                       <Badge key={index} variant="secondary" size="sm">
                         {regionName}
                       </Badge>
