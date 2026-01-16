@@ -62,6 +62,16 @@ class AuthControllerTest extends TestCase
     /** @test */
     public function it_can_register_salesperson(): void
     {
+        // Generate a simple test image (1x1 pixel PNG)
+        $image = imagecreatetruecolor(100, 100);
+        $color = imagecolorallocate($image, 66, 133, 244);
+        imagefill($image, 0, 0, $color);
+        ob_start();
+        imagepng($image);
+        $imageData = ob_get_clean();
+        imagedestroy($image);
+        $avatarBase64 = base64_encode($imageData);
+
         $response = $this->postJson('/api/auth/register-salesperson', [
             'name' => 'Jane Smith',
             'email' => 'jane@example.com',
@@ -72,6 +82,8 @@ class AuthControllerTest extends TestCase
             'bio' => 'Experienced insurance salesperson',
             'specialties' => 'Life Insurance, Health Insurance',
             'service_regions' => ['台北市', '新北市'],
+            'avatar' => $avatarBase64,
+            'avatar_mime' => 'image/png',
         ]);
 
         $response->assertStatus(201)
@@ -110,7 +122,7 @@ class AuthControllerTest extends TestCase
         ]);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['full_name', 'phone']);
+            ->assertJsonValidationErrors(['full_name', 'phone', 'avatar', 'avatar_mime']);
     }
 
     /** @test */

@@ -144,7 +144,7 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Schema(
     schema: 'RegisterSalespersonRequest',
-    required: ['name', 'email', 'password', 'password_confirmation', 'full_name', 'phone'],
+    required: ['name', 'email', 'password', 'password_confirmation', 'full_name', 'phone', 'avatar', 'avatar_mime'],
     properties: [
         new OA\Property(property: 'name', type: 'string', maxLength: 255, example: 'Jane Smith'),
         new OA\Property(property: 'email', type: 'string', format: 'email', maxLength: 255, example: 'jane@example.com'),
@@ -155,6 +155,8 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'bio', type: 'string', maxLength: 1000, example: 'Experienced insurance salesperson'),
         new OA\Property(property: 'specialties', type: 'string', maxLength: 500, example: 'Life Insurance, Health Insurance'),
         new OA\Property(property: 'service_regions', type: 'array', items: new OA\Items(type: 'string'), example: ['台北市', '新北市']),
+        new OA\Property(property: 'avatar', type: 'string', description: 'Base64 encoded image data (required)'),
+        new OA\Property(property: 'avatar_mime', type: 'string', enum: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'], example: 'image/jpeg'),
     ]
 )]
 #[OA\Schema(

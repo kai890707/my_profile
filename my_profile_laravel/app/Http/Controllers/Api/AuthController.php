@@ -415,13 +415,21 @@ class AuthController extends Controller
                 'status' => 'active', // User must be active for JWT auth
             ]);
 
-            // Create salesperson profile
+            // Decode avatar data and calculate size
+            $avatarData = $request->input('avatar');
+            $avatarMime = $request->input('avatar_mime');
+            $avatarSize = strlen(base64_decode($avatarData));
+
+            // Create salesperson profile with avatar
             $user->salespersonProfile()->create([
                 'full_name' => $request->input('full_name'),
                 'phone' => $request->input('phone'),
                 'bio' => $request->input('bio'),
                 'specialties' => $request->input('specialties'),
                 'service_regions' => $request->input('service_regions'),
+                'avatar_data' => $avatarData,
+                'avatar_mime' => $avatarMime,
+                'avatar_size' => $avatarSize,
             ]);
 
             DB::commit();

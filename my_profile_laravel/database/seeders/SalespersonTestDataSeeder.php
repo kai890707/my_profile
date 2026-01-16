@@ -15,6 +15,56 @@ use Illuminate\Support\Facades\Hash;
 class SalespersonTestDataSeeder extends Seeder
 {
     /**
+     * Generate a simple colored placeholder image as base64.
+     * Creates a minimal valid JPEG for testing purposes.
+     */
+    private function generateTestAvatar(int $index): array
+    {
+        // Different colors for different test users (simple gradient by index)
+        $colors = [
+            ['r' => 66, 'g' => 133, 'b' => 244],  // Blue
+            ['r' => 219, 'g' => 68, 'b' => 55],   // Red
+            ['r' => 244, 'g' => 180, 'b' => 0],   // Yellow
+            ['r' => 15, 'g' => 157, 'b' => 88],   // Green
+            ['r' => 171, 'g' => 71, 'b' => 188],  // Purple
+            ['r' => 0, 'g' => 172, 'b' => 193],   // Cyan
+            ['r' => 255, 'g' => 112, 'b' => 67],  // Orange
+            ['r' => 158, 'g' => 158, 'b' => 158], // Gray
+            ['r' => 121, 'g' => 85, 'b' => 72],   // Brown
+            ['r' => 233, 'g' => 30, 'b' => 99],   // Pink
+        ];
+
+        $color = $colors[$index % count($colors)];
+
+        // Create a 100x100 PNG image
+        $image = imagecreatetruecolor(100, 100);
+        $bgColor = imagecolorallocate($image, $color['r'], $color['g'], $color['b']);
+        imagefill($image, 0, 0, $bgColor);
+
+        // Add initials text
+        $textColor = imagecolorallocate($image, 255, 255, 255);
+        $text = (string) ($index + 1);
+        $fontSize = 5; // Built-in font size
+        $textWidth = imagefontwidth($fontSize) * strlen($text);
+        $textHeight = imagefontheight($fontSize);
+        $x = (100 - $textWidth) / 2;
+        $y = (100 - $textHeight) / 2;
+        imagestring($image, $fontSize, (int) $x, (int) $y, $text, $textColor);
+
+        // Convert to base64
+        ob_start();
+        imagepng($image);
+        $imageData = ob_get_clean();
+        imagedestroy($image);
+
+        return [
+            'data' => base64_encode($imageData),
+            'mime' => 'image/png',
+            'size' => strlen($imageData),
+        ];
+    }
+
+    /**
      * Run the database seeds.
      */
     public function run(): void
@@ -321,6 +371,9 @@ class SalespersonTestDataSeeder extends Seeder
                 $companyId = $company->id;
             }
 
+            // Generate test avatar for this user
+            $avatar = $this->generateTestAvatar($index);
+
             // Create Profile
             $profileData = [
                 'user_id' => $user->id,
@@ -331,6 +384,9 @@ class SalespersonTestDataSeeder extends Seeder
                 'specialties' => $data['profile']['specialties'],
                 'service_regions' => $data['profile']['service_regions'],
                 'approval_status' => $data['profile']['approval_status'],
+                'avatar_data' => $avatar['data'],
+                'avatar_mime' => $avatar['mime'],
+                'avatar_size' => $avatar['size'],
             ];
 
             if ($data['profile']['approval_status'] === 'approved') {

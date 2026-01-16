@@ -33,6 +33,8 @@ class RegisterSalespersonRequest extends FormRequest
             'specialties' => ['nullable', 'string', 'max:500'],
             'service_regions' => ['nullable', 'array'],
             'service_regions.*' => ['string', 'max:100'],
+            'avatar' => ['required', 'string'], // Base64 encoded image data
+            'avatar_mime' => ['required', 'string', 'in:image/jpeg,image/png,image/gif,image/webp'],
         ];
     }
 
@@ -57,6 +59,9 @@ class RegisterSalespersonRequest extends FormRequest
             'bio.max' => '個人簡介不得超過 1000 個字元',
             'specialties.max' => '專長領域不得超過 500 個字元',
             'service_regions.array' => '服務區域格式錯誤',
+            'avatar.required' => '請上傳業務員照片',
+            'avatar_mime.required' => '請提供照片格式',
+            'avatar_mime.in' => '照片格式僅支援 JPEG、PNG、GIF、WebP',
         ];
     }
 }

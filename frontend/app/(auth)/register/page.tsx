@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRegisterUser, useRegisterSalesperson } from '@/hooks/useAuth';
+import { Camera, X } from 'lucide-react';
 
 type RegistrationType = 'user' | 'salesperson';
 
@@ -27,6 +29,10 @@ const registerSalespersonSchema = z.object({
   phone: z.string().regex(/^09\d{8}$/, '請輸入有效的手機號碼（例：0912345678）'),
   bio: z.string().max(500, '簡介不能超過 500 個字元').optional(),
   specialties: z.string().max(200, '專長不能超過 200 個字元').optional(),
+  avatar: z.string().min(1, '請上傳業務員照片'),
+  avatar_mime: z.enum(['image/jpeg', 'image/png', 'image/gif', 'image/webp'], {
+    message: '照片格式僅支援 JPEG、PNG、GIF、WebP',
+  }),
 });
 
 type RegisterUserForm = z.infer<typeof registerUserSchema>;
@@ -34,6 +40,8 @@ type RegisterSalespersonForm = z.infer<typeof registerSalespersonSchema>;
 
 export default function RegisterPage() {
   const [registrationType, setRegistrationType] = useState<RegistrationType | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const registerUserMutation = useRegisterUser();
   const registerSalespersonMutation = useRegisterSalesperson();
@@ -47,6 +55,56 @@ export default function RegisterPage() {
   const salespersonForm = useForm<RegisterSalespersonForm>({
     resolver: zodResolver(registerSalespersonSchema),
   });
+
+  // 處理圖片選擇
+  const handleAvatarChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 驗證檔案類型
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      salespersonForm.setError('avatar', {
+        type: 'manual',
+        message: '照片格式僅支援 JPEG、PNG、GIF、WebP',
+      });
+      return;
+    }
+
+    // 驗證檔案大小 (最大 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      salespersonForm.setError('avatar', {
+        type: 'manual',
+        message: '照片大小不能超過 2MB',
+      });
+      return;
+    }
+
+    // 讀取檔案並轉換為 Base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      // 移除 data:image/xxx;base64, 前綴
+      const base64Data = base64String.split(',')[1];
+
+      salespersonForm.setValue('avatar', base64Data);
+      salespersonForm.setValue('avatar_mime', file.type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp');
+      salespersonForm.clearErrors('avatar');
+      salespersonForm.clearErrors('avatar_mime');
+      setAvatarPreview(base64String);
+    };
+    reader.readAsDataURL(file);
+  }, [salespersonForm]);
+
+  // 移除已選擇的圖片
+  const handleRemoveAvatar = useCallback(() => {
+    setAvatarPreview(null);
+    salespersonForm.setValue('avatar', '');
+    salespersonForm.setValue('avatar_mime', '' as 'image/jpeg');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [salespersonForm]);
 
   const onSubmitUser = (data: RegisterUserForm) => {
     registerUserMutation.mutate(data);
@@ -289,6 +347,67 @@ export default function RegisterPage() {
             />
             {salespersonForm.formState.errors.bio && (
               <p className="text-sm text-red-600">{salespersonForm.formState.errors.bio.message}</p>
+            )}
+          </div>
+
+          {/* 業務員照片上傳 */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">
+              業務員照片 <span className="text-red-500">*</span>
+            </label>
+            <div className="flex items-center gap-4">
+              {avatarPreview ? (
+                <div className="relative">
+                  <Image
+                    src={avatarPreview}
+                    alt="Avatar preview"
+                    width={100}
+                    height={100}
+                    className="w-24 h-24 rounded-full object-cover border-2 border-slate-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-24 h-24 rounded-full border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-500 hover:border-primary-500 hover:text-primary-500 transition-colors"
+                >
+                  <Camera className="w-6 h-6 mb-1" />
+                  <span className="text-xs">上傳照片</span>
+                </button>
+              )}
+              <div className="flex-1">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+                {!avatarPreview && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    選擇照片
+                  </Button>
+                )}
+                <p className="text-xs text-slate-500 mt-1">
+                  支援 JPEG、PNG、GIF、WebP 格式，最大 2MB
+                </p>
+              </div>
+            </div>
+            {salespersonForm.formState.errors.avatar && (
+              <p className="text-sm text-red-600">{salespersonForm.formState.errors.avatar.message}</p>
             )}
           </div>
 
