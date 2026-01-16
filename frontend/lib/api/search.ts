@@ -24,10 +24,16 @@ export async function searchSalespersons(
  * 取得業務員詳細資料
  */
 export async function getSalespersonDetail(id: number): Promise<SalespersonProfile> {
-  const response = await apiClient.get<ApiResponse<SalespersonProfile>>(
+  const response = await apiClient.get<ApiResponse<{ profile: any }>>(
     `/profiles/${id}`
   );
-  return response.data.data!;
+  const { profile } = response.data.data!;
+
+  // 將 user.salesperson_status 映射到 approval_status
+  return {
+    ...profile,
+    approval_status: profile.user?.salesperson_status || 'pending',
+  };
 }
 
 /**

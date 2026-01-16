@@ -100,11 +100,15 @@ export default function SalespersonDetailPage() {
     return [];
   })();
 
-  const statusBadge = {
+  const statusBadgeMap = {
     pending: { variant: 'warning' as const, label: '審核中', icon: Clock },
     approved: { variant: 'success' as const, label: '已審核', icon: CheckCircle2 },
     rejected: { variant: 'error' as const, label: '已拒絕', icon: Clock },
-  }[salesperson.approval_status];
+  };
+
+  const statusBadge = salesperson.approval_status && statusBadgeMap[salesperson.approval_status as keyof typeof statusBadgeMap]
+    ? statusBadgeMap[salesperson.approval_status as keyof typeof statusBadgeMap]
+    : { variant: 'secondary' as const, label: '未知', icon: Clock };
 
   return (
     <div className="min-h-screen flex flex-col">
