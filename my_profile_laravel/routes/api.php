@@ -103,6 +103,7 @@ Route::prefix('salesperson')->group(function (): void {
     Route::middleware('jwt.auth')->group(function (): void {
         Route::post('/upgrade', [SalespersonController::class, 'upgrade']);
         Route::put('/profile', [SalespersonController::class, 'updateProfile']);
+        Route::post('/company', [SalespersonController::class, 'saveCompany']);
 
         // Profile alias (points to /profile/ endpoint)
         Route::get('/profile', [SalespersonProfileController::class, 'me']);
