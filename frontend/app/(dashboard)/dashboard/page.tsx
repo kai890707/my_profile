@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
 import { ProfileSkeleton } from '@/components/ui/skeleton';
-import { Camera, Save, Building2, X } from 'lucide-react';
+import { Camera, Save, Building2, X, Pencil } from 'lucide-react';
 import { getAvatarFallback } from '@/lib/utils/avatar';
 import { useProfile, useUpdateProfile, useSaveCompany } from '@/hooks/useSalesperson';
 import { useRegions } from '@/hooks/useSearch';
@@ -34,13 +34,30 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 // 公司資訊表單驗證
 const companySchema = z.object({
-  name: z.string().min(2, '公司名稱至少需要 2 個字元').max(100, '公司名稱不能超過 100 個字元'),
-});
+  company_id: z.number().optional(),
+  is_self_employed: z.boolean().optional(),
+}).refine(
+  (data) => {
+    // 至少提供一個
+    if (!data.company_id && !data.is_self_employed) {
+      return false;
+    }
+    // 不可同時提供
+    if (data.company_id && data.is_self_employed) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: '請選擇公司或勾選自營業者（不可同時選擇）',
+  }
+);
 
 type CompanyFormData = z.infer<typeof companySchema>;
 
 export default function ProfilePage() {
   const [editMode, setEditMode] = useState(false);
+  const [companyEditMode, setCompanyEditMode] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -78,12 +95,19 @@ export default function ProfilePage() {
     handleSubmit: handleCompanySubmit,
     formState: { errors: companyErrors },
     reset: resetCompany,
+    watch: watchCompany,
+    setValue: setCompanyValue,
   } = useForm<CompanyFormData>({
     resolver: zodResolver(companySchema),
     defaultValues: {
-      name: profile?.company?.name || '',
+      company_id: profile?.company?.id,
+      is_self_employed: !profile?.company?.id,
     },
   });
+
+  // Watch company form fields
+  const isSelfEmployed = watchCompany('is_self_employed');
+  const selectedCompanyId = watchCompany('company_id');
 
   // 當資料載入完成或進入編輯模式時，重置表單
   useEffect(() => {
@@ -109,7 +133,8 @@ export default function ProfilePage() {
         service_regions: serviceRegions,
       });
       resetCompany({
-        name: profile.company?.name || '',
+        company_id: profile.company?.id,
+        is_self_employed: !profile.company?.id,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -168,7 +193,15 @@ export default function ProfilePage() {
 
   // 提交公司資訊
   const onSubmitCompany = (data: CompanyFormData) => {
-    saveCompanyMutation.mutate(data);
+    saveCompanyMutation.mutate(data, {
+      onSuccess: () => {
+        setCompanyEditMode(false);
+        toast.success('公司資訊已更新');
+      },
+      onError: (error: any) => {
+        toast.error(error?.response?.data?.error || '儲存失敗');
+      },
+    });
   };
 
   if (profileLoading || regionsLoading) {
@@ -397,41 +430,107 @@ export default function ProfilePage() {
       {/* 公司資訊卡片 */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            公司資訊
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              公司資訊
+            </span>
+            {!companyEditMode && (profileData?.company || profileData?.company_id === null) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCompanyEditMode(true)}
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                編輯
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {profileData?.company && !editMode ? (
-            // 檢視模式
+          {companyEditMode || (!profileData?.company && profileData?.company_id !== null) ? (
+            // 編輯模式或無公司資訊
+            <form onSubmit={handleCompanySubmit(onSubmitCompany)} className="space-y-4">
+              <div className="space-y-3">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                    {...registerCompany('is_self_employed')}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setCompanyValue('is_self_employed', checked);
+                      if (checked) {
+                        setCompanyValue('company_id', undefined);
+                      }
+                    }}
+                  />
+                  <span className="text-sm font-medium text-slate-700">我是自營業者</span>
+                </label>
+
+                {!isSelfEmployed && (
+                  <Input
+                    label="公司 ID"
+                    type="number"
+                    placeholder="請輸入公司 ID"
+                    error={companyErrors.company_id?.message || companyErrors.root?.message}
+                    {...registerCompany('company_id', { valueAsNumber: true })}
+                    disabled={isSelfEmployed}
+                  />
+                )}
+
+                {companyErrors.root && (
+                  <p className="text-sm text-red-600">{companyErrors.root.message}</p>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  type="submit"
+                  isLoading={saveCompanyMutation.isPending}
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  儲存公司資訊
+                </Button>
+                {companyEditMode && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setCompanyEditMode(false);
+                      resetCompany({
+                        company_id: profile?.company?.id,
+                        is_self_employed: !profile?.company?.id,
+                      });
+                    }}
+                  >
+                    取消
+                  </Button>
+                )}
+              </div>
+            </form>
+          ) : profileData?.company ? (
+            // 檢視模式 - 有公司資訊
             <div className="space-y-4">
               <div>
                 <h4 className="text-sm font-semibold text-slate-700 mb-1">公司名稱</h4>
                 <p className="text-slate-900">{profileData.company.name}</p>
               </div>
+              {profileData.company.tax_id && (
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-700 mb-1">統一編號</h4>
+                  <p className="text-slate-900">{profileData.company.tax_id}</p>
+                </div>
+              )}
             </div>
           ) : (
-            // 編輯模式或無公司資訊
-            <form onSubmit={handleCompanySubmit(onSubmitCompany)} className="space-y-4">
-              <Input
-                label="公司名稱"
-                type="text"
-                placeholder="請輸入公司名稱"
-                error={companyErrors.name?.message}
-                required
-                {...registerCompany('name')}
-              />
-
-
-              <Button
-                type="submit"
-                isLoading={saveCompanyMutation.isPending}
-              >
-                <Save className="mr-2 h-4 w-4" />
-                儲存公司資訊
-              </Button>
-            </form>
+            // 檢視模式 - 自營業者
+            <div className="space-y-4">
+              <Badge variant="secondary" className="bg-teal-100 text-teal-800">
+                自營業者
+              </Badge>
+              <p className="text-sm text-slate-600">您目前設定為自營業者，無所屬公司。</p>
+            </div>
           )}
         </CardContent>
       </Card>
