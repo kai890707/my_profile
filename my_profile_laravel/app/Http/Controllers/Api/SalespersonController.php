@@ -222,12 +222,38 @@ class SalespersonController extends Controller
     {
         $salespeople = User::where('role', User::ROLE_SALESPERSON)
             ->where('salesperson_status', User::STATUS_APPROVED)
-            ->with('salespersonProfile.company')
+            ->whereHas('salespersonProfile')
+            ->with(['salespersonProfile.company'])
             ->paginate(20);
+
+        // Transform to flat structure matching SalespersonSearchResult
+        $transformed = $salespeople->through(function (User $user) {
+            $profile = $user->salespersonProfile;
+            $company = $profile?->company;
+
+            // Build avatar data URL from base64 stored in database
+            $avatarUrl = null;
+            if ($profile?->avatar_data && $profile?->avatar_mime) {
+                $avatarUrl = "data:{$profile->avatar_mime};base64,{$profile->avatar_data}";
+            }
+
+            return [
+                'id' => $profile?->id,
+                'full_name' => $profile?->full_name,
+                'phone' => $profile?->phone ?? '',
+                'bio' => $profile?->bio,
+                'specialties' => $profile?->specialties,
+                'avatar' => $avatarUrl,
+                'company_name' => $company?->name,
+                'industry_name' => null, // Industry relation removed from Company model
+                'service_regions' => $profile?->service_regions ?? [],
+                'created_at' => $user->created_at?->toIso8601String() ?? '',
+            ];
+        });
 
         return response()->json([
             'success' => true,
-            'data' => $salespeople,
+            'data' => $transformed,
         ]);
     }
 }
