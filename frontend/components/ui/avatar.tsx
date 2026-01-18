@@ -63,13 +63,24 @@ export function Avatar({
         )}
       >
         {src ? (
-          <Image
-            src={src}
-            alt={alt}
-            width={96}
-            height={96}
-            className="object-cover w-full h-full"
-          />
+          // Use native img for data URLs, Next.js Image for regular URLs
+          src.startsWith('data:') ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={src}
+              alt={alt}
+              className="object-cover w-full h-full"
+            />
+          ) : (
+            <Image
+              src={src}
+              alt={alt}
+              width={96}
+              height={96}
+              className="object-cover w-full h-full"
+              unoptimized
+            />
+          )
         ) : fallback ? (
           <div className="flex items-center justify-center h-full w-full bg-gradient-to-br from-primary-400 to-secondary-400 text-white font-bold text-sm">
             {fallback}
