@@ -13,11 +13,20 @@ export function useAuth() {
   return useQuery({
     queryKey: queryKeys.auth.me,
     queryFn: async () => {
-      const response = await getCurrentUser();
-      // Backend 返回 { success: true, data: { user: {...} } }
-      // 需要解包取出 user
-      const data = response.data as { user?: any } | any;
-      return data?.user ?? data;
+      try {
+        const response = await getCurrentUser();
+        // Backend 返回 { success: true, data: { user: {...} } }
+        // 需要解包取出 user
+        const data = response.data as { user?: any } | any;
+        return data?.user ?? data;
+      } catch (error: any) {
+        // 如果是 401 未認證錯誤,返回 null (表示未登入)
+        if (error.response?.status === 401) {
+          return null;
+        }
+        // 其他錯誤則拋出
+        throw error;
+      }
     },
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
