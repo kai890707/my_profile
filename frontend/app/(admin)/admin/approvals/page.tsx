@@ -497,7 +497,10 @@ export default function ApprovalsPage() {
                 >
                   <div className="flex items-start gap-4 flex-1">
                     <div className={`p-3 bg-${activeTabData?.color}-50 rounded-xl`}>
-                      {activeTabData && <activeTabData.icon className={`h-6 w-6 text-${activeTabData.color}-600`} />}
+                      {activeTabData && (() => {
+                        const Icon = activeTabData.icon;
+                        return <Icon className={`h-6 w-6 text-${activeTabData.color}-600`} />;
+                      })()}
                     </div>
 
                     <div className="flex-1">
@@ -510,7 +513,7 @@ export default function ApprovalsPage() {
 
                       <p className="text-sm text-slate-600 mt-1">
                         {activeTab === 'users' && item.email}
-                        {activeTab === 'companies' && `統編：${item.tax_id}`}
+                        {activeTab === 'companies' && `統編：${item.tax_id || '無'}`}
                         {activeTab === 'certifications' && `發證單位：${item.issuer}`}
                         {activeTab === 'experiences' && item.company}
                       </p>
@@ -535,7 +538,10 @@ export default function ApprovalsPage() {
             </div>
           ) : (
             <div className="text-center py-16">
-              {activeTabData && <activeTabData.icon className="h-16 w-16 text-slate-300 mx-auto mb-4" />}
+              {activeTabData && (() => {
+                const Icon = activeTabData.icon;
+                return <Icon className="h-16 w-16 text-slate-300 mx-auto mb-4" />;
+              })()}
               <h3 className="text-lg font-semibold text-slate-900 mb-2">
                 目前沒有待審核的{activeTabData?.label}
               </h3>

@@ -129,10 +129,21 @@ Route::get('/salespeople', [SalespersonController::class, 'index']);
 
 // Admin routes
 Route::middleware(['jwt.auth', 'admin'])->prefix('admin')->group(function (): void {
+    // Dashboard statistics
+    Route::get('/statistics', [AdminController::class, 'statistics']);
+
+    // Pending approvals
     Route::get('/pending-approvals', [AdminController::class, 'pendingApprovals']);
+
+    // Company management
+    Route::post('/approve-company/{id}', [AdminController::class, 'approveCompany']);
 
     // Salesperson application management
     Route::get('/salesperson-applications', [AdminController::class, 'salespersonApplications']);
     Route::post('/salesperson-applications/{id}/approve', [AdminController::class, 'approveSalesperson']);
     Route::post('/salesperson-applications/{id}/reject', [AdminController::class, 'rejectSalesperson']);
+
+    // Settings
+    Route::get('/settings/regions', [AdminController::class, 'getRegions']);
+    Route::get('/settings/industries', [AdminController::class, 'getIndustries']);
 });
