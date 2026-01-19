@@ -17,8 +17,10 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { searchCompanies, type SearchCompaniesResponse } from '@/lib/api/companies';
 import type { Company } from '@/types/api';
 import { toast } from 'sonner';
@@ -149,6 +151,9 @@ export function CompanySearchCombobox({
         </DialogTrigger>
 
         <DialogContent className="p-0 max-w-md">
+          <VisuallyHidden>
+            <DialogTitle>搜尋公司</DialogTitle>
+          </VisuallyHidden>
           <Command shouldFilter={false}>
             <CommandInput
               placeholder="輸入公司名稱或統一編號"

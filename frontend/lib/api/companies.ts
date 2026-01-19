@@ -31,8 +31,14 @@ export interface CreateCompanyRequest {
   is_personal: boolean;
 }
 
-export async function createCompany(data: CreateCompanyRequest): Promise<ApiResponse<Company>> {
-  const response = await apiClient.post<ApiResponse<Company>>('/companies', data);
+export interface CreateCompanyResponse {
+  success: boolean;
+  company: Company;
+  message: string;
+}
+
+export async function createCompany(data: CreateCompanyRequest): Promise<CreateCompanyResponse> {
+  const response = await apiClient.post<CreateCompanyResponse>('/companies', data);
   return response.data;
 }
 

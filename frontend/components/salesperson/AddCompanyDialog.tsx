@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { createCompany, type CreateCompanyRequest } from '@/lib/api/companies';
+import { createCompany, type CreateCompanyRequest, type CreateCompanyResponse } from '@/lib/api/companies';
 import type { Company } from '@/types/api';
 import { toast } from 'sonner';
 
@@ -76,9 +76,9 @@ export function AddCompanyDialog({
 
       const response = await createCompany(requestData);
 
-      if (response.success && response.data) {
+      if (response.success && response.company) {
         toast.success('公司新增成功');
-        onSuccess(response.data);
+        onSuccess(response.company);
         reset();
         onOpenChange(false);
       } else {

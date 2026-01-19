@@ -254,8 +254,8 @@ export default function ProfilePage() {
           is_personal: true,
         });
 
-        if (response.success && response.data) {
-          companyId = response.data.id;
+        if (response.success && response.company) {
+          companyId = response.company.id;
           toast.success('營業資訊已建立');
         } else {
           toast.error('建立失敗，請稍後再試');
