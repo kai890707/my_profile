@@ -442,7 +442,7 @@ docker-compose up -d
 
 ## 👤 維護者
 
-**Kai Huang**
+**Kai Tsai**
 - GitHub: [@kai890707](https://github.com/kai890707)
 
 ---

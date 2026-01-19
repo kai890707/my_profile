@@ -10,12 +10,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
 import { ProfileSkeleton } from '@/components/ui/skeleton';
-import { Camera, Save, Building2, X } from 'lucide-react';
+import { Camera, Save, Building2, X, Pencil } from 'lucide-react';
 import { getAvatarFallback } from '@/lib/utils/avatar';
 import { useProfile, useUpdateProfile, useSaveCompany } from '@/hooks/useSalesperson';
 import { useRegions } from '@/hooks/useSearch';
 import { processImageUpload, formatFileSize } from '@/lib/utils/image';
 import { toast } from 'sonner';
+import { CompanySearchCombobox } from '@/components/salesperson/CompanySearchCombobox';
+import { AddCompanyDialog } from '@/components/salesperson/AddCompanyDialog';
+import { AlertDialog } from '@/components/ui/alert-dialog';
+import { createCompany } from '@/lib/api/companies';
+import type { Company } from '@/types/api';
 
 // 個人資料表單驗證
 const profileSchema = z.object({
@@ -32,17 +37,27 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
-// 公司資訊表單驗證
+// 公司資訊表單驗證（簡化版，使用組件狀態管理）
 const companySchema = z.object({
-  name: z.string().min(2, '公司名稱至少需要 2 個字元').max(100, '公司名稱不能超過 100 個字元'),
+  company_id: z.number().optional(),
+  is_self_employed: z.boolean().optional(),
 });
 
 type CompanyFormData = z.infer<typeof companySchema>;
 
 export default function ProfilePage() {
   const [editMode, setEditMode] = useState(false);
+  const [companyEditMode, setCompanyEditMode] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Company selection state
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [isSelfEmployed, setIsSelfEmployed] = useState(false);
+  const [businessName, setBusinessName] = useState('');
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showSwitchAlert, setShowSwitchAlert] = useState(false);
+  const [pendingSwitchValue, setPendingSwitchValue] = useState(false);
 
   // 獲取資料
   const { data: profile, isLoading: profileLoading } = useProfile();
@@ -72,16 +87,19 @@ export default function ProfilePage() {
     },
   });
 
-  // 公司資訊表單
+  // 公司資訊表單（保留以維持向後兼容）
   const {
     register: registerCompany,
     handleSubmit: handleCompanySubmit,
     formState: { errors: companyErrors },
     reset: resetCompany,
+    watch: watchCompany,
+    setValue: setCompanyValue,
   } = useForm<CompanyFormData>({
     resolver: zodResolver(companySchema),
     defaultValues: {
-      name: profile?.company?.name || '',
+      company_id: profile?.company?.id,
+      is_self_employed: !profile?.company?.id,
     },
   });
 
@@ -108,12 +126,26 @@ export default function ProfilePage() {
         specialties: profile.specialties || '',
         service_regions: serviceRegions,
       });
-      resetCompany({
-        name: profile.company?.name || '',
-      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id, editMode]);
+
+  // Initialize company selection state when entering company edit mode
+  useEffect(() => {
+    if (profile && companyEditMode) {
+      if (profile.company) {
+        setSelectedCompany(profile.company);
+        setIsSelfEmployed(profile.company.is_personal);
+        if (profile.company.is_personal) {
+          setBusinessName(profile.company.name);
+        }
+      } else {
+        setSelectedCompany(null);
+        setIsSelfEmployed(false);
+        setBusinessName('');
+      }
+    }
+  }, [profile, companyEditMode]);
 
   // 處理頭像上傳
   const handleAvatarChange = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -166,9 +198,95 @@ export default function ProfilePage() {
     });
   };
 
+  // Handle self-employed switch
+  const handleSelfEmployedChange = (checked: boolean) => {
+    // If there's existing data, show confirmation dialog
+    if (
+      (checked && selectedCompany) || // Company → Self-employed
+      (!checked && (isSelfEmployed && businessName)) // Self-employed → Company
+    ) {
+      setPendingSwitchValue(checked);
+      setShowSwitchAlert(true);
+    } else {
+      setIsSelfEmployed(checked);
+      if (checked) {
+        setSelectedCompany(null);
+      } else {
+        setBusinessName('');
+      }
+    }
+  };
+
+  // Confirm switch
+  const confirmSwitch = () => {
+    setIsSelfEmployed(pendingSwitchValue);
+    if (pendingSwitchValue) {
+      // Switching to self-employed
+      setSelectedCompany(null);
+    } else {
+      // Switching to company
+      setBusinessName('');
+    }
+    setShowSwitchAlert(false);
+  };
+
+  // Handle company add success
+  const handleCompanyAdded = (company: Company) => {
+    setSelectedCompany(company);
+  };
+
   // 提交公司資訊
-  const onSubmitCompany = (data: CompanyFormData) => {
-    saveCompanyMutation.mutate(data);
+  const onSubmitCompany = async () => {
+    try {
+      let companyId: number | undefined;
+
+      if (isSelfEmployed) {
+        // Validate business name
+        if (!businessName || businessName.trim().length === 0) {
+          toast.error('請填寫營業名稱');
+          return;
+        }
+
+        // Create personal company
+        const response = await createCompany({
+          name: businessName.trim(),
+          tax_id: null,
+          is_personal: true,
+        });
+
+        if (response.success && response.company) {
+          companyId = response.company.id;
+          toast.success('營業資訊已建立');
+        } else {
+          toast.error('建立失敗，請稍後再試');
+          return;
+        }
+      } else {
+        // Validate company selection
+        if (!selectedCompany) {
+          toast.error('請選擇公司');
+          return;
+        }
+        companyId = selectedCompany.id;
+      }
+
+      // Save company ID to profile
+      saveCompanyMutation.mutate(
+        { company_id: companyId },
+        {
+          onSuccess: () => {
+            setCompanyEditMode(false);
+            toast.success('公司資訊已更新');
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.error || '儲存失敗');
+          },
+        }
+      );
+    } catch (error: any) {
+      console.error('提交公司資訊失敗:', error);
+      toast.error('儲存失敗，請稍後再試');
+    }
   };
 
   if (profileLoading || regionsLoading) {
@@ -397,44 +515,139 @@ export default function ProfilePage() {
       {/* 公司資訊卡片 */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            公司資訊
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              公司資訊
+            </span>
+            {!companyEditMode && (profileData?.company || profileData?.company_id === null) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCompanyEditMode(true)}
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                編輯
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {profileData?.company && !editMode ? (
-            // 檢視模式
+          {companyEditMode || (!profileData?.company && profileData?.company_id !== null) ? (
+            // 編輯模式或無公司資訊
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                    checked={isSelfEmployed}
+                    onChange={(e) => handleSelfEmployedChange(e.target.checked)}
+                  />
+                  <span className="text-sm font-medium text-slate-700">我是自營業者</span>
+                </label>
+
+                {!isSelfEmployed ? (
+                  <CompanySearchCombobox
+                    value={selectedCompany}
+                    onChange={setSelectedCompany}
+                    onAddNew={() => setShowAddDialog(true)}
+                    disabled={saveCompanyMutation.isPending}
+                  />
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">
+                      營業名稱
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="例：王小明設計工作室"
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      disabled={saveCompanyMutation.isPending}
+                      required
+                    />
+                    <p className="text-xs text-slate-500">
+                      請填寫您的工作室或個人營業名稱
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  onClick={onSubmitCompany}
+                  isLoading={saveCompanyMutation.isPending}
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  儲存公司資訊
+                </Button>
+                {companyEditMode && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setCompanyEditMode(false);
+                      setSelectedCompany(profile?.company || null);
+                      setIsSelfEmployed(profile?.company?.is_personal || false);
+                      setBusinessName(profile?.company?.is_personal ? profile.company.name : '');
+                    }}
+                  >
+                    取消
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : profileData?.company ? (
+            // 檢視模式 - 有公司資訊
             <div className="space-y-4">
               <div>
                 <h4 className="text-sm font-semibold text-slate-700 mb-1">公司名稱</h4>
                 <p className="text-slate-900">{profileData.company.name}</p>
               </div>
+              {profileData.company.tax_id && (
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-700 mb-1">統一編號</h4>
+                  <p className="text-slate-900">{profileData.company.tax_id}</p>
+                </div>
+              )}
             </div>
           ) : (
-            // 編輯模式或無公司資訊
-            <form onSubmit={handleCompanySubmit(onSubmitCompany)} className="space-y-4">
-              <Input
-                label="公司名稱"
-                type="text"
-                placeholder="請輸入公司名稱"
-                error={companyErrors.name?.message}
-                required
-                {...registerCompany('name')}
-              />
-
-
-              <Button
-                type="submit"
-                isLoading={saveCompanyMutation.isPending}
-              >
-                <Save className="mr-2 h-4 w-4" />
-                儲存公司資訊
-              </Button>
-            </form>
+            // 檢視模式 - 自營業者
+            <div className="space-y-4">
+              <Badge variant="secondary" className="bg-teal-100 text-teal-800">
+                自營業者
+              </Badge>
+              <p className="text-sm text-slate-600">您目前設定為自營業者，無所屬公司。</p>
+            </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Add Company Dialog */}
+      <AddCompanyDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        onSuccess={handleCompanyAdded}
+      />
+
+      {/* Switch Confirmation Alert */}
+      <AlertDialog
+        open={showSwitchAlert}
+        onOpenChange={setShowSwitchAlert}
+        title={pendingSwitchValue ? '確認切換為自營業者？' : '確認切換為公司業務員？'}
+        description={
+          pendingSwitchValue
+            ? '切換後，您先前選擇的公司資訊將被清除。'
+            : '切換後，您的自營業者名稱將被清除。'
+        }
+        cancelText="取消"
+        confirmText="確認切換"
+        onConfirm={confirmSwitch}
+        variant="default"
+      />
     </div>
   );
 }

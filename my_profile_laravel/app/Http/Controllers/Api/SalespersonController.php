@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SaveCompanyRequest;
 use App\Http\Requests\UpdateSalespersonProfileRequest;
 use App\Http\Requests\UpgradeSalespersonRequest;
 use App\Models\User;
@@ -254,6 +255,64 @@ class SalespersonController extends Controller
         return response()->json([
             'success' => true,
             'data' => $transformed,
+        ]);
+    }
+
+    /**
+     * Save company information for salesperson.
+     *
+     * POST /api/salesperson/company
+     */
+    public function saveCompany(SaveCompanyRequest $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        // Check if user is a salesperson
+        if (! $user->isSalesperson()) {
+            return response()->json([
+                'success' => false,
+                'error' => '僅業務員可儲存公司資訊',
+            ], 403);
+        }
+
+        // Get or create salesperson profile
+        $profile = $user->salespersonProfile;
+
+        if (! $profile) {
+            return response()->json([
+                'success' => false,
+                'error' => '業務員個人資料不存在',
+            ], 404);
+        }
+
+        // Update company information
+        if ($request->filled('company_id')) {
+            // Set company_id
+            $profile->update(['company_id' => $request->input('company_id')]);
+            $message = '公司資訊已更新';
+        } elseif ($request->boolean('is_self_employed')) {
+            // Set to self-employed (company_id = null)
+            $profile->update(['company_id' => null]);
+            $message = '已設定為自營業者';
+        }
+
+        // Reload profile with company relationship
+        $profile->load('company');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'profile' => [
+                    'id' => $profile->id,
+                    'company_id' => $profile->company_id,
+                    'company' => $profile->company ? [
+                        'id' => $profile->company->id,
+                        'name' => $profile->company->name,
+                    ] : null,
+                ],
+            ],
+            'message' => $message,
         ]);
     }
 }

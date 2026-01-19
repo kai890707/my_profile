@@ -404,4 +404,171 @@ class SalespersonControllerTest extends TestCase
         $this->assertTrue($data['can_reapply']); // 已過期，可重新申請
         $this->assertEquals(0, $data['days_until_reapply']); // Should be 0 or negative
     }
+
+    /**
+     * ========================================
+     * Save Company API Tests
+     * ========================================
+     */
+
+    /** @test */
+    public function salesperson_can_select_existing_company(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_SALESPERSON]);
+        $profile = SalespersonProfile::factory()->create(['user_id' => $user->id, 'company_id' => null]);
+        $company = \App\Models\Company::factory()->create(['name' => 'Test Company']);
+        $token = auth()->login($user);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/salesperson/company', [
+                'company_id' => $company->id,
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'profile' => [
+                        'id' => $profile->id,
+                        'company_id' => $company->id,
+                        'company' => [
+                            'id' => $company->id,
+                            'name' => 'Test Company',
+                        ],
+                    ],
+                ],
+                'message' => '公司資訊已更新',
+            ]);
+
+        $profile->refresh();
+        $this->assertEquals($company->id, $profile->company_id);
+    }
+
+    /** @test */
+    public function salesperson_can_set_as_self_employed(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_SALESPERSON]);
+        $company = \App\Models\Company::factory()->create();
+        $profile = SalespersonProfile::factory()->create([
+            'user_id' => $user->id,
+            'company_id' => $company->id,
+        ]);
+        $token = auth()->login($user);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/salesperson/company', [
+                'is_self_employed' => true,
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'profile' => [
+                        'id' => $profile->id,
+                        'company_id' => null,
+                        'company' => null,
+                    ],
+                ],
+                'message' => '已設定為自營業者',
+            ]);
+
+        $profile->refresh();
+        $this->assertNull($profile->company_id);
+    }
+
+    /** @test */
+    public function save_company_fails_when_company_does_not_exist(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_SALESPERSON]);
+        SalespersonProfile::factory()->create(['user_id' => $user->id]);
+        $token = auth()->login($user);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/salesperson/company', [
+                'company_id' => 99999, // Non-existent company
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['company_id']);
+    }
+
+    /** @test */
+    public function save_company_fails_when_both_company_id_and_is_self_employed_provided(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_SALESPERSON]);
+        SalespersonProfile::factory()->create(['user_id' => $user->id]);
+        $company = \App\Models\Company::factory()->create();
+        $token = auth()->login($user);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/salesperson/company', [
+                'company_id' => $company->id,
+                'is_self_employed' => true,
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['company_id']);
+    }
+
+    /** @test */
+    public function save_company_fails_when_neither_company_id_nor_is_self_employed_provided(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_SALESPERSON]);
+        SalespersonProfile::factory()->create(['user_id' => $user->id]);
+        $token = auth()->login($user);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/salesperson/company', []);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['company_id']);
+    }
+
+    /** @test */
+    public function unauthenticated_user_cannot_save_company(): void
+    {
+        $response = $this->postJson('/api/salesperson/company', [
+            'is_self_employed' => true,
+        ]);
+
+        $response->assertStatus(401);
+    }
+
+    /** @test */
+    public function regular_user_cannot_save_company(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_USER]);
+        $token = auth()->login($user);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/salesperson/company', [
+                'is_self_employed' => true,
+            ]);
+
+        $response->assertStatus(403)
+            ->assertJson([
+                'success' => false,
+                'error' => '僅業務員可儲存公司資訊',
+            ]);
+    }
+
+    /** @test */
+    public function save_company_fails_when_profile_does_not_exist(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_SALESPERSON]);
+        $token = auth()->login($user);
+        // No profile created
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/salesperson/company', [
+                'is_self_employed' => true,
+            ]);
+
+        $response->assertStatus(404)
+            ->assertJson([
+                'success' => false,
+                'error' => '業務員個人資料不存在',
+            ]);
+    }
 }

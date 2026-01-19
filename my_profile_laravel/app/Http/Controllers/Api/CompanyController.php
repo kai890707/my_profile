@@ -443,11 +443,15 @@ class CompanyController extends Controller
 
         $query = Company::query();
 
-        if ($taxId) {
-            $query->where('tax_id', $taxId);
-        }
-
-        if ($name) {
+        // Use OR logic with LIKE search for better UX
+        if ($taxId && $name) {
+            $query->where(function ($q) use ($taxId, $name) {
+                $q->where('tax_id', 'like', '%'.$taxId.'%')
+                  ->orWhere('name', 'like', '%'.$name.'%');
+            });
+        } elseif ($taxId) {
+            $query->where('tax_id', 'like', '%'.$taxId.'%');
+        } elseif ($name) {
             $query->where('name', 'like', '%'.$name.'%');
         }
 

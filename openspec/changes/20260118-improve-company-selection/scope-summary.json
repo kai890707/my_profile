@@ -1,0 +1,194 @@
+{
+  "feature": "改進業務員公司選擇的 UX",
+  "proposal_id": "20260118-improve-company-selection",
+  "priority": "High",
+  "estimated_completion": "2.5 工作日",
+
+  "scope": {
+    "backend": true,
+    "frontend": true,
+    "ui_design": true,
+    "architecture": false,
+    "database": false
+  },
+
+  "scope_explanation": {
+    "backend": "需調整搜尋 API 支援模糊搜尋、確認驗證規則",
+    "frontend": "主要開發範圍：Combobox、Dialog、表單驗證",
+    "ui_design": "設計 Combobox 樣式、Dialog 佈局、無障礙性",
+    "architecture": "使用現有架構，無需變更",
+    "database": "採用個人公司方案，使用現有 companies 表，無需 Migration"
+  },
+
+  "files": {
+    "frontend": {
+      "new_files": [
+        {
+          "path": "frontend/components/salesperson/CompanySearchCombobox.tsx",
+          "lines": 300,
+          "description": "公司搜尋 Autocomplete 組件（shadcn/ui Combobox）"
+        },
+        {
+          "path": "frontend/components/salesperson/AddCompanyDialog.tsx",
+          "lines": 200,
+          "description": "新增公司對話框組件"
+        },
+        {
+          "path": "frontend/components/salesperson/BusinessNameInput.tsx",
+          "lines": 100,
+          "description": "自營業者營業名稱輸入組件"
+        },
+        {
+          "path": "frontend/components/salesperson/SwitchConfirmDialog.tsx",
+          "lines": 100,
+          "description": "公司/自營切換確認對話框"
+        },
+        {
+          "path": "frontend/components/salesperson/types.ts",
+          "lines": 50,
+          "description": "公司選擇相關 TypeScript 類型定義"
+        }
+      ],
+      "modified_files": [
+        {
+          "path": "frontend/app/salesperson/register/page.tsx",
+          "estimated_changes": "+50 行",
+          "description": "整合新的公司選擇組件"
+        },
+        {
+          "path": "frontend/lib/api/salesperson.ts",
+          "estimated_changes": "+50 行",
+          "description": "確認 API 呼叫邏輯（可能需微調）"
+        },
+        {
+          "path": "frontend/lib/validations/salesperson.ts",
+          "estimated_changes": "+50 行",
+          "description": "新增公司名稱、統編、營業名稱驗證規則"
+        }
+      ],
+      "total_new_lines": 750,
+      "total_modified_lines": 150
+    },
+    "backend": {
+      "files_to_check": [
+        {
+          "path": "my_profile_laravel/app/Http/Controllers/Api/SalespersonController.php",
+          "action": "確認 searchCompanies 方法支援模糊搜尋（LIKE %keyword%）"
+        },
+        {
+          "path": "my_profile_laravel/app/Models/Company.php",
+          "action": "確認 type 欄位存在（registered/personal）"
+        }
+      ],
+      "potential_new_files": [
+        {
+          "path": "my_profile_laravel/app/Http/Requests/SearchCompanyRequest.php",
+          "lines": 30,
+          "description": "公司搜尋請求驗證（如現有 API 驗證不足）",
+          "optional": true
+        }
+      ],
+      "migrations": [
+        {
+          "path": "my_profile_laravel/database/migrations/xxxx_add_indexes_to_companies_table.php",
+          "description": "新增 companies.name 和 companies.tax_id 索引（效能優化）",
+          "optional": true,
+          "estimated_time": "30 分鐘"
+        }
+      ],
+      "total_estimated_lines": 50
+    }
+  },
+
+  "effort_estimation": {
+    "frontend": {
+      "preparation": 1,
+      "development": 10,
+      "testing": 1,
+      "total_hours": 12
+    },
+    "backend": {
+      "api_adjustment": 1,
+      "database_optimization": 0.5,
+      "validation": 0.5,
+      "testing": 0.5,
+      "total_hours": 2.5
+    },
+    "total_hours": 14.5,
+    "total_days": 2,
+    "buffer_days": 0.5,
+    "final_estimate_days": 2.5
+  },
+
+  "key_decisions": {
+    "data_model": "個人公司方案（companies.type = 'personal'）",
+    "ui_component": "shadcn/ui Combobox",
+    "search_debounce": "300ms",
+    "search_limit": 10,
+    "accessibility": "WCAG AA",
+    "performance_target": "API < 500ms (P95)"
+  },
+
+  "risks": [
+    {
+      "risk": "Backend API 不支援模糊搜尋",
+      "probability": "低",
+      "impact": "高",
+      "mitigation": "需 Backend 調整為 LIKE 查詢，預估 1 小時"
+    },
+    {
+      "risk": "個人公司方案與現有模型不相容",
+      "probability": "低",
+      "impact": "中",
+      "mitigation": "改用方案 A（新增欄位），需 Migration"
+    },
+    {
+      "risk": "效能問題（公司數量暴增）",
+      "probability": "低",
+      "impact": "中",
+      "mitigation": "確保索引、使用 LIMIT 10、未來考慮 Elasticsearch"
+    }
+  ],
+
+  "dependencies": [
+    {
+      "dependency": "Backend API 確認",
+      "owner": "Backend 團隊",
+      "estimated_time": "1 小時",
+      "blocking": true
+    },
+    {
+      "dependency": "shadcn/ui Combobox 安裝",
+      "owner": "Frontend 團隊",
+      "estimated_time": "30 分鐘",
+      "blocking": true
+    },
+    {
+      "dependency": "資料庫索引",
+      "owner": "Backend 團隊",
+      "estimated_time": "30 分鐘",
+      "blocking": false
+    }
+  ],
+
+  "acceptance_criteria": [
+    "業務員可搜尋公司名稱或統編選擇公司",
+    "搜尋結果顯示公司名稱+統編（如有）",
+    "搜尋不到時可新增公司",
+    "自營業者可填寫營業名稱（必填）",
+    "切換時有確認對話框",
+    "表單驗證完整（即時驗證、錯誤訊息）",
+    "搜尋回應 < 500ms (P95)",
+    "符合 WCAG AA 無障礙性標準",
+    "鍵盤完整操作（Tab, Arrow, Enter, Esc）",
+    "色彩對比 >= 4.5:1"
+  ],
+
+  "next_steps": [
+    "1. 確認 Backend API 支援（1 小時）",
+    "2. 安裝 shadcn/ui Combobox（30 分鐘）",
+    "3. 開始 Frontend 開發（Day 1-2）",
+    "4. Backend 調整（Day 2，如需要）",
+    "5. 測試與上線（Day 2 下午）"
+  ]
+}

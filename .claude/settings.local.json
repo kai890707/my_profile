@@ -82,7 +82,13 @@
       "Bash(__NEW_LINE_32f269ac1218ac4c__ echo \"現有歸檔資料夾 \\(需要重新命名\\):\")",
       "Bash(__NEW_LINE_32f269ac1218ac4c__ echo \"\")",
       "Bash(while read dir)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git merge:*)",
+      "Bash(git branch:*)",
+      "Bash(git diff frontend/app/salesperson/[id]/page.tsx frontend/lib/api/search.ts)",
+      "Bash(open http://localhost:3001/search)",
+      "Bash(open:*)",
+      "Bash(npx shadcn@latest add:*)"
     ]
   }
 }

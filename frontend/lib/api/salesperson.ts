@@ -75,9 +75,11 @@ export async function updateProfile(data: UpdateProfileRequest): Promise<ApiResp
 
 /**
  * 儲存公司資訊
+ * 必須提供 company_id 或 is_self_employed，但不可同時提供
  */
 export interface SaveCompanyRequest {
-  name: string;
+  company_id?: number;      // 選擇既有公司
+  is_self_employed?: boolean; // 標記為自營業者
 }
 
 export async function saveCompany(data: SaveCompanyRequest): Promise<ApiResponse<Company>> {
