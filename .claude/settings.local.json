@@ -87,7 +87,8 @@
       "Bash(git branch:*)",
       "Bash(git diff frontend/app/salesperson/[id]/page.tsx frontend/lib/api/search.ts)",
       "Bash(open http://localhost:3001/search)",
-      "Bash(open:*)"
+      "Bash(open:*)",
+      "Bash(npx shadcn@latest add:*)"
     ]
   }
 }
