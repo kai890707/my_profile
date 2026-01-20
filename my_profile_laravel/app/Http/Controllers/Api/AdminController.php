@@ -93,7 +93,7 @@ class AdminController extends Controller
     #[OA\Get(
         path: '/admin/pending-approvals',
         summary: '取得所有待審核項目',
-        description: '取得所有待審核的公司和業務員檔案列表',
+        description: '取得所有待審核的公司、業務員檔案、工作經驗和證照列表',
         security: [['bearerAuth' => []]],
         tags: ['管理員'],
         responses: [
@@ -108,6 +108,8 @@ class AdminController extends Controller
                             properties: [
                                 new OA\Property(property: 'companies', type: 'array', items: new OA\Items(ref: '#/components/schemas/Company')),
                                 new OA\Property(property: 'profiles', type: 'array', items: new OA\Items(ref: '#/components/schemas/SalespersonProfile')),
+                                new OA\Property(property: 'experiences', type: 'array', items: new OA\Items(ref: '#/components/schemas/Experience')),
+                                new OA\Property(property: 'certifications', type: 'array', items: new OA\Items(ref: '#/components/schemas/Certification')),
                             ],
                             type: 'object'
                         ),
@@ -131,11 +133,24 @@ class AdminController extends Controller
         $companies = $this->companyService->getPendingApprovals();
         $profiles = $this->profileService->getPendingApprovals();
 
+        // Get pending experiences and certifications
+        $experiences = Experience::where('approval_status', 'pending')
+            ->with(['user'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $certifications = Certification::where('approval_status', 'pending')
+            ->with(['user'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return response()->json([
             'success' => true,
             'data' => [
                 'companies' => $companies,
                 'profiles' => $profiles,
+                'experiences' => $experiences,
+                'certifications' => $certifications,
             ],
         ]);
     }
