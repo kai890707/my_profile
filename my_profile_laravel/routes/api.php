@@ -138,6 +138,12 @@ Route::middleware(['jwt.auth', 'admin'])->prefix('admin')->group(function (): vo
     // Company management
     Route::post('/approve-company/{id}', [AdminController::class, 'approveCompany']);
 
+    // Experience management
+    Route::post('/approve-experience/{id}', [AdminController::class, 'approveExperience']);
+
+    // Certification management
+    Route::post('/approve-certification/{id}', [AdminController::class, 'approveCertification']);
+
     // Salesperson application management
     Route::get('/salesperson-applications', [AdminController::class, 'salespersonApplications']);
     Route::post('/salesperson-applications/{id}/approve', [AdminController::class, 'approveSalesperson']);

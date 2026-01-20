@@ -6,7 +6,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RejectSalespersonRequest;
+use App\Models\Certification;
 use App\Models\Company;
+use App\Models\Experience;
 use App\Models\User;
 use App\Services\CompanyService;
 use App\Services\SalespersonProfileService;
@@ -443,6 +445,130 @@ class AdminController extends Controller
         return response()->json([
             'success' => true,
             'data' => $industries,
+        ]);
+    }
+
+    /**
+     * Approve experience.
+     *
+     * POST /api/admin/approve-experience/{id}
+     */
+    #[OA\Post(
+        path: '/admin/approve-experience/{id}',
+        summary: '批准工作經驗',
+        description: '將工作經驗審核狀態設為已通過',
+        security: [['bearerAuth' => []]],
+        tags: ['管理員'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                description: '工作經驗 ID',
+                required: true,
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: '工作經驗已批准',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'success', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: '工作經驗已批准'),
+                        new OA\Property(property: 'experience', type: 'object'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: '工作經驗不存在',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+        ]
+    )]
+    public function approveExperience(int $id): JsonResponse
+    {
+        $experience = Experience::findOrFail($id);
+
+        if ($experience->approval_status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'error' => '此工作經驗無法審核',
+            ], 400);
+        }
+
+        $experience->approval_status = 'approved';
+        $experience->approved_by = auth()->id();
+        $experience->approved_at = now();
+        $experience->save();
+
+        return response()->json([
+            'success' => true,
+            'experience' => $experience,
+            'message' => '工作經驗已批准',
+        ]);
+    }
+
+    /**
+     * Approve certification.
+     *
+     * POST /api/admin/approve-certification/{id}
+     */
+    #[OA\Post(
+        path: '/admin/approve-certification/{id}',
+        summary: '批准證照',
+        description: '將證照審核狀態設為已通過',
+        security: [['bearerAuth' => []]],
+        tags: ['管理員'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                description: '證照 ID',
+                required: true,
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: '證照已批准',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'success', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: '證照已批准'),
+                        new OA\Property(property: 'certification', type: 'object'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: '證照不存在',
+                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+            ),
+        ]
+    )]
+    public function approveCertification(int $id): JsonResponse
+    {
+        $certification = Certification::findOrFail($id);
+
+        if ($certification->approval_status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'error' => '此證照無法審核',
+            ], 400);
+        }
+
+        $certification->approval_status = 'approved';
+        $certification->approved_by = auth()->id();
+        $certification->approved_at = now();
+        $certification->save();
+
+        return response()->json([
+            'success' => true,
+            'certification' => $certification,
+            'message' => '證照已批准',
         ]);
     }
 }
