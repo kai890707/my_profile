@@ -178,7 +178,9 @@ export default function ExperiencesPage() {
                             {statusBadge.label}
                           </Badge>
                         </div>
-                        <p className="text-slate-600 font-medium">{exp.company}</p>
+                        <p className="text-slate-600 font-medium">
+                          {typeof exp.company === 'string' ? exp.company : exp.company?.name || '未指定'}
+                        </p>
                         <div className="flex items-center gap-2 text-sm text-slate-500 mt-2">
                           <Calendar className="h-4 w-4" />
                           <span>

@@ -119,7 +119,7 @@ export interface Company {
 export interface Experience {
   id: number;
   user_id: number;
-  company: string;
+  company: string | { name: string };
   position: string;
   start_date: string;
   end_date: string | null;

@@ -52,7 +52,7 @@ export function ExperienceFormModal({
   } = useForm<ExperienceFormData>({
     resolver: zodResolver(experienceSchema),
     defaultValues: {
-      company: experience?.company || '',
+      company: experience?.company ? (typeof experience.company === 'string' ? experience.company : experience.company.name) : '',
       position: experience?.position || '',
       start_date: experience?.start_date || '',
       end_date: experience?.end_date || '',
@@ -64,7 +64,7 @@ export function ExperienceFormModal({
   useEffect(() => {
     if (experience) {
       reset({
-        company: experience.company,
+        company: typeof experience.company === 'string' ? experience.company : experience.company?.name || '',
         position: experience.position,
         start_date: experience.start_date,
         end_date: experience.end_date || '',
@@ -81,7 +81,7 @@ export function ExperienceFormModal({
     }
   }, [experience, reset]);
 
-  const handleFormSubmit = (data: ExperienceFormData) => {
+  const handleFormSubmit: (data: ExperienceFormData) => void = (data) => {
     onSubmit(data);
   };
 
