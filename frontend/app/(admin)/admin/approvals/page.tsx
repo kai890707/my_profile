@@ -408,7 +408,7 @@ export default function ApprovalsPage() {
       id: 'experiences' as ApprovalType,
       label: '工作經驗',
       icon: Briefcase,
-      count: pendingData?.profiles?.filter((p: any) => p.approval_status === 'pending').length || 0,
+      count: pendingData?.experiences?.length || 0,
       color: 'purple',
     },
   ];
@@ -422,7 +422,7 @@ export default function ApprovalsPage() {
       case 'certifications':
         return pendingData?.certifications || [];
       case 'experiences':
-        return pendingData?.profiles?.filter((p: any) => p.approval_status === 'pending') || [];
+        return pendingData?.experiences || [];
       default:
         return [];
     }
