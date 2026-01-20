@@ -372,7 +372,14 @@ class AdminController extends Controller
                         new OA\Property(
                             property: 'data',
                             type: 'array',
-                            items: new OA\Items(type: 'string', example: '台北市')
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                                    new OA\Property(property: 'name', type: 'string', example: '台北市'),
+                                    new OA\Property(property: 'parent_id', type: 'integer', nullable: true, example: null),
+                                ],
+                                type: 'object'
+                            )
                         ),
                     ]
                 )
@@ -381,12 +388,10 @@ class AdminController extends Controller
     )]
     public function getRegions(): JsonResponse
     {
-        $regions = DB::table('salesperson_profiles')
-            ->whereNotNull('region')
-            ->distinct()
-            ->pluck('region')
-            ->sort()
-            ->values();
+        $regions = DB::table('regions')
+            ->select('id', 'name', 'parent_id')
+            ->orderBy('name')
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -415,7 +420,13 @@ class AdminController extends Controller
                         new OA\Property(
                             property: 'data',
                             type: 'array',
-                            items: new OA\Items(type: 'string', example: '科技業')
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                                    new OA\Property(property: 'name', type: 'string', example: '科技業'),
+                                ],
+                                type: 'object'
+                            )
                         ),
                     ]
                 )
@@ -424,12 +435,10 @@ class AdminController extends Controller
     )]
     public function getIndustries(): JsonResponse
     {
-        $industries = DB::table('salesperson_profiles')
-            ->whereNotNull('industry')
-            ->distinct()
-            ->pluck('industry')
-            ->sort()
-            ->values();
+        $industries = DB::table('industries')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
 
         return response()->json([
             'success' => true,
