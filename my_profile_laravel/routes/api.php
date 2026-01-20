@@ -129,10 +129,34 @@ Route::get('/salespeople', [SalespersonController::class, 'index']);
 
 // Admin routes
 Route::middleware(['jwt.auth', 'admin'])->prefix('admin')->group(function (): void {
+    // Dashboard statistics
+    Route::get('/statistics', [AdminController::class, 'statistics']);
+
+    // Pending approvals
     Route::get('/pending-approvals', [AdminController::class, 'pendingApprovals']);
+
+    // Company management
+    Route::post('/approve-company/{id}', [AdminController::class, 'approveCompany']);
+
+    // Experience management
+    Route::post('/approve-experience/{id}', [AdminController::class, 'approveExperience']);
+    Route::post('/reject-experience/{id}', [AdminController::class, 'rejectExperience']);
+
+    // Certification management
+    Route::post('/approve-certification/{id}', [AdminController::class, 'approveCertification']);
+    Route::post('/reject-certification/{id}', [AdminController::class, 'rejectCertification']);
 
     // Salesperson application management
     Route::get('/salesperson-applications', [AdminController::class, 'salespersonApplications']);
     Route::post('/salesperson-applications/{id}/approve', [AdminController::class, 'approveSalesperson']);
     Route::post('/salesperson-applications/{id}/reject', [AdminController::class, 'rejectSalesperson']);
+
+    // Settings
+    Route::get('/settings/regions', [AdminController::class, 'getRegions']);
+    Route::get('/settings/industries', [AdminController::class, 'getIndustries']);
+
+    // User Management
+    Route::get('/users', [AdminController::class, 'getUsers']);
+    Route::put('/users/{id}/status', [AdminController::class, 'updateUserStatus']);
+    Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
 });

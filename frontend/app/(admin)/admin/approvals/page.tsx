@@ -225,7 +225,9 @@ function DetailModal({
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-semibold text-slate-900">{item.position}</h3>
-                    <p className="text-lg text-slate-600 mt-1">{item.company}</p>
+                    <p className="text-lg text-slate-600 mt-1">
+                      {typeof item.company === 'string' ? item.company : item.company?.name || '未指定'}
+                    </p>
                     <div className="mt-3 space-y-3">
                       <div className="flex items-center gap-2 text-slate-600">
                         <Calendar className="h-4 w-4" />
@@ -406,7 +408,7 @@ export default function ApprovalsPage() {
       id: 'experiences' as ApprovalType,
       label: '工作經驗',
       icon: Briefcase,
-      count: pendingData?.profiles?.filter((p: any) => p.approval_status === 'pending').length || 0,
+      count: pendingData?.experiences?.length || 0,
       color: 'purple',
     },
   ];
@@ -420,7 +422,7 @@ export default function ApprovalsPage() {
       case 'certifications':
         return pendingData?.certifications || [];
       case 'experiences':
-        return pendingData?.profiles?.filter((p: any) => p.approval_status === 'pending') || [];
+        return pendingData?.experiences || [];
       default:
         return [];
     }
@@ -497,7 +499,10 @@ export default function ApprovalsPage() {
                 >
                   <div className="flex items-start gap-4 flex-1">
                     <div className={`p-3 bg-${activeTabData?.color}-50 rounded-xl`}>
-                      {activeTabData && <activeTabData.icon className={`h-6 w-6 text-${activeTabData.color}-600`} />}
+                      {activeTabData && (() => {
+                        const Icon = activeTabData.icon;
+                        return <Icon className={`h-6 w-6 text-${activeTabData.color}-600`} />;
+                      })()}
                     </div>
 
                     <div className="flex-1">
@@ -510,9 +515,9 @@ export default function ApprovalsPage() {
 
                       <p className="text-sm text-slate-600 mt-1">
                         {activeTab === 'users' && item.email}
-                        {activeTab === 'companies' && `統編：${item.tax_id}`}
+                        {activeTab === 'companies' && `統編：${item.tax_id || '無'}`}
                         {activeTab === 'certifications' && `發證單位：${item.issuer}`}
-                        {activeTab === 'experiences' && item.company}
+                        {activeTab === 'experiences' && (typeof item.company === 'string' ? item.company : item.company?.name || '未指定')}
                       </p>
 
                       <p className="text-xs text-slate-500 mt-1">
@@ -535,7 +540,10 @@ export default function ApprovalsPage() {
             </div>
           ) : (
             <div className="text-center py-16">
-              {activeTabData && <activeTabData.icon className="h-16 w-16 text-slate-300 mx-auto mb-4" />}
+              {activeTabData && (() => {
+                const Icon = activeTabData.icon;
+                return <Icon className="h-16 w-16 text-slate-300 mx-auto mb-4" />;
+              })()}
               <h3 className="text-lg font-semibold text-slate-900 mb-2">
                 目前沒有待審核的{activeTabData?.label}
               </h3>
