@@ -3,7 +3,7 @@
 **專案類型**: Full-Stack Monorepo
 **架構**: Laravel 11 (Backend) + Next.js 15 (Frontend)
 **開發方法**: OpenSpec Specification-Driven Development (SDD)
-**最後更新**: 2026-01-11
+**最後更新**: 2026-01-20
 
 ---
 
@@ -60,10 +60,18 @@ my_profile/                          # 專案根目錄 (此目錄)
     │   ├── feature-finish.md        # 完成功能
     │   ├── test.md                  # 測試命令
     │   └── ...
-    └── agents/                      # 專業 Agents
-        ├── qa-engineer.md           # QA 測試 Agent
-        ├── devops-engineer.md       # DevOps Agent
-        └── react-specialist.md      # React 專家 Agent
+    ├── agents/                      # 專業 Agents
+    │   ├── qa-engineer.md           # QA 測試 Agent
+    │   ├── devops-engineer.md       # DevOps Agent
+    │   └── react-specialist.md      # React 專家 Agent
+    └── skills/                      # 專業 Skills (NEW!)
+        ├── README.md                # Skills 使用指南
+        ├── react-best-practices/    # React/Next.js 效能優化
+        ├── webapp-testing/          # Playwright Web 測試
+        ├── playwright-skill/        # 瀏覽器自動化
+        ├── frontend-design/         # UI/UX 設計
+        ├── php-pro/                 # PHP/Laravel 專家
+        └── artifacts-builder/       # 複雜 HTML artifacts
 ```
 
 ---
@@ -109,6 +117,64 @@ cat .claude/commands/WORKFLOW.md
 - `/test` - 執行全面測試
 - `/feature-finish` - 完成功能開發
 - `/pr-review` - Pull Request 審查
+
+### 我要使用專業 Skills
+
+```bash
+# 閱讀 Skills 使用指南
+cat .claude/skills/README.md
+```
+
+**可用 Skills** (6 個):
+- `react-best-practices` - React/Next.js 效能優化 (自動觸發)
+- `webapp-testing` - Playwright Web 應用測試
+- `playwright-skill` - 完整瀏覽器自動化測試
+- `frontend-design` - UI/UX 設計專家
+- `php-pro` - PHP/Laravel 開發專家 (自動觸發)
+- `artifacts-builder` - 複雜多組件 HTML artifacts
+
+**快速使用**:
+```
+"請使用 playwright-skill 測試登入流程"
+"請使用 react-best-practices 審查這個組件"
+"請使用 frontend-design 設計評分介面"
+```
+
+**詳細文檔**: `.claude/skills/README.md`
+
+---
+
+## 🎯 Skills 自動觸發機制
+
+某些 Skills 會在特定情境下**自動觸發**，無需手動調用：
+
+### 自動觸發場景
+
+| 場景 | 觸發的 Skill | 說明 |
+|------|-------------|------|
+| 撰寫 React 組件 | `react-best-practices` | 自動檢查效能最佳實踐 |
+| 審查 React 程式碼 | `react-best-practices` | 提供優化建議 |
+| 處理 Laravel 程式碼 | `php-pro` | Laravel 最佳實踐指導 |
+| 執行 `/implement-frontend` | `frontend-design` | UI/UX 設計階段自動調用 |
+| 重構 React/Next.js | `react-best-practices` | 確保符合效能標準 |
+
+### 主動調用場景
+
+以下情況需要**主動調用** Skills：
+
+```bash
+# 測試前端功能
+"請使用 playwright-skill 測試搜尋功能"
+
+# 測試登入流程
+"請使用 webapp-testing 驗證登入流程"
+
+# 設計新介面
+"請使用 frontend-design 設計業務員卡片"
+
+# 創建複雜組件
+"請使用 artifacts-builder 創建互動式儀表板"
+```
 
 ---
 
