@@ -154,4 +154,9 @@ Route::middleware(['jwt.auth', 'admin'])->prefix('admin')->group(function (): vo
     // Settings
     Route::get('/settings/regions', [AdminController::class, 'getRegions']);
     Route::get('/settings/industries', [AdminController::class, 'getIndustries']);
+
+    // User Management
+    Route::get('/users', [AdminController::class, 'getUsers']);
+    Route::put('/users/{id}/status', [AdminController::class, 'updateUserStatus']);
+    Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
 });
