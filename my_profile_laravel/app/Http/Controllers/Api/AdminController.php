@@ -492,9 +492,18 @@ class AdminController extends Controller
         $experience = Experience::findOrFail($id);
 
         if ($experience->approval_status !== 'pending') {
+            $statusMessage = match ($experience->approval_status) {
+                'approved' => '此工作經驗已經被批准',
+                'rejected' => '此工作經驗已被拒絕',
+                default => '此工作經驗無法審核',
+            };
+
             return response()->json([
                 'success' => false,
-                'error' => '此工作經驗無法審核',
+                'error' => $statusMessage,
+                'current_status' => $experience->approval_status,
+                'approved_by' => $experience->approved_by,
+                'approved_at' => $experience->approved_at?->toISOString(),
             ], 400);
         }
 
@@ -507,6 +516,80 @@ class AdminController extends Controller
             'success' => true,
             'experience' => $experience,
             'message' => '工作經驗已批准',
+        ]);
+    }
+
+    /**
+     * Reject experience.
+     *
+     * POST /api/admin/reject-experience/{id}
+     */
+    #[OA\Post(
+        path: '/admin/reject-experience/{id}',
+        summary: 'Reject experience',
+        security: [['bearerAuth' => []]],
+        tags: ['Admin'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'reason', type: 'string', example: '資訊不完整'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Experience rejected successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'success', type: 'boolean', example: true),
+                        new OA\Property(property: 'experience', ref: '#/components/schemas/Experience'),
+                        new OA\Property(property: 'message', type: 'string', example: '工作經驗已拒絕'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 400, description: 'Invalid status'),
+            new OA\Response(response: 401, description: 'Unauthorized'),
+            new OA\Response(response: 404, description: 'Experience not found'),
+        ]
+    )]
+    public function rejectExperience(int $id, Request $request): JsonResponse
+    {
+        $experience = Experience::findOrFail($id);
+
+        if ($experience->approval_status !== 'pending') {
+            $statusMessage = match ($experience->approval_status) {
+                'approved' => '此工作經驗已經被批准，無法拒絕',
+                'rejected' => '此工作經驗已被拒絕',
+                default => '此工作經驗無法拒絕',
+            };
+
+            return response()->json([
+                'success' => false,
+                'error' => $statusMessage,
+                'current_status' => $experience->approval_status,
+            ], 400);
+        }
+
+        $experience->approval_status = 'rejected';
+        $experience->rejected_reason = $request->input('reason');
+        $experience->approved_by = auth()->id();
+        $experience->approved_at = now();
+        $experience->save();
+
+        return response()->json([
+            'success' => true,
+            'experience' => $experience,
+            'message' => '工作經驗已拒絕',
         ]);
     }
 
@@ -554,9 +637,18 @@ class AdminController extends Controller
         $certification = Certification::findOrFail($id);
 
         if ($certification->approval_status !== 'pending') {
+            $statusMessage = match ($certification->approval_status) {
+                'approved' => '此證照已經被批准',
+                'rejected' => '此證照已被拒絕',
+                default => '此證照無法審核',
+            };
+
             return response()->json([
                 'success' => false,
-                'error' => '此證照無法審核',
+                'error' => $statusMessage,
+                'current_status' => $certification->approval_status,
+                'approved_by' => $certification->approved_by,
+                'approved_at' => $certification->approved_at?->toISOString(),
             ], 400);
         }
 
@@ -569,6 +661,80 @@ class AdminController extends Controller
             'success' => true,
             'certification' => $certification,
             'message' => '證照已批准',
+        ]);
+    }
+
+    /**
+     * Reject certification.
+     *
+     * POST /api/admin/reject-certification/{id}
+     */
+    #[OA\Post(
+        path: '/admin/reject-certification/{id}',
+        summary: 'Reject certification',
+        security: [['bearerAuth' => []]],
+        tags: ['Admin'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'reason', type: 'string', example: '證照過期'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Certification rejected successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'success', type: 'boolean', example: true),
+                        new OA\Property(property: 'certification', ref: '#/components/schemas/Certification'),
+                        new OA\Property(property: 'message', type: 'string', example: '證照已拒絕'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 400, description: 'Invalid status'),
+            new OA\Response(response: 401, description: 'Unauthorized'),
+            new OA\Response(response: 404, description: 'Certification not found'),
+        ]
+    )]
+    public function rejectCertification(int $id, Request $request): JsonResponse
+    {
+        $certification = Certification::findOrFail($id);
+
+        if ($certification->approval_status !== 'pending') {
+            $statusMessage = match ($certification->approval_status) {
+                'approved' => '此證照已經被批准，無法拒絕',
+                'rejected' => '此證照已被拒絕',
+                default => '此證照無法拒絕',
+            };
+
+            return response()->json([
+                'success' => false,
+                'error' => $statusMessage,
+                'current_status' => $certification->approval_status,
+            ], 400);
+        }
+
+        $certification->approval_status = 'rejected';
+        $certification->rejected_reason = $request->input('reason');
+        $certification->approved_by = auth()->id();
+        $certification->approved_at = now();
+        $certification->save();
+
+        return response()->json([
+            'success' => true,
+            'certification' => $certification,
+            'message' => '證照已拒絕',
         ]);
     }
 }
