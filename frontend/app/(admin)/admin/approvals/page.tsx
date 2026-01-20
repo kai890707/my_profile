@@ -225,7 +225,9 @@ function DetailModal({
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-semibold text-slate-900">{item.position}</h3>
-                    <p className="text-lg text-slate-600 mt-1">{item.company}</p>
+                    <p className="text-lg text-slate-600 mt-1">
+                      {typeof item.company === 'string' ? item.company : item.company?.name || '未指定'}
+                    </p>
                     <div className="mt-3 space-y-3">
                       <div className="flex items-center gap-2 text-slate-600">
                         <Calendar className="h-4 w-4" />
@@ -515,7 +517,7 @@ export default function ApprovalsPage() {
                         {activeTab === 'users' && item.email}
                         {activeTab === 'companies' && `統編：${item.tax_id || '無'}`}
                         {activeTab === 'certifications' && `發證單位：${item.issuer}`}
-                        {activeTab === 'experiences' && item.company}
+                        {activeTab === 'experiences' && (typeof item.company === 'string' ? item.company : item.company?.name || '未指定')}
                       </p>
 
                       <p className="text-xs text-slate-500 mt-1">
