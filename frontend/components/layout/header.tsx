@@ -26,9 +26,10 @@ interface HeaderProps {
     avatar?: string | null;
   } | null;
   onLogout?: () => void;
+  isLoading?: boolean;
 }
 
-export function Header({ user, onLogout }: HeaderProps) {
+export function Header({ user, onLogout, isLoading }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const publicLinks = [
@@ -91,7 +92,20 @@ export function Header({ user, onLogout }: HeaderProps) {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
-            {user ? (
+            {isLoading ? (
+              <>
+                {/* Loading Skeleton */}
+                <div className="flex items-center space-x-3">
+                  {/* Avatar Skeleton */}
+                  <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+                  {/* Name and Role Skeleton (hidden on mobile) */}
+                  <div className="hidden md:block space-y-2">
+                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-3 w-16 bg-gray-200 rounded animate-pulse" />
+                  </div>
+                </div>
+              </>
+            ) : user ? (
               <>
                 {/* User Menu */}
                 <DropdownMenu>

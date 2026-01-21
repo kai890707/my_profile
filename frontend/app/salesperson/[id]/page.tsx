@@ -23,6 +23,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { useSalespersonDetail } from '@/hooks/useSearch';
+import { useAuth, useLogout } from '@/hooks/useAuth';
 import { formatDate } from '@/lib/utils/format';
 import { ExperienceTimeline } from '@/components/features/salesperson/experience-timeline';
 import { CertificationCards } from '@/components/features/salesperson/certification-cards';
@@ -32,11 +33,17 @@ export default function SalespersonDetailPage() {
   const id = parseInt(params.id as string);
 
   const { data: salesperson, isLoading, error } = useSalespersonDetail(id);
+  const { data: user, isLoading: authLoading } = useAuth();
+  const logoutMutation = useLogout();
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
+        <Header user={user} onLogout={handleLogout} isLoading={authLoading} />
         <main className="flex-1 bg-slate-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <Card>
@@ -54,7 +61,7 @@ export default function SalespersonDetailPage() {
   if (error || !salesperson) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
+        <Header user={user} onLogout={handleLogout} isLoading={authLoading} />
         <main className="flex-1 bg-slate-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <Card>
@@ -114,7 +121,7 @@ export default function SalespersonDetailPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <Header user={user} onLogout={handleLogout} isLoading={authLoading} />
 
       <main className="flex-1 bg-slate-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
