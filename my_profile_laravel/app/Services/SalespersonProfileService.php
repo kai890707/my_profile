@@ -54,7 +54,7 @@ class SalespersonProfileService
      */
     public function getById(int $id): ?SalespersonProfile
     {
-        return SalespersonProfile::with(['user', 'company', 'approvalLogs'])
+        return SalespersonProfile::with(['user', 'company', 'approvalLogs', 'experiences', 'certifications'])
             ->find($id);
     }
 

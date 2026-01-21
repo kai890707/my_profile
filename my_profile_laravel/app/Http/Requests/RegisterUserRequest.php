@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class RegisterUserRequest extends FormRequest
 {
@@ -51,5 +53,21 @@ class RegisterUserRequest extends FormRequest
             'password.confirmed' => '密碼確認不一致',
             'role.in' => '角色必須為 user 或 salesperson',
         ];
+    }
+
+    /**
+     * Handle a failed validation attempt.
+     *
+     * @throws \Illuminate\Http\Exceptions\HttpResponseException
+     */
+    protected function failedValidation(Validator $validator): void
+    {
+        throw new HttpResponseException(
+            response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422)
+        );
     }
 }

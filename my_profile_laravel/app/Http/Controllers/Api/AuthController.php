@@ -9,6 +9,8 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RefreshTokenRequest;
 use App\Http\Requests\RegisterUserRequest;
 use App\Http\Requests\RegisterSalespersonRequest;
+use App\Http\Resources\SalespersonProfileResource;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
@@ -59,14 +61,7 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'User registered successfully',
             'data' => [
-                'user' => [
-                    'id' => $user->id,
-                    'username' => $user->username,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'status' => $user->status,
-                ],
+                'user' => (new UserResource($user))->resolve(),
                 'access_token' => $result['access_token'],
                 'refresh_token' => $result['refresh_token'],
                 'token_type' => $result['token_type'],
@@ -123,14 +118,7 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Login successful',
             'data' => [
-                'user' => [
-                    'id' => $user->id,
-                    'username' => $user->username,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'status' => $user->status,
-                ],
+                'user' => (new UserResource($user))->resolve(),
                 'access_token' => $result['access_token'],
                 'refresh_token' => $result['refresh_token'],
                 'token_type' => $result['token_type'],
@@ -296,16 +284,7 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'user' => [
-                    'id' => $user->id,
-                    'username' => $user->username,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'status' => $user->status,
-                    'created_at' => $user->created_at?->toIso8601String(),
-                    'updated_at' => $user->updated_at?->toIso8601String(),
-                ],
+                'user' => (new UserResource($user))->resolve(),
             ],
         ]);
     }
@@ -405,19 +384,15 @@ class AuthController extends Controller
             // Reload user with profile
             $user->load('salespersonProfile');
 
+            // Reload user with profile
+            $user->load('salespersonProfile');
+
             return response()->json([
                 'success' => true,
                 'message' => '註冊成功！您的業務員資料正在審核中，預計 1-3 個工作天完成。',
                 'data' => [
-                    'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'role' => $user->role,
-                        'salesperson_status' => $user->salesperson_status,
-                        'salesperson_applied_at' => $user->salesperson_applied_at,
-                    ],
-                    'profile' => $user->salespersonProfile,
+                    'user' => (new UserResource($user))->resolve(),
+                    'profile' => $user->salespersonProfile ? (new SalespersonProfileResource($user->salespersonProfile))->resolve() : null,
                     'access_token' => $loginResult['access_token'],
                     'refresh_token' => $loginResult['refresh_token'],
                     'token_type' => $loginResult['token_type'],
