@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RefreshTokenRequest;
+use App\Http\Requests\RegisterUserRequest;
 use App\Http\Requests\RegisterSalespersonRequest;
 use App\Models\User;
 use App\Services\AuthService;
@@ -12,7 +15,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use OpenApi\Attributes as OA;
 
 class AuthController extends Controller
@@ -46,25 +48,9 @@ class AuthController extends Controller
             ),
         ]
     )]
-    public function register(Request $request): JsonResponse
+    public function register(RegisterUserRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'username' => 'required|string|max:100|unique:users,username',
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email',
-            'password' => 'required|string|min:6|confirmed',
-            'role' => 'nullable|in:user,salesperson',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $result = $this->authService->register($validator->validated());
+        $result = $this->authService->register($request->validated());
 
         /** @var \App\Models\User $user */
         $user = $result['user'];
@@ -119,22 +105,9 @@ class AuthController extends Controller
             ),
         ]
     )]
-    public function login(Request $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $result = $this->authService->login($validator->validated());
+        $result = $this->authService->login($request->validated());
 
         if ($result === null) {
             return response()->json([
@@ -211,26 +184,11 @@ class AuthController extends Controller
             ),
         ]
     )]
-    public function refresh(Request $request): JsonResponse
+    public function refresh(RefreshTokenRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'refresh_token' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
         try {
-            $refreshToken = $request->input('refresh_token');
-
-            if (! is_string($refreshToken)) {
-                throw new \Exception('Invalid refresh token');
-            }
+            $validated = $request->validated();
+            $refreshToken = $validated['refresh_token'];
 
             $result = $this->authService->refreshWithToken($refreshToken);
 

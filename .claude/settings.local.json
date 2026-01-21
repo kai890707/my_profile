@@ -90,7 +90,8 @@
       "Bash(open:*)",
       "Bash(npx shadcn@latest add:*)",
       "Bash(./vendor/bin/pint:*)",
-      "Bash(gh pr merge:*)"
+      "Bash(gh pr merge:*)",
+      "Bash(composer test:*)"
     ]
   }
 }
