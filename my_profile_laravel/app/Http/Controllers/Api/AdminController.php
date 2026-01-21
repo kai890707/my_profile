@@ -294,8 +294,9 @@ class AdminController extends Controller
             ], 400);
         }
 
+        $validated = $request->validated();
         $user->rejectSalesperson(
-            $request->input('rejection_reason'),
+            (string) $validated['rejection_reason'],
             $request->getReapplyDays()
         );
 
@@ -357,8 +358,8 @@ class AdminController extends Controller
         }
 
         $company->approval_status = 'approved';
-        $company->approved_by = auth()->id();
-        $company->approved_at = now();
+        $company->approved_by = (int) auth()->id();
+        $company->approved_at = now()->toDateTimeString();
         $company->save();
 
         return response()->json([
@@ -518,13 +519,13 @@ class AdminController extends Controller
                 'error' => $statusMessage,
                 'current_status' => $experience->approval_status,
                 'approved_by' => $experience->approved_by,
-                'approved_at' => $experience->approved_at?->toISOString(),
+                'approved_at' => $experience->approved_at,
             ], 400);
         }
 
         $experience->approval_status = 'approved';
-        $experience->approved_by = auth()->id();
-        $experience->approved_at = now();
+        $experience->approved_by = (int) auth()->id();
+        $experience->approved_at = now()->toDateTimeString();
         $experience->save();
 
         return response()->json([
@@ -596,9 +597,9 @@ class AdminController extends Controller
         }
 
         $experience->approval_status = 'rejected';
-        $experience->rejected_reason = $request->input('reason');
-        $experience->approved_by = auth()->id();
-        $experience->approved_at = now();
+        $experience->rejected_reason = (string) $request->input('reason');
+        $experience->approved_by = (int) auth()->id();
+        $experience->approved_at = now()->toDateTimeString();
         $experience->save();
 
         return response()->json([
@@ -663,13 +664,13 @@ class AdminController extends Controller
                 'error' => $statusMessage,
                 'current_status' => $certification->approval_status,
                 'approved_by' => $certification->approved_by,
-                'approved_at' => $certification->approved_at?->toISOString(),
+                'approved_at' => $certification->approved_at,
             ], 400);
         }
 
         $certification->approval_status = 'approved';
-        $certification->approved_by = auth()->id();
-        $certification->approved_at = now();
+        $certification->approved_by = (int) auth()->id();
+        $certification->approved_at = now()->toDateTimeString();
         $certification->save();
 
         return response()->json([
@@ -741,9 +742,9 @@ class AdminController extends Controller
         }
 
         $certification->approval_status = 'rejected';
-        $certification->rejected_reason = $request->input('reason');
-        $certification->approved_by = auth()->id();
-        $certification->approved_at = now();
+        $certification->rejected_reason = (string) $request->input('reason');
+        $certification->approved_by = (int) auth()->id();
+        $certification->approved_at = now()->toDateTimeString();
         $certification->save();
 
         return response()->json([
@@ -835,7 +836,7 @@ class AdminController extends Controller
 
         // 排序：管理員優先，再依建立時間
         $query->orderByRaw("FIELD(role, 'admin', 'salesperson', 'user')")
-              ->orderBy('created_at', 'desc');
+            ->orderBy('created_at', 'desc');
 
         // 分頁（預設 15 筆，最大 100 筆）
         $perPage = min((int) $request->input('per_page', 15), 100);

@@ -395,7 +395,7 @@ class AuthController extends Controller
 
         try {
             // Generate username from email (part before @) + random suffix
-            $emailPrefix = explode('@', $request->input('email'))[0];
+            $emailPrefix = explode('@', (string) $request->input('email'))[0];
             $username = $emailPrefix.'_'.\Illuminate\Support\Str::random(4);
 
             // Ensure username is unique (should be very unlikely to collide)
@@ -408,7 +408,7 @@ class AuthController extends Controller
                 'username' => $username,
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
-                'password_hash' => Hash::make($request->input('password')),
+                'password_hash' => Hash::make((string) $request->input('password')),
                 'role' => User::ROLE_SALESPERSON,
                 'salesperson_status' => User::STATUS_PENDING,
                 'salesperson_applied_at' => now(),
@@ -418,7 +418,7 @@ class AuthController extends Controller
             // Decode avatar data and calculate size
             $avatarData = $request->input('avatar');
             $avatarMime = $request->input('avatar_mime');
-            $avatarSize = strlen(base64_decode($avatarData));
+            $avatarSize = strlen(base64_decode((string) $avatarData));
 
             // Create salesperson profile with avatar
             $user->salespersonProfile()->create([
@@ -436,8 +436,8 @@ class AuthController extends Controller
 
             // Generate token using AuthService
             $loginResult = $this->authService->login([
-                'email' => $request->input('email'),
-                'password' => $request->input('password'),
+                'email' => (string) $request->input('email'),
+                'password' => (string) $request->input('password'),
             ]);
 
             if ($loginResult === null) {
@@ -457,7 +457,7 @@ class AuthController extends Controller
                         'email' => $user->email,
                         'role' => $user->role,
                         'salesperson_status' => $user->salesperson_status,
-                        'salesperson_applied_at' => $user->salesperson_applied_at?->toIso8601String(),
+                        'salesperson_applied_at' => $user->salesperson_applied_at,
                     ],
                     'profile' => $user->salespersonProfile,
                     'access_token' => $loginResult['access_token'],

@@ -42,8 +42,11 @@ class Certification extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
+            'file_size' => 'integer',
             'issue_date' => 'date',
             'expiry_date' => 'date',
+            'approved_by' => 'integer',
             'approved_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',

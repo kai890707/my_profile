@@ -40,6 +40,8 @@ class Company extends Model
     {
         return [
             'is_personal' => 'boolean',
+            'created_by' => 'integer',
+            'approved_by' => 'integer',
             'approved_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',

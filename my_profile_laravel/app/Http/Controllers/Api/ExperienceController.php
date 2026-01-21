@@ -21,6 +21,13 @@ class ExperienceController extends Controller
     {
         $user = $request->user();
 
+        if (! $user) {
+            return response()->json([
+                "success" => false,
+                "error" => ["code" => "UNAUTHORIZED", "message" => "Authentication required"],
+            ], 401);
+        }
+
         // Check if user is a salesperson
         if (! $user->isSalesperson()) {
             return response()->json([
@@ -65,6 +72,13 @@ class ExperienceController extends Controller
     {
         $user = $request->user();
 
+        if (! $user) {
+            return response()->json([
+                "success" => false,
+                "error" => ["code" => "UNAUTHORIZED", "message" => "Authentication required"],
+            ], 401);
+        }
+
         // Check if user is a salesperson
         if (! $user->isSalesperson()) {
             return response()->json([
@@ -96,6 +110,13 @@ class ExperienceController extends Controller
     public function update(UpdateExperienceRequest $request, int $id): JsonResponse
     {
         $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                "success" => false,
+                "error" => ["code" => "UNAUTHORIZED", "message" => "Authentication required"],
+            ], 401);
+        }
 
         // Find experience
         $experience = Experience::find($id);
@@ -137,6 +158,13 @@ class ExperienceController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                "success" => false,
+                "error" => ["code" => "UNAUTHORIZED", "message" => "Authentication required"],
+            ], 401);
+        }
 
         // Find experience
         $experience = Experience::find($id);
