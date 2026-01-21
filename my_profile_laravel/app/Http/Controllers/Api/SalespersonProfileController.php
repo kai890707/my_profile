@@ -207,8 +207,8 @@ class SalespersonProfileController extends Controller
 
         if (! $user) {
             return response()->json([
-                "success" => false,
-                "error" => ["code" => "UNAUTHORIZED", "message" => "Authentication required"],
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
             ], 401);
         }
 
@@ -303,8 +303,8 @@ class SalespersonProfileController extends Controller
 
         if (! $user) {
             return response()->json([
-                "success" => false,
-                "error" => ["code" => "UNAUTHORIZED", "message" => "Authentication required"],
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
             ], 401);
         }
 
@@ -420,8 +420,8 @@ class SalespersonProfileController extends Controller
 
         if (! $user) {
             return response()->json([
-                "success" => false,
-                "error" => ["code" => "UNAUTHORIZED", "message" => "Authentication required"],
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
             ], 401);
         }
 
@@ -510,8 +510,8 @@ class SalespersonProfileController extends Controller
 
         if (! $user) {
             return response()->json([
-                "success" => false,
-                "error" => ["code" => "UNAUTHORIZED", "message" => "Authentication required"],
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
             ], 401);
         }
 

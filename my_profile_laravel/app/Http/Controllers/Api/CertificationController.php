@@ -22,13 +22,6 @@ class CertificationController extends Controller
 
         if (! $user) {
             return response()->json([
-                "success" => false,
-                "error" => ["code" => "UNAUTHORIZED", "message" => "Authentication required"],
-            ], 401);
-        }
-
-        if (! $user) {
-            return response()->json([
                 'success' => false,
                 'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
             ], 401);
@@ -63,13 +56,6 @@ class CertificationController extends Controller
     public function store(StoreCertificationRequest $request): JsonResponse
     {
         $user = $request->user();
-
-        if (! $user) {
-            return response()->json([
-                "success" => false,
-                "error" => ["code" => "UNAUTHORIZED", "message" => "Authentication required"],
-            ], 401);
-        }
 
         if (! $user) {
             return response()->json([
@@ -170,8 +156,8 @@ class CertificationController extends Controller
 
         if (! $user) {
             return response()->json([
-                "success" => false,
-                "error" => ["code" => "UNAUTHORIZED", "message" => "Authentication required"],
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
             ], 401);
         }
 
