@@ -1,9 +1,9 @@
 # System Architecture Overview
 
 **Project**: 業務推廣系統 (Business Promotion System Backend API)
-**Framework**: CodeIgniter 4.6.4
-**Version**: 1.0.0
-**Last Updated**: 2026-01-08
+**Framework**: Laravel 11.x
+**Version**: 1.2.0
+**Last Updated**: 2026-01-20
 
 ## System Purpose
 
@@ -13,15 +13,16 @@
 
 ```
 ┌─────────────────────────────────────┐
-│     Frontend (React/Vue)            │
-│     (Not in this project)           │
+│     Frontend (Next.js 15)           │
+│     React 19 + TypeScript           │
+│     http://localhost:3001           │
 └─────────────────────────────────────┘
               ↓ HTTPS + JWT
 ┌─────────────────────────────────────┐
-│     API Gateway (Routes.php)        │
-│     - CORS Filter                   │
-│     - Auth Filter                   │
-│     - Role Filter                   │
+│     API Gateway (routes/api.php)    │
+│     - CORS Middleware               │
+│     - Sanctum Auth Middleware       │
+│     - Role-based Middleware         │
 └─────────────────────────────────────┘
               ↓
 ┌─────────────────────────────────────┐
@@ -30,16 +31,16 @@
 │     - SalespersonController         │
 │     - SearchController              │
 │     - AdminController               │
+│     - CompanyController             │
+│     - SwaggerController             │
 └─────────────────────────────────────┘
               ↓
 ┌─────────────────────────────────────┐
-│     Business Logic (Models)         │
-│     - UserModel                     │
-│     - SalespersonProfileModel       │
-│     - CompanyModel                  │
-│     - CertificationModel            │
-│     - IndustryModel, RegionModel    │
-│     - ApprovalLogModel              │
+│     Business Logic Layer            │
+│     - Eloquent Models               │
+│     - Form Request Validation       │
+│     - Policy Authorization          │
+│     - Service Classes               │
 └─────────────────────────────────────┘
               ↓
 ┌─────────────────────────────────────┐
@@ -55,20 +56,22 @@
 
 ### 1. Authentication & Authorization
 
-**JWT Library** (`app/Libraries/JWTLib.php`)
+**Laravel Sanctum** (Token-based Authentication)
 - Token generation (Access + Refresh)
-- Token verification
-- Token expiry check
+- Token verification and validation
+- Token expiry management
+- API token authentication
 
-**Filters**
-- `AuthFilter`: JWT validation
-- `RoleFilter`: RBAC permission check
+**Middleware**
+- `auth:sanctum`: Sanctum authentication
+- `EnsureUserRole`: RBAC permission check
+- `CheckSalespersonStatus`: Salesperson approval check
 
 **Token Configuration**
-- Access Token: 1 hour (3600s)
-- Refresh Token: 7 days (604800s)
-- Algorithm: HS256
-- Storage: Frontend localStorage/httpOnly cookie
+- Access Token: 60 minutes
+- Refresh Token: 7 days
+- Storage: Frontend localStorage + HTTP-only cookies
+- Secure transmission: HTTPS only in production
 
 ### 2. Role-Based Access Control (RBAC)
 
@@ -166,12 +169,15 @@ LIMIT 20 OFFSET 0
 
 | Component | Technology | Version |
 |-----------|-----------|---------|
-| Framework | CodeIgniter 4 | 4.6.4 |
-| Language | PHP | 8.2 |
+| Framework | Laravel | 11.x |
+| Language | PHP | 8.4 |
 | Database | MySQL | 8.0 |
-| Authentication | JWT (firebase/php-jwt) | 7.0 |
+| Authentication | Laravel Sanctum | 4.x |
 | Container | Docker + Docker Compose | Latest |
-| Web Server | Apache | 2.4.65 |
+| Web Server | Nginx (Production) / PHP Dev Server | Latest |
+| Testing | Pest PHP | 3.x |
+| Static Analysis | PHPStan | Level 9 |
+| API Docs | Swagger/OpenAPI | 3.0 |
 
 ## Deployment Environment
 
@@ -187,13 +193,22 @@ LIMIT 20 OFFSET 0
 
 **Environment Variables** (`.env`):
 ```
-CI_ENVIRONMENT=development
-app.baseURL=http://localhost:8080/
-database.default.hostname=db
-database.default.database=my_profile
-JWT_SECRET_KEY=<256-bit-secret>
-JWT_ACCESS_EXPIRY=3600
-JWT_REFRESH_EXPIRY=604800
+APP_ENV=local
+APP_URL=http://localhost:8080
+APP_PORT=8080
+
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=my_profile_laravel
+DB_USERNAME=sail
+DB_PASSWORD=password
+
+SANCTUM_STATEFUL_DOMAINS=localhost:3001
+SESSION_DOMAIN=localhost
+SESSION_LIFETIME=120
+
+FRONTEND_URL=http://localhost:3001
 ```
 
 ## Security Measures
@@ -281,21 +296,33 @@ docker-compose exec -T db mysql -u root -p my_profile < backup.sql
 **Migration Management**:
 ```bash
 # Run migrations
-docker-compose exec app php spark migrate
+docker exec -it my_profile_laravel_app php artisan migrate
 
 # Rollback
-docker-compose exec app php spark migrate:rollback
+docker exec -it my_profile_laravel_app php artisan migrate:rollback
 
 # Status
-docker-compose exec app php spark migrate:status
+docker exec -it my_profile_laravel_app php artisan migrate:status
+
+# Fresh with seeding
+docker exec -it my_profile_laravel_app php artisan migrate:fresh --seed
 ```
 
 ---
 
 ## Related Documents
 
-- [API Specifications](../api/) - Detailed API endpoint documentation
+- [API Specifications](../api/endpoints.md) - Detailed API endpoint documentation (37 endpoints)
 - [Data Models](../models/data-models.md) - Database schema and relationships
-- [Authentication Spec](../api/authentication.md) - JWT authentication details
-- [Requirements Spec](../../需求規格書.md) - Original requirements document
-- [Implementation Plan](../../實作計畫書.md) - Technical implementation plan
+- [Business Rules](../business-rules.md) - System business rules and validation
+- [Frontend Specs](../frontend/README.md) - Frontend architecture and components
+- [Swagger Documentation](http://localhost:8080/api/docs) - Interactive API documentation
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0.0 | 2026-01-10 | CodeIgniter 4 → Laravel 11 migration complete |
+| 1.1.0 | 2026-01-09 | Frontend SPA completed (Next.js 15) |
+| 1.2.0 | 2026-01-11 | User Registration Refactor |
+| 1.2.1 | 2026-01-20 | Documentation updates |

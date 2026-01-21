@@ -3,7 +3,7 @@
 **專案**: YAMU Frontend SPA
 **框架**: Next.js 16.1.1 + TypeScript + React 19
 **開發方法**: OpenSpec Specification-Driven Development (SDD)
-**最後更新**: 2026-01-09
+**最後更新**: 2026-01-20
 
 ---
 
@@ -25,6 +25,125 @@
 6. Archive → 歸檔到規範庫
 
 **Commands 參考**: `../.claude/commands/README.md`
+
+---
+
+## 🎯 Frontend 專用 Skills
+
+本專案整合了多個專業 Skills，在 Frontend 開發時會自動或手動觸發：
+
+### 自動觸發的 Skills
+
+這些 Skills 會在特定情境下**自動觸發**：
+
+#### 1. react-best-practices (Vercel 最佳實踐)
+
+**觸發時機**:
+- 撰寫新的 React 組件或 Next.js 頁面
+- 實作資料獲取 (client/server-side)
+- 審查程式碼效能問題
+- 重構現有 React/Next.js 程式碼
+- 優化 bundle size 或載入時間
+
+**核心規則** (45 條，8 個類別):
+- **CRITICAL**: 消除瀑布流、Bundle 優化
+- **HIGH**: Server-Side 效能
+- **MEDIUM**: Re-render 優化、Rendering 效能
+- **LOW**: JavaScript 效能、進階模式
+
+**範例**:
+```typescript
+// ❌ Bad: Barrel imports
+import { Button, Input } from '@/components';
+
+// ✅ Good: Direct imports
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+```
+
+#### 2. frontend-design (UI/UX 設計專家)
+
+**觸發時機**:
+- 執行 `/implement-frontend` 時自動調用
+- 設計新的使用者介面
+- 改善現有 UX 體驗
+
+**設計流程**:
+1. 需求分析 → 理解使用者需求
+2. 設計系統 → 定義色彩、字體、間距
+3. 組件設計 → 設計 UI 組件和變體
+4. 頁面設計 → 設計完整頁面佈局
+5. 互動設計 → 定義使用者互動流程
+
+### 主動調用的 Skills
+
+這些 Skills 需要**手動調用**：
+
+#### 3. playwright-skill (瀏覽器自動化測試)
+
+**使用方式**:
+```
+"請使用 playwright-skill 測試登入流程"
+"請使用 playwright-skill 檢查響應式設計"
+```
+
+**功能**:
+- E2E 測試完整使用者流程
+- 測試表單提交和驗證
+- 檢查響應式設計 (Desktop/Tablet/Mobile)
+- 測試登入流程和認證
+- 捕獲瀏覽器截圖
+- 驗證 UX 互動
+
+**自動偵測開發伺服器**:
+```bash
+# 自動偵測 http://localhost:3001
+cd ../.claude/skills/playwright-skill && \
+  node -e "require('./lib/helpers').detectDevServers()"
+```
+
+#### 4. webapp-testing (Playwright Web 測試工具)
+
+**使用方式**:
+```
+"請使用 webapp-testing 驗證搜尋功能"
+"請使用 webapp-testing 測試前後端整合"
+```
+
+**功能**:
+- 驗證前端功能正確性
+- 調試 UI 行為問題
+- 查看瀏覽器 console 日誌
+- 測試多伺服器環境 (Backend + Frontend)
+
+**範例**:
+```bash
+# 測試 Backend + Frontend 整合
+python scripts/with_server.py \
+  --server "cd ../my_profile_laravel && php artisan serve --port=8080" --port 8080 \
+  --server "npm run dev" --port 3001 \
+  -- python test_integration.py
+```
+
+### Skills 使用建議
+
+**開發階段**:
+1. 設計 UI → `frontend-design` (自動)
+2. 撰寫組件 → `react-best-practices` (自動檢查)
+3. 實作功能 → 遵循最佳實踐
+4. 測試功能 → `playwright-skill` (手動調用)
+
+**程式碼審查**:
+1. `react-best-practices` 自動檢查效能
+2. 確認是否遵循 45 條規則
+3. 優化 bundle size 和載入時間
+
+**測試驗證**:
+1. `webapp-testing` 快速驗證功能
+2. `playwright-skill` 完整 E2E 測試
+3. 響應式設計測試 (3 個 viewport)
+
+**詳細文檔**: `../.claude/skills/README.md`
 
 ---
 

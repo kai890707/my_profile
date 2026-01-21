@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import { useSalespersonDetail } from '@/hooks/useSearch';
 import { formatDate } from '@/lib/utils/format';
+import { ExperienceTimeline } from '@/components/features/salesperson/experience-timeline';
+import { CertificationCards } from '@/components/features/salesperson/certification-cards';
 
 export default function SalespersonDetailPage() {
   const params = useParams();
@@ -184,100 +186,36 @@ export default function SalespersonDetailPage() {
               </Card>
 
               {/* 工作經驗 */}
-              {salesperson.experiences && salesperson.experiences.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Briefcase className="h-5 w-5" />
-                      工作經驗
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      {salesperson.experiences.map((exp) => (
-                        <div key={exp.id} className="border-l-2 border-primary-200 pl-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <h4 className="text-lg font-semibold text-slate-900">
-                                {exp.position}
-                              </h4>
-                              <p className="text-slate-600">{exp.company}</p>
-                            </div>
-                            {exp.approval_status === 'approved' && (
-                              <Badge variant="success" size="sm">
-                                <CheckCircle2 className="mr-1 h-3 w-3" />
-                                已驗證
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
-                            <Calendar className="h-4 w-4" />
-                            <span>
-                              {formatDate(exp.start_date)} -{' '}
-                              {exp.end_date ? formatDate(exp.end_date) : '至今'}
-                            </span>
-                          </div>
-                          {exp.description && (
-                            <p className="text-slate-600 text-sm whitespace-pre-line">
-                              {exp.description}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Briefcase className="h-5 w-5" />
+                    工作經驗
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ExperienceTimeline
+                    experiences={salesperson.experiences || []}
+                    isLoading={isLoading}
+                  />
+                </CardContent>
+              </Card>
 
               {/* 專業證照 */}
-              {salesperson.certifications &&
-                salesperson.certifications.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Award className="h-5 w-5" />
-                        專業證照
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        {salesperson.certifications.map((cert) => (
-                          <div
-                            key={cert.id}
-                            className="p-4 rounded-lg border border-slate-200 hover:border-primary-300 transition-colors"
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <h4 className="font-semibold text-slate-900">
-                                {cert.name}
-                              </h4>
-                              {cert.approval_status === 'approved' && (
-                                <CheckCircle2 className="h-5 w-5 text-success-600 flex-shrink-0" />
-                              )}
-                            </div>
-                            <p className="text-sm text-slate-600 mb-2">
-                              {cert.issuer}
-                            </p>
-                            <div className="flex items-center gap-2 text-xs text-slate-500">
-                              <Calendar className="h-3 w-3" />
-                              <span>{formatDate(cert.issue_date)}</span>
-                              {cert.expiry_date && (
-                                <>
-                                  <span>-</span>
-                                  <span>{formatDate(cert.expiry_date)}</span>
-                                </>
-                              )}
-                            </div>
-                            {cert.description && (
-                              <p className="text-xs text-slate-600 mt-2">
-                                {cert.description}
-                              </p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="h-5 w-5" />
+                    專業證照
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CertificationCards
+                    certifications={salesperson.certifications || []}
+                    isLoading={isLoading}
+                  />
+                </CardContent>
+              </Card>
             </div>
 
             {/* 右側聯絡資訊 */}

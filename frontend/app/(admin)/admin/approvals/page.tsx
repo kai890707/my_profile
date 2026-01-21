@@ -1,11 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProfileSkeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Users,
   Building2,
@@ -18,6 +27,9 @@ import {
   Mail,
   Phone,
   FileText,
+  Search,
+  Filter,
+  X,
 } from 'lucide-react';
 import {
   usePendingApprovals,
@@ -34,6 +46,288 @@ import { formatDate } from '@/lib/utils/format';
 import type { User, Company, Certification, Experience } from '@/types/api';
 
 type ApprovalType = 'users' | 'companies' | 'certifications' | 'experiences';
+
+// Helper 函數：取得項目名稱
+function getItemName(item: any, type: ApprovalType): string {
+  switch (type) {
+    case 'users':
+      return item.username || item.email || '業務員';
+    case 'companies':
+      return item.name || '公司';
+    case 'certifications':
+      return item.name || '證照';
+    case 'experiences':
+      return item.position || '工作經驗';
+    default:
+      return '項目';
+  }
+}
+
+// Helper 函數：取得公司名稱（處理類型不一致）
+function getCompanyName(company: string | { name: string } | undefined): string {
+  if (!company) return '未指定';
+  if (typeof company === 'string') return company;
+  return company.name || '未指定';
+}
+
+type DateFilter = 'all' | 'today' | 'week' | 'month';
+
+// Helper 函數：根據搜尋關鍵字篩選
+function filterBySearch(items: any[], query: string, type: ApprovalType): any[] {
+  if (!query.trim()) return items;
+
+  const lowerQuery = query.toLowerCase();
+
+  return items.filter((item) => {
+    switch (type) {
+      case 'users':
+        return (
+          item.username?.toLowerCase().includes(lowerQuery) ||
+          item.email?.toLowerCase().includes(lowerQuery)
+        );
+      case 'companies':
+        return (
+          item.name?.toLowerCase().includes(lowerQuery) ||
+          item.tax_id?.toLowerCase().includes(lowerQuery)
+        );
+      case 'certifications':
+        return (
+          item.name?.toLowerCase().includes(lowerQuery) ||
+          item.issuer?.toLowerCase().includes(lowerQuery)
+        );
+      case 'experiences':
+        const companyName = getCompanyName(item.company).toLowerCase();
+        return (
+          item.position?.toLowerCase().includes(lowerQuery) ||
+          companyName.includes(lowerQuery)
+        );
+      default:
+        return true;
+    }
+  });
+}
+
+// Helper 函數：根據日期範圍篩選
+function filterByDate(items: any[], dateFilter: DateFilter): any[] {
+  if (dateFilter === 'all') return items;
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  return items.filter((item) => {
+    const itemDate = new Date(item.created_at || item.issue_date);
+    const itemDateOnly = new Date(itemDate.getFullYear(), itemDate.getMonth(), itemDate.getDate());
+
+    switch (dateFilter) {
+      case 'today':
+        return itemDateOnly.getTime() === today.getTime();
+      case 'week':
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return itemDateOnly >= weekAgo;
+      case 'month':
+        const monthAgo = new Date(today);
+        monthAgo.setDate(monthAgo.getDate() - 30);
+        return itemDateOnly >= monthAgo;
+      default:
+        return true;
+    }
+  });
+}
+
+interface ApprovalFiltersProps {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  dateFilter: DateFilter;
+  onDateFilterChange: (filter: DateFilter) => void;
+  resultCount: number;
+  totalCount: number;
+}
+
+function ApprovalFilters({
+  searchQuery,
+  onSearchChange,
+  dateFilter,
+  onDateFilterChange,
+  resultCount,
+  totalCount,
+}: ApprovalFiltersProps) {
+  return (
+    <div className="space-y-4">
+      {/* 搜尋和篩選控制 */}
+      <div className="flex flex-col md:flex-row gap-4">
+        {/* 搜尋框 */}
+        <div className="flex-1 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="搜尋項目..."
+            className="w-full h-11 pl-11 pr-10 rounded-xl border-2 border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 hover:border-slate-300 transition-all"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => onSearchChange('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <X className="h-4 w-4 text-slate-400" />
+            </button>
+          )}
+        </div>
+
+        {/* 日期篩選 */}
+        <div className="relative">
+          <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
+          <select
+            value={dateFilter}
+            onChange={(e) => onDateFilterChange(e.target.value as DateFilter)}
+            className="h-11 pl-11 pr-10 rounded-xl border-2 border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 hover:border-slate-300 transition-all cursor-pointer appearance-none"
+          >
+            <option value="all">所有日期</option>
+            <option value="today">今天</option>
+            <option value="week">最近 7 天</option>
+            <option value="month">最近 30 天</option>
+          </select>
+          <svg
+            className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
+
+      {/* 結果計數 */}
+      {(searchQuery || dateFilter !== 'all') && (
+        <div className="flex items-center justify-between text-sm">
+          <p className="text-slate-600">
+            找到 <span className="font-semibold text-slate-900">{resultCount}</span> 個項目
+            {resultCount !== totalCount && (
+              <span className="text-slate-500"> (共 {totalCount} 個)</span>
+            )}
+          </p>
+          {(searchQuery || dateFilter !== 'all') && (
+            <button
+              onClick={() => {
+                onSearchChange('');
+                onDateFilterChange('all');
+              }}
+              className="text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
+            >
+              <X className="h-4 w-4" />
+              清除篩選
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface RejectModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (reason: string) => void;
+  isLoading: boolean;
+  itemType: ApprovalType;
+  itemName: string;
+}
+
+function RejectModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  isLoading,
+  itemType,
+  itemName,
+}: RejectModalProps) {
+  const [reason, setReason] = useState('');
+  const [error, setError] = useState('');
+
+  const typeLabels = {
+    users: '業務員註冊',
+    companies: '公司資訊',
+    certifications: '專業證照',
+    experiences: '工作經驗',
+  };
+
+  const handleSubmit = () => {
+    // 驗證：不能空白
+    if (!reason.trim()) {
+      setError('請輸入拒絕原因');
+      return;
+    }
+
+    // 驗證：最少 10 字元
+    if (reason.trim().length < 10) {
+      setError('拒絕原因至少需要 10 個字元');
+      return;
+    }
+
+    // 清除錯誤並提交
+    setError('');
+    onConfirm(reason.trim());
+  };
+
+  const handleClose = () => {
+    setReason('');
+    setError('');
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-red-600">
+            <XCircle className="h-5 w-5" />
+            拒絕{typeLabels[itemType]}
+          </DialogTitle>
+          <DialogDescription>
+            確定要拒絕「{itemName}」嗎？請提供詳細的拒絕原因。
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="py-4">
+          <Textarea
+            label="拒絕原因"
+            required
+            value={reason}
+            onChange={(e) => {
+              setReason(e.target.value);
+              if (error) setError('');
+            }}
+            rows={5}
+            placeholder="請詳細說明拒絕的原因（至少 10 個字元）"
+            error={error}
+            disabled={isLoading}
+          />
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            disabled={isLoading}
+          >
+            取消
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            isLoading={isLoading}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            <XCircle className="mr-2 h-4 w-4" />
+            確認拒絕
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 interface DetailModalProps {
   isOpen: boolean;
@@ -226,7 +520,7 @@ function DetailModal({
                   <div className="flex-1">
                     <h3 className="text-xl font-semibold text-slate-900">{item.position}</h3>
                     <p className="text-lg text-slate-600 mt-1">
-                      {typeof item.company === 'string' ? item.company : item.company?.name || '未指定'}
+                      {getCompanyName(item.company)}
                     </p>
                     <div className="mt-3 space-y-3">
                       <div className="flex items-center gap-2 text-slate-600">
@@ -289,6 +583,10 @@ export default function ApprovalsPage() {
   const [activeTab, setActiveTab] = useState<ApprovalType>('users');
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [detailType, setDetailType] = useState<ApprovalType>('users');
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [rejectItemName, setRejectItemName] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
 
   // 獲取待審核項目
   const { data: pendingData, isLoading } = usePendingApprovals();
@@ -337,33 +635,57 @@ export default function ApprovalsPage() {
 
   const handleReject = () => {
     if (!selectedItem) return;
+    const itemName = getItemName(selectedItem, detailType);
+    setRejectItemName(itemName);
+    setIsRejectModalOpen(true);
+  };
 
-    const reason = prompt('請輸入拒絕原因（選填）：');
-    if (reason === null) return;
+  const handleRejectConfirm = (reason: string) => {
+    if (!selectedItem) return;
 
     switch (detailType) {
       case 'users':
         rejectUserMutation.mutate(
-          { userId: selectedItem.id, reason: reason || undefined },
-          { onSuccess: () => setSelectedItem(null) }
+          { userId: selectedItem.id, reason },
+          {
+            onSuccess: () => {
+              setSelectedItem(null);
+              setIsRejectModalOpen(false);
+            },
+          }
         );
         break;
       case 'companies':
         rejectCompanyMutation.mutate(
-          { companyId: selectedItem.id, reason: reason || undefined },
-          { onSuccess: () => setSelectedItem(null) }
+          { companyId: selectedItem.id, reason },
+          {
+            onSuccess: () => {
+              setSelectedItem(null);
+              setIsRejectModalOpen(false);
+            },
+          }
         );
         break;
       case 'certifications':
         rejectCertMutation.mutate(
-          { certId: selectedItem.id, reason: reason || undefined },
-          { onSuccess: () => setSelectedItem(null) }
+          { certId: selectedItem.id, reason },
+          {
+            onSuccess: () => {
+              setSelectedItem(null);
+              setIsRejectModalOpen(false);
+            },
+          }
         );
         break;
       case 'experiences':
         rejectExpMutation.mutate(
-          { expId: selectedItem.id, reason: reason || undefined },
-          { onSuccess: () => setSelectedItem(null) }
+          { expId: selectedItem.id, reason },
+          {
+            onSuccess: () => {
+              setSelectedItem(null);
+              setIsRejectModalOpen(false);
+            },
+          }
         );
         break;
     }
@@ -428,8 +750,16 @@ export default function ApprovalsPage() {
     }
   };
 
-  const items = getItemsByTab();
+  const rawItems = getItemsByTab();
   const activeTabData = tabs.find((t) => t.id === activeTab);
+
+  // 篩選邏輯
+  const filteredItems = useMemo(() => {
+    let result = rawItems;
+    result = filterBySearch(result, searchQuery, activeTab);
+    result = filterByDate(result, dateFilter);
+    return result;
+  }, [rawItems, searchQuery, dateFilter, activeTab]);
 
   const isAnyMutationLoading =
     approveUserMutation.isPending ||
@@ -487,12 +817,22 @@ export default function ApprovalsPage() {
         })}
       </div>
 
+      {/* 搜尋與篩選 */}
+      <ApprovalFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        dateFilter={dateFilter}
+        onDateFilterChange={setDateFilter}
+        resultCount={filteredItems.length}
+        totalCount={rawItems.length}
+      />
+
       {/* Content */}
       <Card>
         <CardContent className="p-6">
-          {items.length > 0 ? (
+          {filteredItems.length > 0 ? (
             <div className="space-y-4">
-              {items.map((item: any) => (
+              {filteredItems.map((item: any) => (
                 <div
                   key={item.id}
                   className="flex items-center justify-between p-4 border-2 border-slate-200 rounded-xl hover:border-primary-300 transition-colors"
@@ -517,7 +857,7 @@ export default function ApprovalsPage() {
                         {activeTab === 'users' && item.email}
                         {activeTab === 'companies' && `統編：${item.tax_id || '無'}`}
                         {activeTab === 'certifications' && `發證單位：${item.issuer}`}
-                        {activeTab === 'experiences' && (typeof item.company === 'string' ? item.company : item.company?.name || '未指定')}
+                        {activeTab === 'experiences' && getCompanyName(item.company)}
                       </p>
 
                       <p className="text-xs text-slate-500 mt-1">
@@ -540,14 +880,40 @@ export default function ApprovalsPage() {
             </div>
           ) : (
             <div className="text-center py-16">
-              {activeTabData && (() => {
-                const Icon = activeTabData.icon;
-                return <Icon className="h-16 w-16 text-slate-300 mx-auto mb-4" />;
-              })()}
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                目前沒有待審核的{activeTabData?.label}
-              </h3>
-              <p className="text-slate-600">所有項目都已處理完畢</p>
+              {searchQuery || dateFilter !== 'all' ? (
+                // 搜尋無結果
+                <>
+                  <Search className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                    找不到符合條件的項目
+                  </h3>
+                  <p className="text-slate-600 mb-4">
+                    請嘗試調整搜尋關鍵字或篩選條件
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setDateFilter('all');
+                    }}
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    清除所有篩選
+                  </Button>
+                </>
+              ) : (
+                // 真的沒有待審核項目
+                <>
+                  {activeTabData && (() => {
+                    const Icon = activeTabData.icon;
+                    return <Icon className="h-16 w-16 text-slate-300 mx-auto mb-4" />;
+                  })()}
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                    目前沒有待審核的{activeTabData?.label}
+                  </h3>
+                  <p className="text-slate-600">所有項目都已處理完畢</p>
+                </>
+              )}
             </div>
           )}
         </CardContent>
@@ -562,6 +928,16 @@ export default function ApprovalsPage() {
         onApprove={handleApprove}
         onReject={handleReject}
         isLoading={isAnyMutationLoading}
+      />
+
+      {/* Reject Modal */}
+      <RejectModal
+        isOpen={isRejectModalOpen}
+        onClose={() => setIsRejectModalOpen(false)}
+        onConfirm={handleRejectConfirm}
+        isLoading={isAnyMutationLoading}
+        itemType={detailType}
+        itemName={rejectItemName}
       />
     </div>
   );

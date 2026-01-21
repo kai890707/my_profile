@@ -39,6 +39,9 @@ my_profile/
 ├── openspec/             # OpenSpec 規範庫
 │   ├── specs/            # 系統規範文件
 │   └── changes/          # 功能變更提案
+├── .claude/              # Claude Code 配置
+│   ├── commands/         # OpenSpec Commands (/implement, /test, etc.)
+│   └── skills/           # 專業技能模組
 └── docs/                 # 專案文檔
 ```
 
@@ -121,7 +124,7 @@ npm run dev
 | **Laravel API** | http://localhost:8080 | RESTful API 端點 |
 | **Swagger UI** | http://localhost:8080/api/docs | 互動式 API 文檔 |
 | **phpMyAdmin** | http://localhost:8081 | 資料庫管理介面 |
-| **Next.js** | http://localhost:3000 | 前端應用程式 |
+| **Next.js** | http://localhost:3001 | 前端應用程式 |
 
 **資料庫連線**:
 - Host: `localhost:3306`
@@ -133,51 +136,82 @@ npm run dev
 
 ## 📡 API 規範
 
-完整的 API 文檔請訪問：
+### Swagger 互動式文檔
+
+本專案提供完整的 Swagger/OpenAPI 3.0 文檔：
 
 - **Swagger UI**: http://localhost:8080/api/docs
+  - 互動式 API 測試介面
+  - 即時試用所有 API 端點
+  - JWT 認證整合
+  - 完整的請求/回應範例
+
 - **OpenAPI JSON**: http://localhost:8080/api/docs/openapi.json
+  - 標準 OpenAPI 3.0 規範
+  - 可用於生成客戶端 SDK
+  - 支援 Postman、Insomnia 匯入
+
+**特性**:
+- ✅ 自動從 Controller 註解生成
+- ✅ 即時更新 (開發環境)
+- ✅ 僅在開發環境可見 (安全性)
+- ✅ 完整的認證流程說明
+- ✅ 詳細的錯誤回應定義
 
 ### API 端點總覽
 
+**總計: 37 個端點**
+
 ```
-認證 (Authentication) - 5 個端點
-├── POST   /api/auth/register       # 用戶註冊
-├── POST   /api/auth/login          # 用戶登入
-├── POST   /api/auth/refresh        # 刷新令牌
-├── POST   /api/auth/logout         # 用戶登出
-└── GET    /api/auth/me             # 取得當前用戶
+認證 (Authentication) - 6 個端點
+├── POST   /api/auth/register              # 一般用戶註冊
+├── POST   /api/auth/register-salesperson  # 業務員註冊
+├── POST   /api/auth/login                 # 用戶登入
+├── POST   /api/auth/refresh               # 刷新令牌
+├── POST   /api/auth/logout                # 用戶登出
+└── GET    /api/auth/me                    # 取得當前用戶
 
-公司管理 (Companies) - 6 個端點
-├── GET    /api/companies           # 列出所有公司
-├── GET    /api/companies/{id}      # 取得單一公司
-├── GET    /api/companies/my        # 我的公司列表
-├── POST   /api/companies           # 建立公司
-├── PUT    /api/companies/{id}      # 更新公司
-└── DELETE /api/companies/{id}      # 刪除公司
+搜尋 (Search) - 2 個端點
+├── GET    /api/search/salespersons        # 搜尋業務員
+└── GET    /api/search/salespersons/{id}   # 取得業務員詳情
 
-業務員檔案 (Profiles) - 6 個端點
-├── GET    /api/profiles            # 列出所有業務員
-├── GET    /api/profiles/{id}       # 取得單一業務員
-├── GET    /api/profile             # 我的業務員檔案
-├── POST   /api/profile             # 建立業務員檔案
-├── PUT    /api/profile             # 更新業務員檔案
-└── DELETE /api/profile             # 刪除業務員檔案
+業務員管理 (Salesperson) - 11 個端點
+├── GET    /api/salesperson/profile        # 取得個人檔案
+├── PUT    /api/salesperson/profile        # 更新個人檔案
+├── POST   /api/salesperson/upgrade        # 升級為業務員
+├── GET    /api/salesperson/status         # 取得審核狀態
+├── POST   /api/salesperson/company        # 提交公司資訊
+├── GET    /api/salesperson/experiences    # 取得工作經歷
+├── POST   /api/salesperson/experiences    # 新增工作經歷
+├── PUT    /api/salesperson/experiences/{id} # 更新工作經歷
+├── DELETE /api/salesperson/experiences/{id} # 刪除工作經歷
+├── GET    /api/salesperson/certifications # 取得證照列表
+├── POST   /api/salesperson/certifications # 上傳證照
+└── DELETE /api/salesperson/certifications/{id} # 刪除證照
 
-參考數據 (Reference Data) - 6 個端點
-├── GET    /api/industries          # 列出所有產業
-├── GET    /api/industries/{id}     # 取得單一產業
-├── GET    /api/regions             # 列出所有地區
-├── GET    /api/regions/{id}        # 取得單一地區
-├── GET    /api/regions/flat        # 平面式地區列表
-└── GET    /api/regions/{id}/children # 取得子地區
+公司管理 (Companies) - 2 個端點
+├── GET    /api/companies/search           # 搜尋公司
+└── POST   /api/companies                  # 建立公司
 
-管理員 (Admin) - 5 個端點
-├── GET    /api/admin/pending-approvals      # 待審核項目
-├── POST   /api/admin/companies/{id}/approve # 核准公司
-├── POST   /api/admin/companies/{id}/reject  # 拒絕公司
-├── POST   /api/admin/profiles/{id}/approve  # 核准業務員
-└── POST   /api/admin/profiles/{id}/reject   # 拒絕業務員
+管理員 (Admin) - 14 個端點
+├── GET    /api/admin/pending-approvals    # 待審核項目
+├── POST   /api/admin/approve-user/{id}    # 核准用戶註冊
+├── POST   /api/admin/reject-user/{id}     # 拒絕用戶註冊
+├── POST   /api/admin/approve-company/{id} # 核准公司
+├── POST   /api/admin/reject-company/{id}  # 拒絕公司
+├── POST   /api/admin/approve-certification/{id} # 核准證照
+├── POST   /api/admin/reject-certification/{id}  # 拒絕證照
+├── GET    /api/admin/salesperson-applications  # 業務員申請列表
+├── POST   /api/admin/salesperson-applications/{id}/approve # 核准業務員
+├── POST   /api/admin/salesperson-applications/{id}/reject  # 拒絕業務員
+├── GET    /api/admin/users                # 用戶列表
+├── PUT    /api/admin/users/{id}/status    # 更新用戶狀態
+├── DELETE /api/admin/users/{id}           # 刪除用戶
+└── GET    /api/admin/statistics           # 平台統計資料
+
+API 文檔 (Swagger) - 2 個端點
+├── GET    /api/docs                       # Swagger UI 介面
+└── GET    /api/docs/openapi.json          # OpenAPI 3.0 規範
 ```
 
 ---
@@ -256,14 +290,40 @@ openspec/
 
 | 資料表 | 說明 | 記錄數 |
 |-------|------|-------|
-| `users` | 用戶基本資訊 | - |
+| `users` | 用戶基本資訊 (含角色與審核狀態) | - |
 | `salesperson_profiles` | 業務員詳細檔案 | - |
-| `companies` | 公司資訊 | - |
+| `companies` | 公司資訊 (簡化版) | - |
 | `industries` | 產業類別 | 10 |
 | `regions` | 地區資料 | 368 |
 | `certifications` | 證照資料 | - |
 | `experiences` | 工作經歷 | - |
 | `approval_logs` | 審核記錄 | - |
+
+### 重要 Schema 變更 (2026-01-11)
+
+**`users` 表新增欄位** - 業務員審核機制重構:
+```sql
+role ENUM('user', 'salesperson', 'admin')           -- 用戶角色
+salesperson_status ENUM('pending', 'approved', 'rejected')  -- 審核狀態
+salesperson_applied_at TIMESTAMP                    -- 申請時間
+salesperson_approved_at TIMESTAMP                   -- 核准時間
+rejection_reason TEXT                               -- 拒絕原因
+can_reapply_at TIMESTAMP                            -- 可重新申請時間
+is_paid_member BOOLEAN                              -- 付費會員標記
+```
+
+**`companies` 表簡化**:
+```sql
+移除: industry_id, address, phone, approval_status, approved_by
+新增: is_personal BOOLEAN  -- 支援個人工作室
+變更: tax_id 改為 nullable  -- 個人工作室無統編
+```
+
+**`salesperson_profiles` 表簡化**:
+```sql
+移除: approval_status, rejected_reason, approved_by, approved_at
+原因: 審核狀態統一由 users 表管理
+```
 
 完整的資料模型文件: [openspec/specs/models/data-models.md](openspec/specs/models/data-models.md)
 
@@ -371,15 +431,27 @@ docker-compose up -d
 **Frontend (Next.js 15)**:
 - ✅ 專案架構設置
 - ✅ UI 組件系統 (shadcn/ui)
-- ✅ 基礎路由與頁面
+- ✅ 18 個頁面完整實作
+- ✅ 30+ 個 React 組件開發
+- ✅ 31 個 API 端點整合
+- ✅ JWT 認證流程與路由守衛
+- ✅ React Query + Zustand 狀態管理
+- ✅ Recharts 圖表整合
+- ✅ TypeScript 嚴格模式 (0 錯誤)
+- ✅ 響應式設計 (Mobile/Tablet/Desktop)
+
+**完整功能模組**:
+- ✅ 公開頁面: 首頁、搜尋、業務員詳情
+- ✅ 認證系統: 登入、註冊、密碼管理
+- ✅ 業務員 Dashboard: 個人檔案、經歷、證照管理
+- ✅ 管理員後台: 審核管理、用戶管理、統計儀表板
 
 ### 🔄 進行中
 
-**Frontend Development**:
-- 🔄 業務員列表與搜尋介面
-- 🔄 業務員詳細檔案頁面
-- 🔄 認證流程整合
-- 🔄 管理員審核介面
+**Frontend Testing**:
+- 🔄 E2E 測試 (Playwright)
+- 🔄 跨瀏覽器相容性測試
+- 🔄 可訪問性測試 (WCAG AA)
 
 ### 📋 計劃中
 
