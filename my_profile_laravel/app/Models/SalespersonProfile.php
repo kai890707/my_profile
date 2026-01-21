@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class SalespersonProfile extends Model
@@ -78,5 +79,39 @@ class SalespersonProfile extends Model
     public function approvalLogs(): MorphMany
     {
         return $this->morphMany(ApprovalLog::class, 'approvable');
+    }
+
+    /**
+     * Get all experiences for this salesperson profile through the user.
+     *
+     * @return HasManyThrough<Experience, User>
+     */
+    public function experiences(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Experience::class,
+            User::class,
+            'id',        // Foreign key on users table
+            'user_id',   // Foreign key on experiences table
+            'user_id',   // Local key on salesperson_profiles table
+            'id'         // Local key on users table
+        );
+    }
+
+    /**
+     * Get all certifications for this salesperson profile through the user.
+     *
+     * @return HasManyThrough<Certification, User>
+     */
+    public function certifications(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Certification::class,
+            User::class,
+            'id',        // Foreign key on users table
+            'user_id',   // Foreign key on certifications table
+            'user_id',   // Local key on salesperson_profiles table
+            'id'         // Local key on users table
+        );
     }
 }

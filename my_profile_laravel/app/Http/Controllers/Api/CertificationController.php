@@ -20,6 +20,13 @@ class CertificationController extends Controller
     {
         $user = $request->user();
 
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
+            ], 401);
+        }
+
         // Check if user is a salesperson
         if (! $user->isSalesperson()) {
             return response()->json([
@@ -49,6 +56,13 @@ class CertificationController extends Controller
     public function store(StoreCertificationRequest $request): JsonResponse
     {
         $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
+            ], 401);
+        }
 
         // Check if user is a salesperson
         if (! $user->isSalesperson()) {
@@ -139,6 +153,13 @@ class CertificationController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
+            ], 401);
+        }
 
         // Find certification
         $certification = Certification::find($id);

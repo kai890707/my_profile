@@ -33,11 +33,11 @@ class PendingApprovalsTestDataSeeder extends Seeder
         foreach ($profiles as $index => $profile) {
             Experience::create([
                 'user_id' => $profile->user_id,
-                'company' => 'Test Company ' . ($index + 1),
-                'position' => 'Test Position ' . ($index + 1),
+                'company' => 'Test Company '.($index + 1),
+                'position' => 'Test Position '.($index + 1),
                 'start_date' => now()->subYears(2),
                 'end_date' => now()->subYears(1),
-                'description' => 'This is a pending test experience ' . ($index + 1),
+                'description' => 'This is a pending test experience '.($index + 1),
                 'approval_status' => 'pending',
             ]);
         }
@@ -73,11 +73,11 @@ class PendingApprovalsTestDataSeeder extends Seeder
         foreach ($profiles as $index => $profile) {
             Certification::create([
                 'user_id' => $profile->user_id,
-                'name' => 'Test Certification ' . ($index + 1),
-                'issuer' => 'Test Issuer ' . ($index + 1),
+                'name' => 'Test Certification '.($index + 1),
+                'issuer' => 'Test Issuer '.($index + 1),
                 'issue_date' => now()->subYears(2),
                 'expiry_date' => now()->addYears(3),
-                'description' => 'This is a pending test certification ' . ($index + 1),
+                'description' => 'This is a pending test certification '.($index + 1),
                 'approval_status' => 'pending',
             ]);
         }

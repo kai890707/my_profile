@@ -193,6 +193,13 @@ class CompanyController extends Controller
     {
         $user = $request->user();
 
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
+            ], 401);
+        }
+
         if (! $user instanceof User) {
             return response()->json([
                 'success' => false,
@@ -248,6 +255,13 @@ class CompanyController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
+            ], 401);
+        }
 
         // Only approved salespeople can create companies
         if (! $user->isApprovedSalesperson()) {
@@ -344,6 +358,13 @@ class CompanyController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
+            ], 401);
+        }
 
         if (! $user instanceof User) {
             return response()->json([
@@ -447,7 +468,7 @@ class CompanyController extends Controller
         if ($taxId && $name) {
             $query->where(function ($q) use ($taxId, $name) {
                 $q->where('tax_id', 'like', '%'.$taxId.'%')
-                  ->orWhere('name', 'like', '%'.$name.'%');
+                    ->orWhere('name', 'like', '%'.$name.'%');
             });
         } elseif ($taxId) {
             $query->where('tax_id', 'like', '%'.$taxId.'%');
@@ -513,6 +534,13 @@ class CompanyController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
+            ], 401);
+        }
 
         if (! $user instanceof User) {
             return response()->json([

@@ -205,6 +205,13 @@ class SalespersonProfileController extends Controller
         // Get authenticated user using Laravel standard method
         $user = $request->user();
 
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
+            ], 401);
+        }
+
         if (! $user instanceof User) {
             return response()->json([
                 'success' => false,
@@ -293,6 +300,13 @@ class SalespersonProfileController extends Controller
     {
         // Get authenticated user using Laravel standard method
         $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
+            ], 401);
+        }
 
         if (! $user instanceof User) {
             return response()->json([
@@ -404,6 +418,13 @@ class SalespersonProfileController extends Controller
         // Get authenticated user using Laravel standard method
         $user = $request->user();
 
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
+            ], 401);
+        }
+
         if (! $user instanceof User) {
             return response()->json([
                 'success' => false,
@@ -486,6 +507,13 @@ class SalespersonProfileController extends Controller
     {
         // Get authenticated user using Laravel standard method
         $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
+            ], 401);
+        }
 
         if (! $user instanceof User) {
             return response()->json([

@@ -51,6 +51,6 @@ class RejectSalespersonRequest extends FormRequest
      */
     public function getReapplyDays(): int
     {
-        return $this->input('reapply_days', User::DEFAULT_REAPPLY_DAYS);
+        return (int) $this->input('reapply_days', User::DEFAULT_REAPPLY_DAYS);
     }
 }

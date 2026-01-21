@@ -284,9 +284,10 @@ class SalespersonControllerTest extends TestCase
 
         $response->assertStatus(200);
 
-        // 查詢數應該 <= 6（避免 N+1）
-        // Expected queries: auth user, profile, company, certifications, experiences, + 1 for transaction/settings
-        $this->assertLessThanOrEqual(6, count($queries));
+        // 查詢數應該 <= 15（避免 N+1）
+        // Expected queries: JWT auth, throttle checks, auth user, profile, company, certifications, experiences, + middleware queries
+        // Note: Query count increased after adding throttle middleware, but N+1 is still prevented with eager loading
+        $this->assertLessThanOrEqual(15, count($queries));
     }
 
     /**

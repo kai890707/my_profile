@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RefreshTokenRequest;
+use App\Http\Requests\RegisterUserRequest;
 use App\Http\Requests\RegisterSalespersonRequest;
+use App\Http\Resources\SalespersonProfileResource;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use OpenApi\Attributes as OA;
 
 class AuthController extends Controller
@@ -46,25 +50,9 @@ class AuthController extends Controller
             ),
         ]
     )]
-    public function register(Request $request): JsonResponse
+    public function register(RegisterUserRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'username' => 'required|string|max:100|unique:users,username',
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email',
-            'password' => 'required|string|min:6|confirmed',
-            'role' => 'nullable|in:user,salesperson',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $result = $this->authService->register($validator->validated());
+        $result = $this->authService->register($request->validated());
 
         /** @var \App\Models\User $user */
         $user = $result['user'];
@@ -73,14 +61,7 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'User registered successfully',
             'data' => [
-                'user' => [
-                    'id' => $user->id,
-                    'username' => $user->username,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'status' => $user->status,
-                ],
+                'user' => (new UserResource($user))->resolve(),
                 'access_token' => $result['access_token'],
                 'refresh_token' => $result['refresh_token'],
                 'token_type' => $result['token_type'],
@@ -119,22 +100,9 @@ class AuthController extends Controller
             ),
         ]
     )]
-    public function login(Request $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $result = $this->authService->login($validator->validated());
+        $result = $this->authService->login($request->validated());
 
         if ($result === null) {
             return response()->json([
@@ -150,14 +118,7 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Login successful',
             'data' => [
-                'user' => [
-                    'id' => $user->id,
-                    'username' => $user->username,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'status' => $user->status,
-                ],
+                'user' => (new UserResource($user))->resolve(),
                 'access_token' => $result['access_token'],
                 'refresh_token' => $result['refresh_token'],
                 'token_type' => $result['token_type'],
@@ -211,26 +172,11 @@ class AuthController extends Controller
             ),
         ]
     )]
-    public function refresh(Request $request): JsonResponse
+    public function refresh(RefreshTokenRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'refresh_token' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
         try {
-            $refreshToken = $request->input('refresh_token');
-
-            if (! is_string($refreshToken)) {
-                throw new \Exception('Invalid refresh token');
-            }
+            $validated = $request->validated();
+            $refreshToken = $validated['refresh_token'];
 
             $result = $this->authService->refreshWithToken($refreshToken);
 
@@ -338,16 +284,7 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'user' => [
-                    'id' => $user->id,
-                    'username' => $user->username,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'status' => $user->status,
-                    'created_at' => $user->created_at?->toIso8601String(),
-                    'updated_at' => $user->updated_at?->toIso8601String(),
-                ],
+                'user' => (new UserResource($user))->resolve(),
             ],
         ]);
     }
@@ -395,7 +332,7 @@ class AuthController extends Controller
 
         try {
             // Generate username from email (part before @) + random suffix
-            $emailPrefix = explode('@', $request->input('email'))[0];
+            $emailPrefix = explode('@', (string) $request->input('email'))[0];
             $username = $emailPrefix.'_'.\Illuminate\Support\Str::random(4);
 
             // Ensure username is unique (should be very unlikely to collide)
@@ -408,7 +345,7 @@ class AuthController extends Controller
                 'username' => $username,
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
-                'password_hash' => Hash::make($request->input('password')),
+                'password_hash' => Hash::make((string) $request->input('password')),
                 'role' => User::ROLE_SALESPERSON,
                 'salesperson_status' => User::STATUS_PENDING,
                 'salesperson_applied_at' => now(),
@@ -418,7 +355,7 @@ class AuthController extends Controller
             // Decode avatar data and calculate size
             $avatarData = $request->input('avatar');
             $avatarMime = $request->input('avatar_mime');
-            $avatarSize = strlen(base64_decode($avatarData));
+            $avatarSize = strlen(base64_decode((string) $avatarData));
 
             // Create salesperson profile with avatar
             $user->salespersonProfile()->create([
@@ -436,8 +373,8 @@ class AuthController extends Controller
 
             // Generate token using AuthService
             $loginResult = $this->authService->login([
-                'email' => $request->input('email'),
-                'password' => $request->input('password'),
+                'email' => (string) $request->input('email'),
+                'password' => (string) $request->input('password'),
             ]);
 
             if ($loginResult === null) {
@@ -447,19 +384,15 @@ class AuthController extends Controller
             // Reload user with profile
             $user->load('salespersonProfile');
 
+            // Reload user with profile
+            $user->load('salespersonProfile');
+
             return response()->json([
                 'success' => true,
                 'message' => '註冊成功！您的業務員資料正在審核中，預計 1-3 個工作天完成。',
                 'data' => [
-                    'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'role' => $user->role,
-                        'salesperson_status' => $user->salesperson_status,
-                        'salesperson_applied_at' => $user->salesperson_applied_at?->toIso8601String(),
-                    ],
-                    'profile' => $user->salespersonProfile,
+                    'user' => (new UserResource($user))->resolve(),
+                    'profile' => $user->salespersonProfile ? (new SalespersonProfileResource($user->salespersonProfile))->resolve() : null,
                     'access_token' => $loginResult['access_token'],
                     'refresh_token' => $loginResult['refresh_token'],
                     'token_type' => $loginResult['token_type'],

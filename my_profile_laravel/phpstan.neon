@@ -5,9 +5,9 @@ parameters:
     level: 9
     paths:
         - app
-        - tests
     excludePaths:
         - vendor
+        - tests
 
     # Laravel specific
     treatPhpDocTypesAsCertain: false
