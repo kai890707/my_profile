@@ -35,59 +35,61 @@ Route::prefix('docs')->group(function (): void {
     Route::get('/openapi.json', [\App\Http\Controllers\Api\SwaggerController::class, 'json']);
 });
 
-// Public Reference Data routes
-Route::prefix('industries')->group(function (): void {
+// Public Reference Data routes (Rate limit: 60 requests/minute)
+Route::middleware('throttle:60,1')->prefix('industries')->group(function (): void {
     Route::get('/', [IndustryController::class, 'index']);
     Route::get('/{id}', [IndustryController::class, 'show']);
 });
 
-Route::prefix('regions')->group(function (): void {
+Route::middleware('throttle:60,1')->prefix('regions')->group(function (): void {
     Route::get('/', [RegionController::class, 'index']);
     Route::get('/flat', [RegionController::class, 'flat']);
     Route::get('/{id}', [RegionController::class, 'show']);
     Route::get('/{id}/children', [RegionController::class, 'children']);
 });
 
-// Public authentication routes
-Route::prefix('auth')->group(function (): void {
+// Public authentication routes (Rate limit: 10 requests/minute for security)
+Route::middleware('throttle:10,1')->prefix('auth')->group(function (): void {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/register-salesperson', [AuthController::class, 'registerSalesperson']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
 });
 
-// Protected authentication routes
-Route::middleware('jwt.auth')->prefix('auth')->group(function (): void {
+// Protected authentication routes (Rate limit: 120 requests/minute)
+Route::middleware(['jwt.auth', 'throttle:120,1'])->prefix('auth')->group(function (): void {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 });
 
 // Company routes (specific routes before wildcards)
 Route::prefix('companies')->group(function (): void {
-    // Public search route
-    Route::get('/search', [CompanyController::class, 'search']);
+    // Public search route (Rate limit: 60 requests/minute)
+    Route::middleware('throttle:60,1')->get('/search', [CompanyController::class, 'search']);
 
-    // Protected specific routes first
-    Route::middleware('jwt.auth')->group(function (): void {
+    // Protected specific routes first (Rate limit: 120 requests/minute)
+    Route::middleware(['jwt.auth', 'throttle:120,1'])->group(function (): void {
         Route::get('/my', [CompanyController::class, 'myCompanies']);
         Route::post('/', [CompanyController::class, 'store']);
         Route::put('/{id}', [CompanyController::class, 'update']);
         Route::delete('/{id}', [CompanyController::class, 'destroy']);
     });
 
-    // Public routes after (wildcard last)
-    Route::get('/', [CompanyController::class, 'index']);
-    Route::get('/{id}', [CompanyController::class, 'show']);
+    // Public routes after (Rate limit: 60 requests/minute)
+    Route::middleware('throttle:60,1')->group(function (): void {
+        Route::get('/', [CompanyController::class, 'index']);
+        Route::get('/{id}', [CompanyController::class, 'show']);
+    });
 });
 
-// Public Salesperson Profile routes
-Route::prefix('profiles')->group(function (): void {
+// Public Salesperson Profile routes (Rate limit: 60 requests/minute)
+Route::middleware('throttle:60,1')->prefix('profiles')->group(function (): void {
     Route::get('/', [SalespersonProfileController::class, 'index']);
     Route::get('/{id}', [SalespersonProfileController::class, 'show']);
 });
 
-// Protected Salesperson Profile routes
-Route::middleware('jwt.auth')->prefix('profile')->group(function (): void {
+// Protected Salesperson Profile routes (Rate limit: 120 requests/minute)
+Route::middleware(['jwt.auth', 'throttle:120,1'])->prefix('profile')->group(function (): void {
     Route::get('/', [SalespersonProfileController::class, 'me']);
     Route::post('/', [SalespersonProfileController::class, 'store']);
     Route::put('/', [SalespersonProfileController::class, 'update']);
@@ -96,11 +98,11 @@ Route::middleware('jwt.auth')->prefix('profile')->group(function (): void {
 
 // Salesperson routes
 Route::prefix('salesperson')->group(function (): void {
-    // Public route
-    Route::get('/status', [SalespersonController::class, 'status']);
+    // Public route (Rate limit: 60 requests/minute)
+    Route::middleware('throttle:60,1')->get('/status', [SalespersonController::class, 'status']);
 
-    // Protected routes
-    Route::middleware('jwt.auth')->group(function (): void {
+    // Protected routes (Rate limit: 120 requests/minute)
+    Route::middleware(['jwt.auth', 'throttle:120,1'])->group(function (): void {
         Route::post('/upgrade', [SalespersonController::class, 'upgrade']);
         Route::put('/profile', [SalespersonController::class, 'updateProfile']);
         Route::post('/company', [SalespersonController::class, 'saveCompany']);
@@ -124,11 +126,11 @@ Route::prefix('salesperson')->group(function (): void {
     });
 });
 
-// Public salespeople search
-Route::get('/salespeople', [SalespersonController::class, 'index']);
+// Public salespeople search (Rate limit: 60 requests/minute)
+Route::middleware('throttle:60,1')->get('/salespeople', [SalespersonController::class, 'index']);
 
-// Admin routes
-Route::middleware(['jwt.auth', 'admin'])->prefix('admin')->group(function (): void {
+// Admin routes (Rate limit: 300 requests/minute)
+Route::middleware(['jwt.auth', 'admin', 'throttle:300,1'])->prefix('admin')->group(function (): void {
     // Dashboard statistics
     Route::get('/statistics', [AdminController::class, 'statistics']);
 
