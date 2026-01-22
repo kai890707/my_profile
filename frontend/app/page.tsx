@@ -65,37 +65,37 @@ export default function HomePage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-20 lg:py-32 overflow-hidden">
+        <section className="relative bg-gradient-to-br from-primary-50 via-primary-25 to-secondary-50 py-16 md:py-20 lg:py-28 overflow-hidden">
           {/* 背景裝飾 */}
           <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-primary-200/20 blur-3xl" />
-            <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-secondary-200/20 blur-3xl" />
+            <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary-200/20 blur-3xl" />
+            <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-secondary-200/20 blur-3xl" />
           </div>
 
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
             <div className="max-w-4xl mx-auto text-center">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-6">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-6 animate-fade-in-up">
                 找到最適合的
-                <span className="bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
                   {' '}專業業務員
                 </span>
               </h1>
-              <p className="text-xl text-slate-600 mb-12 max-w-2xl mx-auto">
+              <p className="text-xl text-slate-600 mb-12 max-w-2xl mx-auto animate-fade-in-up animation-delay-100">
                 YAMU 連結優質業務員與企業需求，打造透明、高效的商業合作環境
               </p>
 
               {/* 搜尋列 */}
-              <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
-                <div className="flex gap-2">
+              <form onSubmit={handleSearch} className="max-w-2xl mx-auto animate-fade-in-up animation-delay-200">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Input
                     size="lg"
                     placeholder="搜尋業務員、公司、產業..."
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
                     icon={<Search className="h-5 w-5" />}
-                    className="text-lg"
+                    className="text-lg h-14 shadow-lg flex-1"
                   />
-                  <Button type="submit" size="lg" className="px-8">
+                  <Button type="submit" size="lg" className="px-10 h-14 w-full sm:w-auto">
                     搜尋
                   </Button>
                 </div>
@@ -111,7 +111,7 @@ export default function HomePage() {
         </section>
 
         {/* Features Section */}
-        <section className="py-20 bg-white">
+        <section className="py-16 md:py-20 bg-white">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
@@ -122,12 +122,17 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
               {features.map((feature, index) => (
-                <Card key={index} hover className="text-center">
+                <div
+                  key={index}
+                  className="animate-fade-in-up"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <Card hover className="text-center border border-slate-100 shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
                   <CardContent className="pt-8">
-                    <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-primary-500 to-secondary-500 mb-6">
-                      <feature.icon className="h-8 w-8 text-white" />
+                    <div className="inline-flex items-center justify-center h-20 w-20 rounded-3xl bg-gradient-to-br from-primary-500 to-secondary-500 shadow-lg mb-6 transition-transform duration-300 hover:scale-110 hover:rotate-6">
+                      <feature.icon className="h-10 w-10 text-white" />
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 mb-3">
                       {feature.title}
@@ -137,13 +142,14 @@ export default function HomePage() {
                     </p>
                   </CardContent>
                 </Card>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
         {/* Popular Salespersons Section */}
-        <section className="py-20 bg-slate-50">
+        <section className="py-16 md:py-20 bg-slate-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-12">
               <div>
@@ -163,18 +169,21 @@ export default function HomePage() {
             </div>
 
             {isLoading ? (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <SalespersonCardSkeleton key={i} />
                 ))}
               </div>
             ) : popularSalespersons && popularSalespersons.data.length > 0 ? (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {popularSalespersons.data.map((salesperson) => (
-                  <SalespersonCard
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+                {popularSalespersons.data.map((salesperson, index) => (
+                  <div
                     key={salesperson.id}
-                    salesperson={salesperson}
-                  />
+                    className="animate-fade-in-up"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <SalespersonCard salesperson={salesperson} />
+                  </div>
                 ))}
               </div>
             ) : (
@@ -189,8 +198,14 @@ export default function HomePage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 bg-gradient-to-r from-primary-600 to-secondary-600">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="relative py-16 md:py-20 bg-gradient-to-r from-primary-500 via-primary-600 to-secondary-500 overflow-hidden">
+          {/* 背景裝飾 */}
+          <div className="absolute inset-0 opacity-30">
+            <div className="absolute top-0 left-0 w-96 h-96 bg-white/20 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/20 rounded-full blur-3xl" />
+          </div>
+
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
             <div className="max-w-3xl mx-auto text-center text-white">
               <h2 className="text-3xl lg:text-4xl font-bold mb-6">
                 準備好找到最佳業務夥伴了嗎？
@@ -198,11 +213,11 @@ export default function HomePage() {
               <p className="text-xl mb-8 opacity-90">
                 立即註冊成為業務員，讓更多客戶找到您
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button asChild size="lg" variant="secondary">
+              <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center">
+                <Button asChild size="lg" variant="secondary" className="h-14 px-10 text-lg shadow-xl hover:brightness-110 hover:-translate-y-1 hover:shadow-2xl transition-all duration-300">
                   <Link href="/register">免費註冊</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="bg-white/10 border-white text-white hover:bg-white/20">
+                <Button asChild size="lg" variant="outline" className="h-14 px-10 text-lg bg-white/10 border-white text-white hover:bg-white/20 hover:-translate-y-1 transition-all duration-300">
                   <Link href="/search">開始搜尋</Link>
                 </Button>
               </div>
