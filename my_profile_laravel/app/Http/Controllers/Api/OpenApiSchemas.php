@@ -212,6 +212,57 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', example: '2023-01-15T10:30:00Z'),
     ]
 )]
+#[OA\Schema(
+    schema: 'ApprovalStatus',
+    description: '所有資源的審核狀態統覽',
+    properties: [
+        new OA\Property(property: 'profile_status', type: 'string', enum: ['pending', 'approved', 'rejected'], example: 'approved'),
+        new OA\Property(property: 'company_status', type: 'string', enum: ['pending', 'approved', 'rejected'], nullable: true, example: 'approved'),
+        new OA\Property(
+            property: 'certifications',
+            type: 'array',
+            items: new OA\Items(
+                properties: [
+                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                    new OA\Property(property: 'name', type: 'string', example: 'PMP 專案管理師'),
+                    new OA\Property(property: 'approval_status', type: 'string', enum: ['pending', 'approved', 'rejected'], example: 'approved'),
+                    new OA\Property(property: 'rejected_reason', type: 'string', nullable: true, example: null),
+                ],
+                type: 'object'
+            )
+        ),
+        new OA\Property(
+            property: 'experiences',
+            type: 'array',
+            items: new OA\Items(
+                properties: [
+                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                    new OA\Property(property: 'company', type: 'string', example: '台積電'),
+                    new OA\Property(property: 'position', type: 'string', example: '業務經理'),
+                    new OA\Property(property: 'approval_status', type: 'string', enum: ['pending', 'approved', 'rejected'], example: 'approved'),
+                    new OA\Property(property: 'rejected_reason', type: 'string', nullable: true, example: null),
+                ],
+                type: 'object'
+            )
+        ),
+    ]
+)]
+#[OA\Schema(
+    schema: 'SalespersonSearchResult',
+    description: '業務員搜尋結果項目',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'full_name', type: 'string', example: '王小明'),
+        new OA\Property(property: 'phone', type: 'string', example: '0912345678'),
+        new OA\Property(property: 'bio', type: 'string', nullable: true, example: '資深保險業務，專注於壽險與醫療險'),
+        new OA\Property(property: 'specialties', type: 'string', nullable: true, example: '壽險, 醫療險, 投資型保單'),
+        new OA\Property(property: 'avatar', type: 'string', nullable: true, example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA...'),
+        new OA\Property(property: 'company_name', type: 'string', nullable: true, example: 'ABC保險公司'),
+        new OA\Property(property: 'industry_name', type: 'string', nullable: true, example: null),
+        new OA\Property(property: 'service_regions', type: 'array', items: new OA\Items(type: 'string'), example: ['台北市', '新北市']),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time', example: '2023-01-15T10:30:00Z'),
+    ]
+)]
 final class OpenApiSchemas
 {
     // This class only exists to hold OpenAPI schema definitions

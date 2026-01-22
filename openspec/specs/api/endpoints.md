@@ -785,87 +785,326 @@
 **Access**: Protected (requires auth + admin role)
 **Headers**: `Authorization: Bearer {token}`
 
-### GET /admin/pending-approvals
-**Description**: Get all pending items
+### GET /admin/statistics
+**Description**: 取得管理員統計資訊，包含業務員、公司、待審核項目的數量
+
 **Response (200)**:
 ```json
 {
-  "status": "success",
+  "success": true,
   "data": {
-    "users": [/* pending salesperson registrations */],
-    "profiles": [/* pending profile updates */],
-    "companies": [/* pending company info */],
-    "certifications": [/* pending certifications */]
+    "total_salespeople": 150,
+    "active_salespeople": 120,
+    "pending_salespeople": 30,
+    "total_companies": 80,
+    "pending_approvals": 15
   }
 }
 ```
 
-### POST /admin/approve-user/:id
-**Description**: Approve salesperson registration
+**Error Responses**:
+- 401: Unauthorized
+- 403: Forbidden (非管理員)
+
+### GET /admin/pending-approvals
+**Description**: 取得所有待審核的公司、業務員檔案、工作經驗和證照列表
+
 **Response (200)**:
 ```json
 {
-  "status": "success",
-  "message": "業務員註冊已審核通過"
+  "success": true,
+  "data": {
+    "companies": [/* Company objects with approval_status: pending */],
+    "profiles": [/* SalespersonProfile objects with approval_status: pending */],
+    "experiences": [/* Experience objects with approval_status: pending */],
+    "certifications": [/* Certification objects with approval_status: pending */]
+  }
 }
 ```
 
-### POST /admin/reject-user/:id
-**Description**: Reject salesperson registration
+**Error Responses**:
+- 401: Unauthorized
+- 403: Forbidden (非管理員)
+
+### GET /admin/salesperson-applications
+**Description**: 取得所有待審核的業務員申請列表
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "data": {
+    "data": [/* User objects with role: salesperson, salesperson_status: pending */],
+    "current_page": 1,
+    "per_page": 20,
+    "total": 30,
+    "last_page": 2
+  }
+}
+```
+
+**Error Responses**:
+- 401: Unauthorized
+- 403: Forbidden (非管理員)
+
+### POST /admin/salesperson-applications/{id}/approve
+**Description**: 批准業務員申請，將業務員狀態設為已審核通過
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "user": {/* User object with updated salesperson_status */},
+  "message": "已批准業務員申請"
+}
+```
+
+**Error Responses**:
+- 400: Bad Request (status 不是 pending)
+- 401: Unauthorized
+- 403: Forbidden (非管理員)
+- 404: Not Found
+
+### POST /admin/salesperson-applications/{id}/reject
+**Description**: 拒絕業務員申請，將業務員狀態設為已拒絕，需提供拒絕原因
+
 **Request Body**:
 ```json
 {
-  "reason": "string (optional)"
+  "rejection_reason": "string - required"
 }
 ```
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "user": {/* User object with updated salesperson_status */},
+  "message": "已拒絕業務員申請"
+}
+```
+
+**Error Responses**:
+- 400: Bad Request (status 不是 pending)
+- 401: Unauthorized
+- 403: Forbidden (非管理員)
+- 404: Not Found
+- 422: Validation Error (缺少 rejection_reason)
+
+### POST /admin/approve-company/{id}
+**Description**: 批准公司，將公司審核狀態設為已通過
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "company": {/* Company object with approval_status: approved */},
+  "message": "公司已批准"
+}
+```
+
+**Error Responses**:
+- 400: Bad Request (approval_status 不是 pending)
+- 401: Unauthorized
+- 403: Forbidden (非管理員)
+- 404: Not Found
+
+### POST /admin/approve-experience/{id}
+**Description**: 批准工作經驗，將工作經驗審核狀態設為已通過
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "experience": {/* Experience object with approval_status: approved */},
+  "message": "工作經驗已批准"
+}
+```
+
+**Error Responses**:
+- 400: Bad Request (approval_status 不是 pending)
+- 401: Unauthorized
+- 403: Forbidden (非管理員)
+- 404: Not Found
+
+### POST /admin/reject-experience/{id}
+**Description**: 拒絕工作經驗，將工作經驗審核狀態設為已拒絕
+
+**Request Body** (optional):
+```json
+{
+  "reason": "string - optional - 拒絕原因"
+}
+```
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "experience": {/* Experience object with approval_status: rejected */},
+  "message": "工作經驗已拒絕"
+}
+```
+
+**Error Responses**:
+- 400: Bad Request (approval_status 不是 pending)
+- 401: Unauthorized
+- 403: Forbidden (非管理員)
+- 404: Not Found
+
+### POST /admin/approve-certification/{id}
+**Description**: 批准證照，將證照審核狀態設為已通過
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "certification": {/* Certification object with approval_status: approved */},
+  "message": "證照已批准"
+}
+```
+
+**Error Responses**:
+- 400: Bad Request (approval_status 不是 pending)
+- 401: Unauthorized
+- 403: Forbidden (非管理員)
+- 404: Not Found
+
+### POST /admin/reject-certification/{id}
+**Description**: 拒絕證照，將證照審核狀態設為已拒絕
+
+**Request Body** (optional):
+```json
+{
+  "reason": "string - optional - 拒絕原因"
+}
+```
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "certification": {/* Certification object with approval_status: rejected */},
+  "message": "證照已拒絕"
+}
+```
+
+**Error Responses**:
+- 400: Bad Request (approval_status 不是 pending)
+- 401: Unauthorized
+- 403: Forbidden (非管理員)
+- 404: Not Found
 
 ### GET /admin/users
-**Description**: List all users
+**Description**: 取得使用者列表，支援角色和狀態篩選
+
 **Query Parameters**:
-- `role` (optional): Filter by role
-- `status` (optional): Filter by status
+- `role` (optional): 角色篩選 (admin, salesperson, user)
+- `status` (optional): 狀態篩選 (active, inactive, pending)
+- `page` (optional): 頁碼 (default: 1)
+- `per_page` (optional): 每頁筆數 (default: 15, max: 100)
 
-### PUT /admin/users/:id/status
-**Description**: Update user status
-**Request Body**:
-```json
-{
-  "status": "active|inactive"
-}
-```
-
-### DELETE /admin/users/:id
-**Description**: Delete user (soft delete)
-
-### GET /admin/settings/industries
-**Description**: Get all industries
-
-### POST /admin/settings/industries
-**Description**: Create industry
-**Request Body**:
-```json
-{
-  "name": "string",
-  "slug": "string",
-  "description": "string (optional)"
-}
-```
-
-### GET /admin/statistics
-**Description**: Get platform statistics
 **Response (200)**:
 ```json
 {
-  "status": "success",
-  "data": {
-    "total_salespersons": 10,
-    "active_salespersons": 8,
-    "pending_salespersons": 2,
-    "total_companies": 5,
-    "pending_approvals": 3
+  "success": true,
+  "data": [/* User objects */],
+  "meta": {
+    "current_page": 1,
+    "per_page": 15,
+    "total": 100,
+    "last_page": 7
   }
 }
 ```
+
+**Error Responses**:
+- 401: Unauthorized
+- 403: Forbidden (非管理員)
+
+### PUT /admin/users/{id}/status
+**Description**: 啟用或停用使用者帳號
+
+**Request Body**:
+```json
+{
+  "status": "active|inactive - required"
+}
+```
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "data": {/* User object with updated status */},
+  "message": "使用者狀態已更新"
+}
+```
+
+**Error Responses**:
+- 400: Bad Request (無法停用管理員或自己)
+- 401: Unauthorized
+- 403: Forbidden (非管理員)
+- 404: Not Found
+- 422: Validation Error
+
+### DELETE /admin/users/{id}
+**Description**: 永久刪除使用者帳號
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "message": "使用者已刪除"
+}
+```
+
+**Error Responses**:
+- 400: Bad Request (無法刪除管理員或自己)
+- 401: Unauthorized
+- 403: Forbidden (非管理員)
+- 404: Not Found
+
+### GET /admin/settings/regions
+**Description**: 取得系統中所有可用的地區列表
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "台北市",
+      "parent_id": null
+    }
+  ]
+}
+```
+
+**Error Responses**:
+- 401: Unauthorized
+- 403: Forbidden (非管理員)
+
+### GET /admin/settings/industries
+**Description**: 取得系統中所有可用的產業列表
+
+**Response (200)**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "科技業"
+    }
+  ]
+}
+```
+
+**Error Responses**:
+- 401: Unauthorized
+- 403: Forbidden (非管理員)
 
 ---
 
@@ -929,7 +1168,7 @@ All endpoints may return these error responses:
 
 ---
 
-## Complete Endpoint List (37 total)
+## Complete Endpoint List (33 total)
 
 **Authentication (5)**:
 - POST /auth/register
@@ -955,22 +1194,22 @@ All endpoints may return these error responses:
 - DELETE /salesperson/certifications/:id
 - GET /salesperson/approval-status
 
-**Admin (19)**:
-- GET /admin/pending-approvals
-- POST /admin/approve-user/:id
-- POST /admin/reject-user/:id
-- POST /admin/approve-company/:id
-- POST /admin/reject-company/:id
-- POST /admin/approve-certification/:id
-- POST /admin/reject-certification/:id
-- GET /admin/users
-- PUT /admin/users/:id/status
-- DELETE /admin/users/:id
-- GET /admin/settings/industries
-- POST /admin/settings/industries
-- GET /admin/settings/regions
-- POST /admin/settings/regions
+**Admin (15)**:
 - GET /admin/statistics
+- GET /admin/pending-approvals
+- GET /admin/salesperson-applications
+- POST /admin/salesperson-applications/{id}/approve
+- POST /admin/salesperson-applications/{id}/reject
+- POST /admin/approve-company/{id}
+- POST /admin/approve-experience/{id}
+- POST /admin/reject-experience/{id}
+- POST /admin/approve-certification/{id}
+- POST /admin/reject-certification/{id}
+- GET /admin/users
+- PUT /admin/users/{id}/status
+- DELETE /admin/users/{id}
+- GET /admin/settings/regions
+- GET /admin/settings/industries
 
 ---
 
