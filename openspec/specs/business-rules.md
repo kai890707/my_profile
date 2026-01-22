@@ -7,6 +7,435 @@
 
 ---
 
+## Common Business Rules & Best Practices
+
+**Last Updated**: 2026-01-21
+**Source**: Extracted from production changes
+
+### BR-100: API Response Unwrapping
+
+**Rule**: Frontend hooks must unwrap nested API responses to prevent data access issues.
+
+**Problem Pattern**:
+```json
+// Backend returns
+{
+  "success": true,
+  "data": {
+    "user": { "id": 1, "role": "salesperson" }
+  }
+}
+
+// ❌ Bad: Frontend directly uses response.data
+// Results in: { user: { id: 1, role: "salesperson" } }
+// Accessing: user.role → undefined (because user is actually {user: {...}})
+```
+
+**Correct Implementation**:
+```typescript
+export function useAuth() {
+  return useQuery({
+    queryFn: async () => {
+      const response = await getCurrentUser();
+      const data = response.data as { user?: any } | any;
+      return data?.user ?? data;  // Unwrap nested structure
+    },
+  });
+}
+```
+
+**Rationale**: Prevents runtime errors when accessing nested properties like `user.role`.
+
+**Related Changes**:
+- 20260115-fix-header-dropdown-and-dashboard-access
+- 20260115-fix-dashboard-profile-edit-prefill
+
+---
+
+### BR-101: Form Validation Consistency (Backend)
+
+**Rule**: All request validation must use Form Request classes, not inline `Validator::make()`.
+
+**Implementation**:
+```php
+// ❌ Bad: Inline validation
+public function rejectSalesperson(Request $request, int $id) {
+    $validator = Validator::make($request->all(), [
+        'reason' => 'required|string|max:500'
+    ]);
+}
+
+// ✅ Good: Form Request class
+public function rejectSalesperson(RejectSalespersonRequest $request, int $id) {
+    $reason = $request->validated('reason');
+}
+```
+
+**Benefits**:
+- Centralized validation logic
+- Type-safe (PHPStan Level 9)
+- Reusable across controllers
+- Custom error messages
+
+**Related Change**: 20260120-fix-backend-code-quality
+
+---
+
+### BR-102: Null Safety and Optional Chaining
+
+**Rule**: Always use null-safe operators when accessing potentially null/undefined properties.
+
+**Backend (PHP 8.0+)**:
+```php
+// ❌ Bad
+$userName = $user->salespersonProfile->full_name;
+
+// ✅ Good
+$userName = $user->salespersonProfile?->full_name ?? 'Unknown';
+```
+
+**Frontend (TypeScript)**:
+```typescript
+// ❌ Bad
+const initial = profile.full_name.substring(0, 2);
+
+// ✅ Good
+const initial = profile.full_name?.substring(0, 2) ?? 'U';
+```
+
+**Rationale**: Prevents runtime errors (TypeError, NullPointerException) when data is missing.
+
+**Related Changes**:
+- All bug fix changes
+- 20260112-fix-avatar-fallback-typeerror
+
+---
+
+### BR-103: Rate Limiting by API Type
+
+**Rule**: Apply different rate limits based on API type and authentication status.
+
+**Configuration**:
+| API Type | Rate Limit | Identifier |
+|----------|------------|------------|
+| Public (auth endpoints) | 60 req/min | IP address |
+| Authenticated | 120 req/min | User ID |
+| Admin | 300 req/min | Admin ID |
+
+**Implementation**:
+```php
+RateLimiter::for('public-api', function (Request $request) {
+    return Limit::perMinute(60)->by($request->ip());
+});
+
+RateLimiter::for('authenticated-api', function (Request $request) {
+    return Limit::perMinute(120)->by(optional($request->user())->id ?: $request->ip());
+});
+```
+
+**Error Response** (429 Too Many Requests):
+```json
+{
+  "status": "error",
+  "message": "Too Many Requests"
+}
+```
+
+**Rationale**: Protect API from abuse while allowing legitimate heavy usage.
+
+**Related Change**: 20260120-fix-backend-code-quality
+
+---
+
+### BR-104: Cache Strategy for Query Performance
+
+**Rule**: Cache expensive queries with appropriate TTL based on data freshness requirements.
+
+**Cache TTL Guidelines**:
+| Data Type | TTL | Rationale |
+|-----------|-----|-----------|
+| Statistics (dashboard) | 5 minutes | Acceptable slight delay |
+| List queries (salespersons) | 1 minute | Balance performance and freshness |
+| Detail queries | 5 minutes | Less frequently updated |
+| Search results | 30 seconds | Frequently changing |
+
+**Implementation**:
+```php
+public function statistics(): JsonResponse
+{
+    $stats = Cache::remember('admin:statistics', 300, function () {
+        return [
+            'total_salespeople' => User::salespersons()->count(),
+            // ... other stats
+        ];
+    });
+
+    return response()->json(['data' => $stats]);
+}
+```
+
+**Cache Invalidation**:
+```php
+// Clear cache when relevant data changes
+public function updateProfile(Request $request): JsonResponse
+{
+    $profile->update($request->validated());
+
+    // Clear related caches
+    Cache::forget('salespersons:list:*');
+    Cache::forget('admin:statistics');
+
+    return response()->json(['success' => true]);
+}
+```
+
+**Rationale**: Reduce database load for frequently accessed, slowly changing data.
+
+**Related Change**: 20260120-fix-backend-code-quality
+
+---
+
+### BR-105: Company Search Strategy
+
+**Rule**: Support both exact match (tax_id) and fuzzy search (name) in a single endpoint.
+
+**Search Logic**:
+1. If input matches 8-digit pattern → Exact match on `tax_id`
+2. Otherwise → Fuzzy search on `name` (LIKE %keyword%)
+3. Limit results to 10 items
+4. Return different response formats based on search type
+
+**Implementation**:
+```php
+public function search(Request $request): JsonResponse
+{
+    $keyword = $request->query('keyword');
+
+    // Exact tax_id search
+    if (preg_match('/^\d{8}$/', $keyword)) {
+        $company = Company::where('tax_id', $keyword)->first();
+        return response()->json([
+            'exists' => (bool) $company,
+            'company' => $company
+        ]);
+    }
+
+    // Fuzzy name search
+    $companies = Company::where('name', 'LIKE', "%{$keyword}%")
+        ->limit(10)
+        ->get();
+
+    return response()->json([
+        'exists' => $companies->isNotEmpty(),
+        'companies' => $companies
+    ]);
+}
+```
+
+**Rationale**: Allow users to search by either name (user-friendly) or tax_id (precise).
+
+**Related Change**: 20260118-improve-company-selection
+
+---
+
+### BR-106: Confirmation Dialog for Data Loss
+
+**Rule**: Show confirmation dialog when user actions will clear existing unsaved data.
+
+**When to Apply**:
+- Switching between mutually exclusive options (e.g., "Company" ↔ "Self-employed")
+- Navigating away from forms with unsaved changes
+- Destructive actions (delete, reset)
+
+**Implementation**:
+```tsx
+const handleTypeChange = (newType: 'company' | 'self') => {
+  // Check if user has filled data
+  const hasData = (employmentType === 'company' && selectedCompany) ||
+                  (employmentType === 'self' && businessName);
+
+  if (hasData) {
+    // Show confirmation dialog
+    setShowConfirm(true);
+    setPendingType(newType);
+  } else {
+    // Direct switch (no data loss)
+    setEmploymentType(newType);
+  }
+};
+```
+
+**Dialog Content**:
+```
+⚠️ 確認切換為自營業者？
+
+切換後，您先前選擇的公司資訊將被清除。
+
+[取消]  [確認切換]
+```
+
+**Rationale**: Prevent accidental data loss and improve user trust.
+
+**Related Change**: 20260118-improve-company-selection
+
+---
+
+### BR-107: Form Pre-filling Dependency Management
+
+**Rule**: When pre-filling edit forms, include both data and edit mode in useEffect dependencies.
+
+**Problem Pattern**:
+```tsx
+// ❌ Bad: Only monitors profile.id
+useEffect(() => {
+  if (profile) {
+    resetForm(profile);
+  }
+}, [profile?.id]);  // Won't re-run when entering edit mode
+```
+
+**Correct Implementation**:
+```tsx
+// ✅ Good: Monitors both profile and editMode
+useEffect(() => {
+  if (profile && editMode) {
+    resetForm({
+      full_name: profile.full_name || '',
+      phone: profile.phone || '',
+      // ... other fields
+    });
+  }
+}, [profile?.id, editMode]);  // Re-runs when entering edit mode
+```
+
+**Additional Rule**: Disable edit button during data loading.
+```tsx
+<Button
+  onClick={() => setEditMode(true)}
+  disabled={profileLoading}  // Prevent editing before data loads
+>
+  編輯資料
+</Button>
+```
+
+**Rationale**: Ensure form fields are always populated when entering edit mode.
+
+**Related Change**: 20260115-fix-dashboard-profile-edit-prefill
+
+---
+
+### BR-108: Avatar Fallback Priority
+
+**Rule**: Generate avatar fallback text using a 5-tier priority system.
+
+**Priority Order**:
+1. `full_name` (e.g., "張小明" → "張小")
+2. `name` (e.g., "John" → "JO")
+3. `username` (e.g., "john_doe" → "JO")
+4. `email` (e.g., "john@example.com" → "JO")
+5. Default: "U"
+
+**Implementation**:
+```typescript
+export function getAvatarFallback(user: {
+  full_name?: string | null;
+  name?: string | null;
+  username?: string | null;
+  email?: string | null;
+}): string {
+  const fullName = user.full_name?.trim();
+  if (fullName && fullName.length >= 2) {
+    return fullName.substring(0, 2).toUpperCase();
+  }
+
+  // Try name, username, email...
+  // (See full implementation in ui-components.md)
+
+  return 'U';  // Final fallback
+}
+```
+
+**Usage**:
+```tsx
+<Avatar
+  src={user.avatar}
+  fallback={getAvatarFallback(user)}
+  size="lg"
+/>
+```
+
+**Rationale**: Provide consistent, meaningful fallback text across all components.
+
+**Related Change**: 20260112-fix-avatar-fallback-typeerror
+
+---
+
+### BR-109: Skeleton Loading States
+
+**Rule**: Use skeleton screens instead of spinners for content loading.
+
+**When to Use**:
+- List/grid content loading
+- Card content loading
+- Form loading states
+- Timeline loading
+
+**Implementation**:
+```tsx
+{isLoading ? (
+  <div className="space-y-4">
+    {[1, 2, 3].map((i) => (
+      <Card key={i} className="p-6">
+        <Skeleton className="h-5 w-48 mb-3" />
+        <Skeleton className="h-4 w-32 mb-2" />
+        <Skeleton className="h-4 w-full" />
+      </Card>
+    ))}
+  </div>
+) : (
+  <ContentList data={data} />
+)}
+```
+
+**Benefits**:
+- Better perceived performance
+- Users see layout structure immediately
+- Reduces Cumulative Layout Shift (CLS)
+
+**Rationale**: Improve user experience during data loading.
+
+**Related Change**: 20260120-enhance-salesperson-experience-certifications-ui
+
+---
+
+### BR-110: Role-Based Navigation Links
+
+**Rule**: Generate navigation menu links dynamically based on user role.
+
+**Role-Link Mapping**:
+| Role | Links |
+|------|-------|
+| Admin | 管理後台, 使用者管理, 統計資料 |
+| Salesperson | 個人中心, 工作經驗, 專業證照 |
+| User | 首頁, 搜尋業務員 |
+
+**Implementation**:
+```tsx
+const getDashboardLinks = () => {
+  if (user?.role === 'admin') return adminLinks;
+  if (user?.role === 'salesperson') return salespersonLinks;
+  return userLinks;  // Regular users
+};
+```
+
+**Error Handling**: If role is undefined, fall back to user links (prevent empty menu).
+
+**Rationale**: Provide role-appropriate navigation without hardcoding conditional logic everywhere.
+
+**Related Change**: 20260115-fix-header-dropdown-and-dashboard-access
+
+---
+
 ## Feature: Swagger API Documentation
 
 **Added**: 2026-01-08

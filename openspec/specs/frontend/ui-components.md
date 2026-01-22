@@ -1499,6 +1499,586 @@ import { getAvatarFallback } from '@/lib/utils/avatar';
 
 ---
 
+## Frontend Component Patterns & Best Practices
+
+**Last Updated**: 2026-01-21
+**Source**: Extracted from production changes
+
+### Pattern 1: Timeline Component for Chronological Data
+
+**Use Case**: Display work experiences or certifications in a chronological timeline.
+
+**Component Structure**:
+```tsx
+// components/features/salesperson/experience-timeline.tsx
+interface ExperienceTimelineProps {
+  experiences: Experience[];
+}
+
+export function ExperienceTimeline({ experiences }: ExperienceTimelineProps) {
+  // Sort by start_date desc (most recent first)
+  const sorted = experiences.sort((a, b) =>
+    new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
+  );
+
+  return (
+    <div className="space-y-8">
+      {sorted.map((exp, index) => (
+        <div key={exp.id} className="relative">
+          {/* Timeline Line */}
+          {index !== sorted.length - 1 && (
+            <div className="absolute left-3 top-8 h-full w-0.5 bg-slate-200" />
+          )}
+
+          {/* Timeline Dot */}
+          <div className="absolute left-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary-500 border-4 border-white" />
+
+          {/* Content Card */}
+          <div className="ml-10">
+            <ExperienceCard experience={exp} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+**Visual Design**:
+```
+[•]─── [Card] Position | Company | Date Range
+ │        └── [Expand] Description
+ │
+[•]─── [Card] Position | Company | Date Range
+ │        └── [Expand] Description
+ │
+[•]─── [Card] Position | Company | Date Range
+         └── [Expand] Description
+```
+
+**Related Change**: 20260120-enhance-salesperson-experience-certifications-ui
+
+---
+
+### Pattern 2: Card Component with Expand/Collapse
+
+**Use Case**: Display certification cards with expandable descriptions.
+
+```tsx
+// components/features/salesperson/certification-card.tsx
+interface CertificationCardProps {
+  certification: Certification;
+}
+
+export function CertificationCard({ certification }: CertificationCardProps) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center space-x-3">
+            <AwardIcon className="h-8 w-8 text-primary-500" />
+            <div>
+              <h3 className="font-semibold text-lg">{certification.name}</h3>
+              <p className="text-sm text-slate-600">{certification.issuer}</p>
+            </div>
+          </div>
+          {certification.approval_status === 'approved' && (
+            <Badge variant="success" className="ml-2">
+              <CheckIcon className="h-3 w-3 mr-1" />
+              已驗證
+            </Badge>
+          )}
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        <div className="flex items-center text-sm text-slate-600 mb-3">
+          <CalendarIcon className="h-4 w-4 mr-2" />
+          {format(new Date(certification.issue_date), 'yyyy-MM-dd')}
+          {certification.expiry_date && (
+            <> - {format(new Date(certification.expiry_date), 'yyyy-MM-dd')}</>
+          )}
+        </div>
+
+        {certification.description && (
+          <>
+            <p className={cn(
+              "text-sm text-slate-700",
+              !expanded && "line-clamp-2"
+            )}>
+              {certification.description}
+            </p>
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="text-sm text-primary-500 hover:underline mt-2"
+            >
+              {expanded ? '收合' : '展開'}
+            </button>
+          </>
+        )}
+
+        {certification.file_url && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={() => window.open(certification.file_url, '_blank')}
+          >
+            <FileTextIcon className="h-4 w-4 mr-2" />
+            查看證書
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+**Features**:
+- Expand/collapse for long descriptions
+- Visual verification badge for approved items
+- Link to certificate file (if available)
+- Hover shadow effect
+
+**Related Change**: 20260120-enhance-salesperson-experience-certifications-ui
+
+---
+
+### Pattern 3: Combobox with Search and Create
+
+**Use Case**: Company search with "Create new" option when no results found.
+
+```tsx
+// components/features/company/company-search-combobox.tsx
+import { Combobox } from '@/components/ui/combobox';
+import { useState } from 'react';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+
+export function CompanySearchCombobox({ onSelect }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebouncedValue(searchTerm, 300);
+
+  const { data: companies, isLoading } = useSearchCompanies({
+    keyword: debouncedSearch
+  });
+
+  return (
+    <Combobox
+      value={selectedCompany}
+      onValueChange={onSelect}
+      placeholder="搜尋公司名稱或統一編號"
+      emptyState={
+        <div className="p-4 text-center">
+          <p className="text-sm text-slate-600 mb-3">找不到公司？</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCreateDialog(true)}
+          >
+            <PlusIcon className="h-4 w-4 mr-2" />
+            新增公司
+          </Button>
+        </div>
+      }
+    >
+      {companies?.map((company) => (
+        <ComboboxOption key={company.id} value={company.id}>
+          <div className="flex flex-col">
+            <span className="font-medium">{company.name}</span>
+            {company.tax_id && (
+              <span className="text-sm text-slate-500">統編：{company.tax_id}</span>
+            )}
+          </div>
+        </ComboboxOption>
+      ))}
+    </Combobox>
+  );
+}
+```
+
+**Features**:
+- Debounced search (300ms)
+- Display company name + tax_id
+- "Create new" fallback when no results
+- Keyboard navigation support
+
+**Related Change**: 20260118-improve-company-selection
+
+---
+
+### Pattern 4: Confirmation Dialog for Data Loss Prevention
+
+**Use Case**: Warn users when switching between options that clear data.
+
+```tsx
+// components/features/company/switch-confirm-dialog.tsx
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+
+interface SwitchConfirmDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  onConfirm: () => void;
+}
+
+export function SwitchConfirmDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  onConfirm
+}: SwitchConfirmDialogProps) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center">
+            <AlertTriangleIcon className="h-5 w-5 text-amber-500 mr-2" />
+            {title}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {description}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>取消</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>
+            確認切換
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+// Usage
+const [showConfirm, setShowConfirm] = useState(false);
+const [pendingType, setPendingType] = useState<'company' | 'self' | null>(null);
+
+const handleTypeChange = (newType: 'company' | 'self') => {
+  // If user has already filled data, show confirmation
+  if ((employmentType === 'company' && selectedCompany) ||
+      (employmentType === 'self' && businessName)) {
+    setPendingType(newType);
+    setShowConfirm(true);
+  } else {
+    setEmploymentType(newType);
+  }
+};
+
+const handleConfirmSwitch = () => {
+  // Clear existing data
+  if (employmentType === 'company') {
+    setSelectedCompany(null);
+  } else {
+    setBusinessName('');
+  }
+  // Switch type
+  setEmploymentType(pendingType);
+  setShowConfirm(false);
+};
+```
+
+**When to Use**:
+- Switching between mutually exclusive options
+- Data loss scenarios (unsaved changes)
+- Destructive actions (delete, reset)
+
+**Related Change**: 20260118-improve-company-selection
+
+---
+
+### Pattern 5: Skeleton Loaders for Better UX
+
+**Best Practice**: Show skeleton screens instead of spinners for content loading.
+
+```tsx
+// components/features/salesperson/experience-timeline-skeleton.tsx
+export function ExperienceTimelineSkeleton() {
+  return (
+    <div className="space-y-8">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="relative">
+          <div className="absolute left-3 top-8 h-full w-0.5 bg-slate-200" />
+          <div className="absolute left-0 w-6 h-6 rounded-full bg-slate-200" />
+
+          <div className="ml-10">
+            <Card className="p-6">
+              <div className="space-y-3">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            </Card>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Usage
+{isLoading ? (
+  <ExperienceTimelineSkeleton />
+) : (
+  <ExperienceTimeline experiences={data.experiences} />
+)}
+```
+
+**Benefits**:
+- Better perceived performance
+- Users see layout structure immediately
+- Reduces layout shift (CLS)
+
+**Related Change**: 20260120-enhance-salesperson-experience-certifications-ui
+
+---
+
+### Pattern 6: Responsive Navigation Menu with User Avatar
+
+**Use Case**: Header with role-based navigation and user menu.
+
+```tsx
+// components/layout/header.tsx
+const getDashboardLinks = () => {
+  if (user?.role === 'admin') {
+    return [
+      { href: '/admin', label: '管理後台', icon: LayoutDashboard },
+      { href: '/admin/users', label: '使用者管理', icon: Users },
+    ];
+  }
+
+  if (user?.role === 'salesperson') {
+    return [
+      { href: '/dashboard', label: '個人中心', icon: LayoutDashboard },
+      { href: '/dashboard/experiences', label: '工作經驗', icon: Briefcase },
+    ];
+  }
+
+  // Regular users
+  return [
+    { href: '/', label: '首頁', icon: Home },
+    { href: '/search', label: '搜尋業務員', icon: Search },
+  ];
+};
+
+export function Header() {
+  const { data: user } = useAuth();
+  const links = getDashboardLinks();
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-sm">
+      <div className="container flex h-16 items-center justify-between">
+        {/* Logo */}
+        <Link href="/">
+          <Logo />
+        </Link>
+
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center space-x-6">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-sm font-medium hover:text-primary-500 transition-colors"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* User Menu */}
+        {user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center space-x-2">
+                <Avatar
+                  src={user.avatar}
+                  fallback={getAvatarFallback(user)}
+                  size="sm"
+                />
+                <span className="hidden md:inline text-sm">{user.name}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {links.map((link) => (
+                <DropdownMenuItem key={link.href} asChild>
+                  <Link href={link.href}>
+                    <link.icon className="h-4 w-4 mr-2" />
+                    {link.label}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOutIcon className="h-4 w-4 mr-2" />
+                登出
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="flex items-center space-x-2">
+            <Link href="/login">
+              <Button variant="ghost" size="sm">登入</Button>
+            </Link>
+            <Link href="/register">
+              <Button size="sm">註冊</Button>
+            </Link>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+}
+```
+
+**Key Features**:
+- Role-based menu links
+- Avatar with fallback logic
+- Responsive design (mobile/desktop)
+- Sticky header with backdrop blur
+
+**Related Change**: 20260115-fix-header-dropdown-and-dashboard-access
+
+---
+
+### Pattern 7: Form Pre-filling with useEffect
+
+**Use Case**: Pre-fill edit form when entering edit mode.
+
+```tsx
+// app/(dashboard)/dashboard/page.tsx
+const [editMode, setEditMode] = useState(false);
+const { data: profile, isLoading: profileLoading } = useProfile();
+
+// Pre-fill form when entering edit mode
+useEffect(() => {
+  if (profile && editMode) {
+    resetProfile({
+      full_name: profile.full_name || '',
+      phone: profile.phone || '',
+      bio: profile.bio || '',
+      specialties: profile.specialties || '',
+      service_regions: profile.service_regions || [],
+    });
+  }
+}, [profile?.id, editMode]);  // Re-run when editMode changes
+
+return (
+  <div>
+    {/* View Mode */}
+    {!editMode && (
+      <div>
+        <p>{profile?.full_name}</p>
+        <Button
+          onClick={() => setEditMode(true)}
+          disabled={profileLoading}  // Prevent editing before data loads
+        >
+          編輯資料
+        </Button>
+      </div>
+    )}
+
+    {/* Edit Mode */}
+    {editMode && (
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Input
+          label="姓名"
+          {...register('full_name')}
+          error={errors.full_name?.message}
+        />
+        {/* ... other fields */}
+        <div className="flex space-x-2">
+          <Button type="submit" isLoading={isSubmitting}>儲存</Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setEditMode(false)}
+          >
+            取消
+          </Button>
+        </div>
+      </form>
+    )}
+  </div>
+);
+```
+
+**Key Points**:
+- Disable edit button during loading
+- useEffect dependency on both `profile` and `editMode`
+- Reset form when canceling
+
+**Related Change**: 20260115-fix-dashboard-profile-edit-prefill
+
+---
+
+### Pattern 8: Avatar Fallback Utility Function
+
+**Use Case**: Generate consistent avatar fallbacks from user data.
+
+```typescript
+// lib/utils/avatar.ts
+/**
+ * Generate Avatar fallback text
+ * Priority: full_name > name > username > email > 'U'
+ */
+export function getAvatarFallback(user: {
+  full_name?: string | null;
+  name?: string | null;
+  username?: string | null;
+  email?: string | null;
+}): string {
+  // Try full_name first
+  const fullName = user.full_name?.trim();
+  if (fullName && fullName.length >= 2) {
+    return fullName.substring(0, 2).toUpperCase();
+  }
+
+  // Try name
+  const name = user.name?.trim();
+  if (name && name.length >= 2) {
+    return name.substring(0, 2).toUpperCase();
+  }
+
+  // Try username
+  const username = user.username?.trim();
+  if (username && username.length >= 2) {
+    return username.substring(0, 2).toUpperCase();
+  }
+
+  // Try email
+  const email = user.email?.trim();
+  if (email && email.length >= 2) {
+    return email.substring(0, 2).toUpperCase();
+  }
+
+  // Default fallback
+  return 'U';
+}
+
+// Usage
+<Avatar
+  src={user.avatar}
+  fallback={getAvatarFallback(user)}
+  size="lg"
+/>
+```
+
+**Benefits**:
+- Centralized logic (DRY principle)
+- Type-safe with optional chaining
+- Consistent behavior across all components
+- Handles all edge cases (null, undefined, empty)
+
+**Related Changes**:
+- 20260112-fix-avatar-fallback-typeerror
+- 20260115-fix-dashboard-profile-edit-prefill
+
 ---
 
 ## Feature: Dashboard Profile Edit Display Fix

@@ -9,8 +9,10 @@ use App\Http\Requests\SaveCompanyRequest;
 use App\Http\Requests\UpdateSalespersonProfileRequest;
 use App\Http\Requests\UpgradeSalespersonRequest;
 use App\Models\User;
+use App\Services\AvatarService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SalespersonController extends Controller
 {
@@ -207,8 +209,10 @@ class SalespersonController extends Controller
      *
      * PUT /api/salesperson/profile
      */
-    public function updateProfile(UpdateSalespersonProfileRequest $request): JsonResponse
-    {
+    public function updateProfile(
+        UpdateSalespersonProfileRequest $request,
+        AvatarService $avatarService
+    ): JsonResponse {
         /** @var User $user */
         $user = $request->user();
 
@@ -226,11 +230,49 @@ class SalespersonController extends Controller
             ], 403);
         }
 
-        $user->salespersonProfile()->update($request->validated());
+        $data = $request->validated();
+
+        // Process avatar if present
+        if ($request->filled('avatar')) {
+            try {
+                $processed = $avatarService->processAvatar($data['avatar']);
+
+                // Replace avatar data URL with processed binary data
+                $data['avatar_data'] = $processed['data'];
+                $data['avatar_mime'] = $processed['mime'];
+                $data['avatar_size'] = $processed['size'];
+                unset($data['avatar']);
+
+            } catch (\InvalidArgumentException $e) {
+                Log::warning('Avatar processing failed', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'error' => [
+                        'code' => 'AVATAR_PROCESSING_FAILED',
+                        'message' => $e->getMessage(),
+                    ],
+                ], 422);
+            }
+        }
+
+        $user->salespersonProfile()->update($data);
+
+        // Reload profile to get updated data
+        $profile = $user->salespersonProfile()->first();
+
+        // Build response with avatar data URL
+        $responseData = $profile->toArray();
+        if ($profile->avatar_data && $profile->avatar_mime) {
+            $responseData['avatar'] = "data:{$profile->avatar_mime};base64,{$profile->avatar_data}";
+        }
 
         return response()->json([
             'success' => true,
-            'profile' => $user->salespersonProfile,
+            'profile' => $responseData,
             'message' => '個人資料已更新',
         ]);
     }

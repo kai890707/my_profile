@@ -31,6 +31,11 @@ class UpdateSalespersonProfileRequest extends FormRequest
             'service_regions' => ['nullable', 'array'],
             'service_regions.*' => ['string', 'max:100'],
             'company_id' => ['nullable', 'exists:companies,id'],
+            'avatar' => [
+                'nullable',
+                'string',
+                'regex:/^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+\/]+=*$/',
+            ],
         ];
     }
 
@@ -49,6 +54,7 @@ class UpdateSalespersonProfileRequest extends FormRequest
             'specialties.max' => '專長領域不得超過 500 個字元',
             'service_regions.array' => '服務區域格式錯誤',
             'company_id.exists' => '選擇的公司不存在',
+            'avatar.regex' => '頭像格式錯誤，僅支援 JPEG、PNG、WebP、GIF 格式的 Data URL',
         ];
     }
 }

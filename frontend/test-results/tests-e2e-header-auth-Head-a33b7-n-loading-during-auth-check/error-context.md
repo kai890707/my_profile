@@ -1,0 +1,295 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e5]:
+        - link "Y YAMU" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e9]: "Y"
+          - generic [ref=e10]: YAMU
+        - navigation [ref=e11]:
+          - link "首頁" [ref=e12] [cursor=pointer]:
+            - /url: /
+          - link "搜尋業務員" [ref=e13] [cursor=pointer]:
+            - /url: /search
+        - generic [ref=e14]:
+          - link "登入" [ref=e15] [cursor=pointer]:
+            - /url: /login
+          - link "註冊" [ref=e16] [cursor=pointer]:
+            - /url: /register
+    - main [ref=e17]:
+      - generic [ref=e23]:
+        - heading "找到最適合的 專業業務員" [level=1] [ref=e24]:
+          - text: 找到最適合的
+          - generic [ref=e25]: 專業業務員
+        - paragraph [ref=e26]: YAMU 連結優質業務員與企業需求，打造透明、高效的商業合作環境
+        - generic [ref=e27]:
+          - generic [ref=e28]:
+            - generic [ref=e30]:
+              - img [ref=e32]
+              - textbox "搜尋業務員、公司、產業..." [ref=e35]
+            - button "搜尋" [ref=e36]
+          - paragraph [ref=e37]:
+            - text: 或
+            - link "瀏覽所有業務員 →" [ref=e38] [cursor=pointer]:
+              - /url: /search
+      - generic [ref=e40]:
+        - generic [ref=e41]:
+          - heading "為什麼選擇 YAMU？" [level=2] [ref=e42]
+          - paragraph [ref=e43]: 我們提供安全、透明、高效的業務員搜尋服務
+        - generic [ref=e44]:
+          - generic [ref=e46] [cursor=pointer]:
+            - img [ref=e48]
+            - heading "專業業務員" [level=3] [ref=e53]
+            - paragraph [ref=e54]: 平台上的業務員都經過審核，確保專業度與可信度
+          - generic [ref=e56] [cursor=pointer]:
+            - img [ref=e58]
+            - heading "安全可靠" [level=3] [ref=e60]
+            - paragraph [ref=e61]: 所有資料都經過驗證，保護您的資訊安全
+          - generic [ref=e63] [cursor=pointer]:
+            - img [ref=e65]
+            - heading "高效媒合" [level=3] [ref=e68]
+            - paragraph [ref=e69]: 快速找到符合需求的業務員，節省您的時間
+      - generic [ref=e71]:
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - heading "熱門業務員" [level=2] [ref=e74]
+            - paragraph [ref=e75]: 最新加入平台的專業業務員
+          - link "查看全部" [ref=e76] [cursor=pointer]:
+            - /url: /search
+            - button "查看全部" [ref=e77]:
+              - text: 查看全部
+              - img [ref=e78]
+        - generic [ref=e80]:
+          - 'link "Avatar 銘凱蔡 AA設計 網頁開發設計 網頁開發設計 PHP 服務地區: 雲林縣、台東縣、台南市、澎湖縣、桃園市、台北市、台中市、新竹縣、新竹市、南投縣、連江縣、嘉義縣" [ref=e81] [cursor=pointer]':
+            - /url: /salesperson/1
+            - generic [ref=e83]:
+              - generic [ref=e84]:
+                - img "Avatar" [ref=e87]
+                - generic [ref=e88]:
+                  - heading "銘凱蔡" [level=3] [ref=e89]
+                  - generic [ref=e90]:
+                    - img [ref=e91]
+                    - generic [ref=e94]: AA設計
+              - paragraph [ref=e95]: 網頁開發設計
+              - generic [ref=e96]:
+                - generic [ref=e97]: 網頁開發設計
+                - generic [ref=e98]: PHP
+              - generic [ref=e99]:
+                - img [ref=e100]
+                - generic [ref=e103]: "服務地區: 雲林縣、台東縣、台南市、澎湖縣、桃園市、台北市、台中市、新竹縣、新竹市、南投縣、連江縣、嘉義縣"
+          - 'link "Avatar 林美玲 新光人壽 專注於企業保險與團體保險領域，服務超過50家中小企業。具備完整的風險管理顧問經驗，能為企業提供全方位的保障規劃。 企業保險 團體保險 風險管理 服務地區: 台中市、彰化縣、南投縣" [ref=e104] [cursor=pointer]':
+            - /url: /salesperson/5
+            - generic [ref=e106]:
+              - generic [ref=e107]:
+                - img "Avatar" [ref=e110]
+                - generic [ref=e111]:
+                  - heading "林美玲" [level=3] [ref=e112]
+                  - generic [ref=e113]:
+                    - img [ref=e114]
+                    - generic [ref=e117]: 新光人壽
+              - paragraph [ref=e118]: 專注於企業保險與團體保險領域，服務超過50家中小企業。具備完整的風險管理顧問經驗，能為企業提供全方位的保障規劃。
+              - generic [ref=e119]:
+                - generic [ref=e120]: 企業保險
+                - generic [ref=e121]: 團體保險
+                - generic [ref=e122]: 風險管理
+              - generic [ref=e123]:
+                - img [ref=e124]
+                - generic [ref=e127]: "服務地區: 台中市、彰化縣、南投縣"
+          - 'link "Avatar 王建宏 台灣賓士 汽車銷售專家，在賓士品牌服務超過8年。熱愛汽車，能為客戶提供專業的購車建議與完善的售後服務。 豪華汽車銷售 企業購車方案 租賃服務 服務地區: 台北市、桃園市" [ref=e128] [cursor=pointer]':
+            - /url: /salesperson/6
+            - generic [ref=e130]:
+              - generic [ref=e131]:
+                - img "Avatar" [ref=e134]
+                - generic [ref=e135]:
+                  - heading "王建宏" [level=3] [ref=e136]
+                  - generic [ref=e137]:
+                    - img [ref=e138]
+                    - generic [ref=e141]: 台灣賓士
+              - paragraph [ref=e142]: 汽車銷售專家，在賓士品牌服務超過8年。熱愛汽車，能為客戶提供專業的購車建議與完善的售後服務。
+              - generic [ref=e143]:
+                - generic [ref=e144]: 豪華汽車銷售
+                - generic [ref=e145]: 企業購車方案
+                - generic [ref=e146]: 租賃服務
+              - generic [ref=e147]:
+                - img [ref=e148]
+                - generic [ref=e151]: "服務地區: 台北市、桃園市"
+          - 'link "Avatar 張慧如 信義房屋 房地產銷售顧問，專精於預售屋與新成屋市場。對台北市各區域房市瞭若指掌，能為客戶找到最適合的房產投資標的。 預售屋銷售 投資置產 房市分析 服務地區: 台北市、新北市、基隆市" [ref=e152] [cursor=pointer]':
+            - /url: /salesperson/7
+            - generic [ref=e154]:
+              - generic [ref=e155]:
+                - img "Avatar" [ref=e158]
+                - generic [ref=e159]:
+                  - heading "張慧如" [level=3] [ref=e160]
+                  - generic [ref=e161]:
+                    - img [ref=e162]
+                    - generic [ref=e165]: 信義房屋
+              - paragraph [ref=e166]: 房地產銷售顧問，專精於預售屋與新成屋市場。對台北市各區域房市瞭若指掌，能為客戶找到最適合的房產投資標的。
+              - generic [ref=e167]:
+                - generic [ref=e168]: 預售屋銷售
+                - generic [ref=e169]: 投資置產
+                - generic [ref=e170]: 房市分析
+              - generic [ref=e171]:
+                - img [ref=e172]
+                - generic [ref=e175]: "服務地區: 台北市、新北市、基隆市"
+          - 'link "Avatar 劉威志 微軟台灣 軟體解決方案銷售專家，具備深厚的技術背景。專注於企業數位轉型與雲端解決方案，協助客戶提升營運效率。 企業軟體 雲端服務 數位轉型 服務地區: 台北市、新竹市、新竹縣" [ref=e176] [cursor=pointer]':
+            - /url: /salesperson/8
+            - generic [ref=e178]:
+              - generic [ref=e179]:
+                - img "Avatar" [ref=e182]
+                - generic [ref=e183]:
+                  - heading "劉威志" [level=3] [ref=e184]
+                  - generic [ref=e185]:
+                    - img [ref=e186]
+                    - generic [ref=e189]: 微軟台灣
+              - paragraph [ref=e190]: 軟體解決方案銷售專家，具備深厚的技術背景。專注於企業數位轉型與雲端解決方案，協助客戶提升營運效率。
+              - generic [ref=e191]:
+                - generic [ref=e192]: 企業軟體
+                - generic [ref=e193]: 雲端服務
+                - generic [ref=e194]: 數位轉型
+              - generic [ref=e195]:
+                - img [ref=e196]
+                - generic [ref=e199]: "服務地區: 台北市、新竹市、新竹縣"
+          - 'link "Avatar 黃怡萱 Cartier 台灣 珠寶銷售顧問，對寶石鑑定與珠寶設計有深入研究。服務於頂級珠寶品牌，為客戶提供專屬的珠寶選購體驗。 珠寶鑑定 訂製珠寶 VIP服務 服務地區: 台北市" [ref=e200] [cursor=pointer]':
+            - /url: /salesperson/9
+            - generic [ref=e202]:
+              - generic [ref=e203]:
+                - img "Avatar" [ref=e206]
+                - generic [ref=e207]:
+                  - heading "黃怡萱" [level=3] [ref=e208]
+                  - generic [ref=e209]:
+                    - img [ref=e210]
+                    - generic [ref=e213]: Cartier 台灣
+              - paragraph [ref=e214]: 珠寶銷售顧問，對寶石鑑定與珠寶設計有深入研究。服務於頂級珠寶品牌，為客戶提供專屬的珠寶選購體驗。
+              - generic [ref=e215]:
+                - generic [ref=e216]: 珠寶鑑定
+                - generic [ref=e217]: 訂製珠寶
+                - generic [ref=e218]: VIP服務
+              - generic [ref=e219]:
+                - img [ref=e220]
+                - generic [ref=e223]: "服務地區: 台北市"
+          - 'link "Avatar 吳承翰 嬌生醫療器材 醫療器材銷售專員，具備醫學背景。專注於手術器械與醫療設備，服務各大醫療院所，提供專業的產品諮詢與技術支援。 醫療器材 手術器械 醫院採購 服務地區: 台北市、新北市、桃園市、台中市" [ref=e224] [cursor=pointer]':
+            - /url: /salesperson/10
+            - generic [ref=e226]:
+              - generic [ref=e227]:
+                - img "Avatar" [ref=e230]
+                - generic [ref=e231]:
+                  - heading "吳承翰" [level=3] [ref=e232]
+                  - generic [ref=e233]:
+                    - img [ref=e234]
+                    - generic [ref=e237]: 嬌生醫療器材
+              - paragraph [ref=e238]: 醫療器材銷售專員，具備醫學背景。專注於手術器械與醫療設備，服務各大醫療院所，提供專業的產品諮詢與技術支援。
+              - generic [ref=e239]:
+                - generic [ref=e240]: 醫療器材
+                - generic [ref=e241]: 手術器械
+                - generic [ref=e242]: 醫院採購
+              - generic [ref=e243]:
+                - img [ref=e244]
+                - generic [ref=e247]: "服務地區: 台北市、新北市、桃園市、台中市"
+          - 'link "Avatar 楊欣怡 雄獅旅遊 旅遊業務專家，擁有豐富的國內外旅遊規劃經驗。專精於客製化行程設計，為客戶打造獨一無二的旅行體驗。 客製旅遊 蜜月規劃 企業旅遊 服務地區: 高雄市、台南市、屏東縣" [ref=e248] [cursor=pointer]':
+            - /url: /salesperson/11
+            - generic [ref=e250]:
+              - generic [ref=e251]:
+                - img "Avatar" [ref=e254]
+                - generic [ref=e255]:
+                  - heading "楊欣怡" [level=3] [ref=e256]
+                  - generic [ref=e257]:
+                    - img [ref=e258]
+                    - generic [ref=e261]: 雄獅旅遊
+              - paragraph [ref=e262]: 旅遊業務專家，擁有豐富的國內外旅遊規劃經驗。專精於客製化行程設計，為客戶打造獨一無二的旅行體驗。
+              - generic [ref=e263]:
+                - generic [ref=e264]: 客製旅遊
+                - generic [ref=e265]: 蜜月規劃
+                - generic [ref=e266]: 企業旅遊
+              - generic [ref=e267]:
+                - img [ref=e268]
+                - generic [ref=e271]: "服務地區: 高雄市、台南市、屏東縣"
+      - generic [ref=e274]:
+        - heading "準備好找到最佳業務夥伴了嗎？" [level=2] [ref=e275]
+        - paragraph [ref=e276]: 立即註冊成為業務員，讓更多客戶找到您
+        - generic [ref=e277]:
+          - link "免費註冊" [ref=e278] [cursor=pointer]:
+            - /url: /register
+          - link "開始搜尋" [ref=e279] [cursor=pointer]:
+            - /url: /search
+    - contentinfo [ref=e280]:
+      - generic [ref=e281]:
+        - generic [ref=e282]:
+          - generic [ref=e283]:
+            - link "Y YAMU" [ref=e284] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e286]: "Y"
+              - generic [ref=e287]: YAMU
+            - paragraph [ref=e288]: 專業業務員搜尋平台，連結優質業務員與需求客戶，打造透明、高效的商業合作環境。
+            - paragraph [ref=e289]: 讓每一次合作都值得信賴
+          - generic [ref=e290]:
+            - heading "功能" [level=3] [ref=e291]
+            - list [ref=e292]:
+              - listitem [ref=e293]:
+                - link "搜尋業務員" [ref=e294] [cursor=pointer]:
+                  - /url: /search
+              - listitem [ref=e295]:
+                - link "熱門業務員" [ref=e296] [cursor=pointer]:
+                  - /url: /search?sort=popular
+              - listitem [ref=e297]:
+                - link "產業類別" [ref=e298] [cursor=pointer]:
+                  - /url: /industries
+              - listitem [ref=e299]:
+                - link "服務地區" [ref=e300] [cursor=pointer]:
+                  - /url: /regions
+          - generic [ref=e301]:
+            - heading "關於" [level=3] [ref=e302]
+            - list [ref=e303]:
+              - listitem [ref=e304]:
+                - link "關於 YAMU" [ref=e305] [cursor=pointer]:
+                  - /url: /about
+              - listitem [ref=e306]:
+                - link "服務條款" [ref=e307] [cursor=pointer]:
+                  - /url: /terms
+              - listitem [ref=e308]:
+                - link "隱私權政策" [ref=e309] [cursor=pointer]:
+                  - /url: /privacy
+              - listitem [ref=e310]:
+                - link "常見問題" [ref=e311] [cursor=pointer]:
+                  - /url: /faq
+          - generic [ref=e312]:
+            - heading "帳號" [level=3] [ref=e313]
+            - list [ref=e314]:
+              - listitem [ref=e315]:
+                - link "業務員註冊" [ref=e316] [cursor=pointer]:
+                  - /url: /register
+              - listitem [ref=e317]:
+                - link "登入" [ref=e318] [cursor=pointer]:
+                  - /url: /login
+              - listitem [ref=e319]:
+                - link "個人中心" [ref=e320] [cursor=pointer]:
+                  - /url: /dashboard
+              - listitem [ref=e321]:
+                - link "聯絡我們" [ref=e322] [cursor=pointer]:
+                  - /url: /contact
+        - generic [ref=e323]:
+          - generic [ref=e324]:
+            - generic [ref=e326]: © 2026 YAMU. All rights reserved.
+            - generic [ref=e327]:
+              - generic [ref=e328]: Made with
+              - img [ref=e329]
+              - generic [ref=e331]: by YAMU Team
+            - generic [ref=e332]:
+              - link "服務條款" [ref=e333] [cursor=pointer]:
+                - /url: /terms
+              - link "隱私權政策" [ref=e334] [cursor=pointer]:
+                - /url: /privacy
+              - link "網站地圖" [ref=e335] [cursor=pointer]:
+                - /url: /sitemap
+          - paragraph [ref=e337]: 本網站為業務員推廣平台，所有刊登資訊均經過審核。若有任何問題請聯繫客服。
+  - region "Notifications alt+T"
+  - generic [ref=e338]:
+    - img [ref=e340]
+    - button "Open Tanstack query devtools" [ref=e388] [cursor=pointer]:
+      - img [ref=e389]
+  - button "Open Next.js Dev Tools" [ref=e442] [cursor=pointer]:
+    - img [ref=e443]
+  - alert [ref=e446]
+```

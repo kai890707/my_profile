@@ -938,5 +938,361 @@ Response 422 (tax_id duplicate):
 
 ---
 
+---
+
+## API Design Patterns & Best Practices
+
+**Last Updated**: 2026-01-21
+**Source**: Extracted from production changes
+
+### Pattern 1: API Response Data Unwrapping
+
+**Issue**: Frontend hooks may receive nested response structures that need unwrapping.
+
+**Backend Response Format**:
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": 1,
+      "role": "salesperson"
+    }
+  }
+}
+```
+
+**Frontend Hook Pattern**:
+```typescript
+// ❌ Bad: Direct return causes nested structure
+return response.data; // Returns { user: {...} }
+
+// ✅ Good: Unwrap the nested structure
+export function useAuth() {
+  return useQuery({
+    queryKey: queryKeys.auth.me,
+    queryFn: async () => {
+      const response = await getCurrentUser();
+      const data = response.data as { user?: any } | any;
+      return data?.user ?? data;  // Unwrap user object
+    },
+  });
+}
+```
+
+**When to Use**:
+- `/api/auth/me` endpoint
+- `/api/salesperson/profile` endpoint
+- Any endpoint where backend wraps data in nested objects
+
+**Related Changes**:
+- 20260115-fix-header-dropdown-and-dashboard-access
+- 20260115-fix-dashboard-profile-edit-prefill
+
+---
+
+### Pattern 2: Form Request Validation (Backend)
+
+**Best Practice**: Use dedicated Form Request classes instead of inline validation.
+
+```php
+// ❌ Bad: Inline validation in controller
+public function rejectSalesperson(Request $request, int $id) {
+    $validator = Validator::make($request->all(), [
+        'reason' => 'required|string|max:500'
+    ]);
+    // ...
+}
+
+// ✅ Good: Dedicated Form Request class
+class RejectSalespersonRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true; // Handled by middleware
+    }
+
+    public function rules(): array
+    {
+        return [
+            'reason' => ['required', 'string', 'max:500'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'reason.required' => '拒絕原因為必填',
+            'reason.max' => '拒絕原因不可超過 500 字元',
+        ];
+    }
+}
+
+// Controller usage
+public function rejectSalesperson(RejectSalespersonRequest $request, int $id) {
+    $reason = $request->validated('reason');
+    // ...
+}
+```
+
+**Benefits**:
+- Centralized validation logic
+- Reusable across controllers
+- Better type safety (PHPStan Level 9 compatible)
+- Cleaner controller code
+
+**Related Change**: 20260120-fix-backend-code-quality
+
+---
+
+### Pattern 3: API Resources for Response Formatting
+
+**Best Practice**: Use API Resources instead of returning raw models.
+
+```php
+// ❌ Bad: Direct model return
+public function profile(): JsonResponse
+{
+    $profile = SalespersonProfile::find($id);
+    return response()->json(['data' => $profile]);
+}
+
+// ✅ Good: Use API Resource
+class SalespersonResource extends JsonResource
+{
+    public function toArray($request): array
+    {
+        return [
+            'id' => $this->id,
+            'user' => new UserResource($this->whenLoaded('user')),
+            'company' => new CompanyResource($this->whenLoaded('company')),
+            'bio' => $this->bio,
+            'years_of_experience' => $this->years_of_experience,
+            'created_at' => $this->created_at?->toISOString(),
+            'updated_at' => $this->updated_at?->toISOString(),
+        ];
+    }
+}
+
+// Controller usage
+public function profile(): JsonResponse
+{
+    $profile = SalespersonProfile::with(['user', 'company'])->find($id);
+    return response()->json([
+        'success' => true,
+        'data' => new SalespersonResource($profile)
+    ]);
+}
+```
+
+**Benefits**:
+- Consistent response format
+- Hide sensitive fields (e.g., internal IDs, timestamps)
+- Type-safe transformations
+- Easy to version (ResourceV1, ResourceV2)
+
+**Related Change**: 20260120-fix-backend-code-quality
+
+---
+
+### Pattern 4: Company Search with Multiple Criteria
+
+**Use Case**: Allow users to search companies by name (fuzzy) or tax_id (exact).
+
+**API Endpoint**:
+```
+GET /api/companies/search?keyword={keyword}
+```
+
+**Backend Logic**:
+```php
+public function search(Request $request): JsonResponse
+{
+    $keyword = $request->query('keyword');
+
+    $query = Company::query();
+
+    if ($keyword) {
+        // Try exact match on tax_id first
+        if (preg_match('/^\d{8}$/', $keyword)) {
+            $company = $query->where('tax_id', $keyword)->first();
+            return response()->json([
+                'exists' => (bool) $company,
+                'company' => $company ? new CompanyResource($company) : null
+            ]);
+        }
+
+        // Fuzzy search on name
+        $companies = $query->where('name', 'LIKE', "%{$keyword}%")
+            ->limit(10)
+            ->get();
+
+        return response()->json([
+            'exists' => $companies->isNotEmpty(),
+            'companies' => CompanyResource::collection($companies)
+        ]);
+    }
+
+    return response()->json(['exists' => false, 'companies' => []]);
+}
+```
+
+**Search Strategy**:
+1. Exact match on `tax_id` (8 digits)
+2. Fuzzy match on `name` (LIKE %keyword%)
+3. Limit results to 10 items
+4. Return different response formats based on search type
+
+**Related Change**: 20260118-improve-company-selection
+
+---
+
+### Pattern 5: Rate Limiting Configuration
+
+**Best Practice**: Configure different rate limits for different API types.
+
+```php
+// app/Providers/RouteServiceProvider.php
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
+
+RateLimiter::for('public-api', function (Request $request) {
+    return Limit::perMinute(60)->by($request->ip());
+});
+
+RateLimiter::for('authenticated-api', function (Request $request) {
+    return Limit::perMinute(120)->by(optional($request->user())->id ?: $request->ip());
+});
+
+RateLimiter::for('admin-api', function (Request $request) {
+    return Limit::perMinute(300)->by(optional($request->user())->id ?: $request->ip());
+});
+
+// routes/api.php
+Route::middleware(['throttle:public-api'])->group(function () {
+    Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::post('/auth/register', [AuthController::class, 'register']);
+});
+
+Route::middleware(['auth:api', 'throttle:authenticated-api'])->group(function () {
+    Route::get('/salesperson/profile', [SalespersonController::class, 'profile']);
+});
+
+Route::middleware(['auth:api', 'role:admin', 'throttle:admin-api'])->group(function () {
+    Route::get('/admin/statistics', [AdminController::class, 'statistics']);
+});
+```
+
+**Rate Limit Guidelines**:
+- Public APIs: 60 req/min (by IP)
+- Authenticated APIs: 120 req/min (by user ID)
+- Admin APIs: 300 req/min (by admin ID)
+
+**Related Change**: 20260120-fix-backend-code-quality
+
+---
+
+### Pattern 6: Null Safety and Optional Chaining
+
+**Issue**: Prevent errors when accessing potentially null/undefined values.
+
+**Backend (PHP)**:
+```php
+// ❌ Bad: Can cause null pointer errors
+$userName = $user->salespersonProfile->full_name;
+
+// ✅ Good: Use null-safe operator (PHP 8.0+)
+$userName = $user->salespersonProfile?->full_name ?? 'Unknown';
+
+// ✅ Good: Use optional() helper
+$userName = optional($user->salespersonProfile)->full_name ?? 'Unknown';
+```
+
+**Frontend (TypeScript)**:
+```typescript
+// ❌ Bad: Can cause runtime errors
+const fullName = profile.full_name.substring(0, 2);
+
+// ✅ Good: Optional chaining + nullish coalescing
+const fullName = profile.full_name?.substring(0, 2) ?? 'U';
+
+// ✅ Good: Early return pattern
+if (!profile?.full_name) {
+    return 'U';
+}
+return profile.full_name.substring(0, 2);
+```
+
+**Related Changes**:
+- 20260115-fix-header-dropdown-and-dashboard-access
+- 20260115-fix-dashboard-profile-edit-prefill
+
+---
+
+### Pattern 7: Cache Strategy for Expensive Queries
+
+**Use Case**: Cache statistics and list queries to reduce database load.
+
+```php
+use Illuminate\Support\Facades\Cache;
+
+// Cache for 5 minutes
+public function statistics(): JsonResponse
+{
+    $stats = Cache::remember('admin:statistics', 300, function () {
+        return [
+            'total_salespeople' => User::salespersons()->count(),
+            'active_salespeople' => User::salespersons()->active()->count(),
+            'pending_salespersons' => User::salespersons()->pending()->count(),
+            'total_companies' => Company::count(),
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'data' => $stats
+    ]);
+}
+
+// Cache with dynamic keys
+public function salespersons(Request $request): JsonResponse
+{
+    $page = $request->query('page', 1);
+    $filters = $request->only(['keyword', 'region', 'industry']);
+    $cacheKey = 'salespersons:list:' . md5(json_encode(['page' => $page, 'filters' => $filters]));
+
+    $result = Cache::remember($cacheKey, 60, function () use ($page, $filters) {
+        return Salesperson::filter($filters)->paginate(20, ['*'], 'page', $page);
+    });
+
+    return response()->json($result);
+}
+```
+
+**Cache Invalidation**:
+```php
+// Clear cache when data changes
+public function updateProfile(Request $request): JsonResponse
+{
+    $profile->update($request->validated());
+
+    // Clear related caches
+    Cache::forget('salespersons:list:*'); // Use Cache::tags() for better management
+    Cache::forget('admin:statistics');
+
+    return response()->json(['success' => true]);
+}
+```
+
+**Cache TTL Guidelines**:
+- Statistics: 5 minutes (300s)
+- List queries: 1 minute (60s)
+- Detail queries: 5 minutes (300s)
+- Search results: 30 seconds (30s)
+
+**Related Change**: 20260120-fix-backend-code-quality
+
+---
+
 ## Frontend 規格
 ---
