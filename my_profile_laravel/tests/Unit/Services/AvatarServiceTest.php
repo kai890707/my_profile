@@ -225,8 +225,8 @@ describe('AvatarService', function () {
 
             $result = $this->service->processAvatar($dataUrl);
 
-            expect($result)->toHaveKeys(['avatar_data', 'avatar_mime', 'avatar_size']);
-            expect($result['avatar_mime'])->toBe('image/png');
+            expect($result)->toHaveKeys(['data', 'mime', 'size']);
+            expect($result['mime'])->toBe('image/png');
         });
 
         it('throws exception for invalid format', function () {

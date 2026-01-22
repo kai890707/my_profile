@@ -59,11 +59,9 @@ class AvatarSecurityTest extends TestCase
             ]);
 
         $response->assertStatus(422)
-            ->assertJson([
-                'success' => false,
-                'error' => [
-                    'code' => 'VALIDATION_ERROR',
-                ],
+            ->assertJsonStructure([
+                'message',
+                'errors' => ['avatar'],
             ]);
 
         // Ensure avatar was not saved
@@ -133,8 +131,9 @@ class AvatarSecurityTest extends TestCase
             ]);
 
         $response->assertStatus(422)
-            ->assertJson([
-                'success' => false,
+            ->assertJsonStructure([
+                'message',
+                'errors',
             ]);
     }
 
@@ -146,9 +145,15 @@ class AvatarSecurityTest extends TestCase
                 'avatar' => '',
             ]);
 
+        // Empty string with nullable validation passes Laravel validation but fails at controller level
+        // because avatar field is required for upload endpoint
         $response->assertStatus(422)
             ->assertJson([
                 'success' => false,
+                'error' => [
+                    'code' => 'VALIDATION_ERROR',
+                    'message' => 'Avatar is required',
+                ],
             ]);
     }
 
