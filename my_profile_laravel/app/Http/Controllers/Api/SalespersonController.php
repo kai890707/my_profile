@@ -9,8 +9,10 @@ use App\Http\Requests\SaveCompanyRequest;
 use App\Http\Requests\UpdateSalespersonProfileRequest;
 use App\Http\Requests\UpgradeSalespersonRequest;
 use App\Models\User;
+use App\Services\AvatarService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SalespersonController extends Controller
 {
@@ -207,8 +209,10 @@ class SalespersonController extends Controller
      *
      * PUT /api/salesperson/profile
      */
-    public function updateProfile(UpdateSalespersonProfileRequest $request): JsonResponse
-    {
+    public function updateProfile(
+        UpdateSalespersonProfileRequest $request,
+        AvatarService $avatarService
+    ): JsonResponse {
         /** @var User $user */
         $user = $request->user();
 
@@ -226,11 +230,52 @@ class SalespersonController extends Controller
             ], 403);
         }
 
-        $user->salespersonProfile()->update($request->validated());
+        $data = $request->validated();
+
+        // Process avatar if present
+        if ($request->filled('avatar')) {
+            try {
+                $processed = $avatarService->processAvatar($data['avatar']);
+
+                // Replace avatar data URL with processed binary data
+                $data['avatar_data'] = $processed['data'];
+                $data['avatar_mime'] = $processed['mime'];
+                $data['avatar_size'] = $processed['size'];
+                unset($data['avatar']);
+
+            } catch (\InvalidArgumentException $e) {
+                Log::warning('Avatar processing failed', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'error' => [
+                        'code' => 'AVATAR_PROCESSING_FAILED',
+                        'message' => $e->getMessage(),
+                    ],
+                ], 422);
+            }
+        }
+
+        $user->salespersonProfile()->update($data);
+
+        // Reload profile to get updated data
+        $profile = $user->salespersonProfile()->first();
+
+        // Build response with avatar data URL (using helper to properly encode binary data)
+        $responseData = $profile->toArray();
+
+        // Remove binary fields that can't be JSON encoded
+        unset($responseData['avatar_data'], $responseData['avatar_mime'], $responseData['avatar_size']);
+
+        // Add avatar as data URL instead
+        $responseData['avatar'] = $avatarService->getAvatarUrl($profile);
 
         return response()->json([
             'success' => true,
-            'profile' => $user->salespersonProfile,
+            'profile' => $responseData,
             'message' => '個人資料已更新',
         ]);
     }
@@ -240,7 +285,7 @@ class SalespersonController extends Controller
      *
      * GET /api/salespeople
      */
-    public function index(): JsonResponse
+    public function index(AvatarService $avatarService): JsonResponse
     {
         $salespeople = User::where('role', User::ROLE_SALESPERSON)
             ->where('salesperson_status', User::STATUS_APPROVED)
@@ -249,15 +294,12 @@ class SalespersonController extends Controller
             ->paginate(20);
 
         // Transform to flat structure matching SalespersonSearchResult
-        $transformed = $salespeople->through(function (User $user) {
+        $transformed = $salespeople->through(function (User $user) use ($avatarService) {
             $profile = $user->salespersonProfile;
             $company = $profile?->company;
 
-            // Build avatar data URL from base64 stored in database
-            $avatarUrl = null;
-            if ($profile?->avatar_data && $profile?->avatar_mime) {
-                $avatarUrl = "data:{$profile->avatar_mime};base64,{$profile->avatar_data}";
-            }
+            // Build avatar data URL using helper (properly encodes binary data)
+            $avatarUrl = $profile ? $avatarService->getAvatarUrl($profile) : null;
 
             return [
                 'id' => $profile?->id,
@@ -341,6 +383,144 @@ class SalespersonController extends Controller
                 ],
             ],
             'message' => $message,
+        ]);
+    }
+
+    /**
+     * Upload avatar for current salesperson.
+     *
+     * POST /api/salesperson/avatar
+     * Rate limit: 10 requests/minute
+     */
+    public function uploadAvatar(
+        UpdateSalespersonProfileRequest $request,
+        AvatarService $avatarService
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
+            ], 401);
+        }
+
+        if (! $user->isSalesperson()) {
+            return response()->json([
+                'success' => false,
+                'error' => '僅業務員可上傳頭像',
+            ], 403);
+        }
+
+        $profile = $user->salespersonProfile;
+
+        if (! $profile) {
+            return response()->json([
+                'success' => false,
+                'error' => '業務員個人資料不存在',
+            ], 404);
+        }
+
+        // Validate avatar is present
+        if (! $request->filled('avatar')) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'VALIDATION_ERROR', 'message' => 'Avatar is required'],
+            ], 422);
+        }
+
+        try {
+            $processed = $avatarService->processAvatar($request->input('avatar'));
+
+            // Update profile with processed avatar
+            $profile->avatar_data = $processed['data'];
+            $profile->avatar_mime = $processed['mime'];
+            $profile->save();
+
+            Log::info('Avatar uploaded successfully', [
+                'user_id' => $user->id,
+                'profile_id' => $profile->id,
+                'mime' => $processed['mime'],
+                'size' => $processed['size'],
+            ]);
+
+            // Return avatar as data URL
+            $avatarUrl = $avatarService->getAvatarUrl($profile);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'avatar' => $avatarUrl,
+                ],
+                'message' => '頭像上傳成功',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Avatar upload failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => 'AVATAR_UPLOAD_FAILED',
+                    'message' => $e->getMessage(),
+                ],
+            ], 400);
+        }
+    }
+
+    /**
+     * Delete avatar for current salesperson.
+     *
+     * DELETE /api/salesperson/avatar
+     * Rate limit: 10 requests/minute
+     */
+    public function deleteAvatar(): JsonResponse
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
+            ], 401);
+        }
+
+        if (! $user->isSalesperson()) {
+            return response()->json([
+                'success' => false,
+                'error' => '僅業務員可刪除頭像',
+            ], 403);
+        }
+
+        $profile = $user->salespersonProfile;
+
+        if (! $profile) {
+            return response()->json([
+                'success' => false,
+                'error' => '業務員個人資料不存在',
+            ], 404);
+        }
+
+        // Clear avatar
+        $profile->avatar_data = null;
+        $profile->avatar_mime = null;
+        $profile->save();
+
+        Log::info('Avatar deleted successfully', [
+            'user_id' => $user->id,
+            'profile_id' => $profile->id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'avatar' => null,
+            ],
+            'message' => '頭像已刪除',
         ]);
     }
 }

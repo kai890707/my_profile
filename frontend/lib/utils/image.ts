@@ -225,3 +225,29 @@ export function formatFileSize(bytes: number): string {
 
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 }
+
+/**
+ * 計算壓縮率
+ * @param originalSize - 原始檔案大小 (bytes)
+ * @param compressedSize - 壓縮後檔案大小 (bytes)
+ * @returns 壓縮率 (百分比)
+ */
+export function calculateCompressionRate(
+  originalSize: number,
+  compressedSize: number
+): number {
+  if (originalSize === 0) return 0;
+  const saved = originalSize - compressedSize;
+  return Math.round((saved / originalSize) * 100);
+}
+
+/**
+ * 處理結果介面
+ */
+export interface ProcessedImage {
+  base64: string;
+  originalSize: number;
+  compressedSize: number;
+  compressionRate: number;
+  mime: string;
+}

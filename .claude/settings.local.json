@@ -91,7 +91,13 @@
       "Bash(npx shadcn@latest add:*)",
       "Bash(./vendor/bin/pint:*)",
       "Bash(gh pr merge:*)",
-      "Bash(composer test:*)"
+      "Bash(composer test:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(npx playwright install:*)",
+      "Skill(webapp-testing)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)"
     ]
   }
 }

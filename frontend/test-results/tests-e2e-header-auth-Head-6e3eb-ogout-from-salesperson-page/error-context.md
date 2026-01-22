@@ -1,0 +1,329 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e5]:
+        - link "Y YAMU" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e9]: "Y"
+          - generic [ref=e10]: YAMU
+        - navigation [ref=e11]:
+          - link "首頁" [ref=e12] [cursor=pointer]:
+            - /url: /
+          - link "搜尋業務員" [ref=e13] [cursor=pointer]:
+            - /url: /search
+        - generic [ref=e14]:
+          - link "登入" [ref=e15] [cursor=pointer]:
+            - /url: /login
+          - link "註冊" [ref=e16] [cursor=pointer]:
+            - /url: /register
+    - main [ref=e17]:
+      - generic [ref=e18]:
+        - link "返回搜尋結果" [ref=e20] [cursor=pointer]:
+          - /url: /search
+          - button "返回搜尋結果" [ref=e21]:
+            - img [ref=e22]
+            - text: 返回搜尋結果
+        - generic [ref=e24]:
+          - generic [ref=e25]:
+            - generic [ref=e27]:
+              - generic [ref=e28]:
+                - generic [ref=e31]: 銘凱
+                - generic [ref=e32]:
+                  - generic [ref=e33]:
+                    - heading "銘凱蔡" [level=1] [ref=e34]
+                    - generic [ref=e35]:
+                      - img [ref=e36]
+                      - text: 已審核
+                  - generic [ref=e39]:
+                    - img [ref=e40]
+                    - generic [ref=e44]: AA設計
+                  - generic [ref=e45]:
+                    - generic [ref=e46]: 網頁開發設計
+                    - generic [ref=e47]: PHP
+              - generic [ref=e48]:
+                - heading "個人簡介" [level=3] [ref=e49]
+                - paragraph [ref=e50]: 網頁開發設計
+            - generic [ref=e51]:
+              - heading "工作經驗" [level=3] [ref=e53]:
+                - img [ref=e54]
+                - text: 工作經驗
+              - list "工作經驗時間軸" [ref=e60]:
+                - listitem [ref=e61]:
+                  - article [ref=e63]:
+                    - generic [ref=e64]:
+                      - generic [ref=e65]:
+                        - img [ref=e66]
+                        - generic [ref=e69]:
+                          - heading "Test Position 1" [level=3] [ref=e70]
+                          - paragraph [ref=e71]: Test Company 1
+                      - generic [ref=e72]:
+                        - img [ref=e73]
+                        - text: 已驗證
+                    - generic [ref=e76]:
+                      - img [ref=e77]
+                      - time [ref=e79]: 2024/1
+                      - generic [ref=e80]: "-"
+                      - time [ref=e81]: 2025/1
+                      - generic [ref=e82]: (1年)
+                    - paragraph [ref=e84]: This is a pending test experience 1
+                - listitem [ref=e85]:
+                  - article [ref=e87]:
+                    - generic [ref=e88]:
+                      - generic [ref=e89]:
+                        - img [ref=e90]
+                        - generic [ref=e93]:
+                          - heading "Test Position 1" [level=3] [ref=e94]
+                          - paragraph [ref=e95]: Test Company 1
+                      - generic [ref=e96]:
+                        - img [ref=e97]
+                        - text: 已驗證
+                    - generic [ref=e100]:
+                      - img [ref=e101]
+                      - time [ref=e103]: 2024/1
+                      - generic [ref=e104]: "-"
+                      - time [ref=e105]: 2025/1
+                      - generic [ref=e106]: (1年)
+                    - paragraph [ref=e108]: This is a pending test experience 1
+                - listitem [ref=e109]:
+                  - article [ref=e111]:
+                    - generic [ref=e112]:
+                      - generic [ref=e113]:
+                        - img [ref=e114]
+                        - generic [ref=e117]:
+                          - heading "Test Position 1" [level=3] [ref=e118]
+                          - paragraph [ref=e119]: Test Company 1
+                      - generic [ref=e120]:
+                        - img [ref=e121]
+                        - text: 已驗證
+                    - generic [ref=e124]:
+                      - img [ref=e125]
+                      - time [ref=e127]: 2024/1
+                      - generic [ref=e128]: "-"
+                      - time [ref=e129]: 2025/1
+                      - generic [ref=e130]: (1年)
+                    - paragraph [ref=e132]: This is a pending test experience 1
+                - listitem [ref=e133]:
+                  - article [ref=e135]:
+                    - generic [ref=e136]:
+                      - generic [ref=e137]:
+                        - img [ref=e138]
+                        - generic [ref=e141]:
+                          - heading "Approved Position" [level=3] [ref=e142]
+                          - paragraph [ref=e143]: Approved Company
+                      - generic [ref=e144]:
+                        - img [ref=e145]
+                        - text: 已驗證
+                    - generic [ref=e148]:
+                      - img [ref=e149]
+                      - time [ref=e151]: 2023/1
+                      - generic [ref=e152]: "-"
+                      - time [ref=e153]: 2024/1
+                      - generic [ref=e154]: (1年)
+                    - paragraph [ref=e156]: This is an approved test experience
+                - listitem [ref=e157]:
+                  - article [ref=e159]:
+                    - generic [ref=e160]:
+                      - generic [ref=e161]:
+                        - img [ref=e162]
+                        - generic [ref=e165]:
+                          - heading "Approved Position" [level=3] [ref=e166]
+                          - paragraph [ref=e167]: Approved Company
+                      - generic [ref=e168]:
+                        - img [ref=e169]
+                        - text: 已驗證
+                    - generic [ref=e172]:
+                      - img [ref=e173]
+                      - time [ref=e175]: 2023/1
+                      - generic [ref=e176]: "-"
+                      - time [ref=e177]: 2024/1
+                      - generic [ref=e178]: (1年)
+                    - paragraph [ref=e180]: This is an approved test experience
+                - listitem [ref=e181]:
+                  - article [ref=e183]:
+                    - generic [ref=e184]:
+                      - generic [ref=e185]:
+                        - img [ref=e186]
+                        - generic [ref=e189]:
+                          - heading "Approved Position" [level=3] [ref=e190]
+                          - paragraph [ref=e191]: Approved Company
+                      - generic [ref=e192]:
+                        - img [ref=e193]
+                        - text: 已驗證
+                    - generic [ref=e196]:
+                      - img [ref=e197]
+                      - time [ref=e199]: 2023/1
+                      - generic [ref=e200]: "-"
+                      - time [ref=e201]: 2024/1
+                      - generic [ref=e202]: (1年)
+                    - paragraph [ref=e204]: This is an approved test experience
+            - generic [ref=e205]:
+              - heading "專業證照" [level=3] [ref=e207]:
+                - img [ref=e208]
+                - text: 專業證照
+              - list "專業證照列表" [ref=e213]:
+                - listitem [ref=e214]:
+                  - article [ref=e215]:
+                    - generic [ref=e216]:
+                      - img [ref=e217]
+                      - heading "Test Certification 1" [level=3] [ref=e221]
+                      - img "已驗證" [ref=e222]
+                    - paragraph [ref=e225]: Test Issuer 1
+                    - generic [ref=e226]:
+                      - img [ref=e227]
+                      - time [ref=e229]: 2024/01
+                      - generic [ref=e230]: "-"
+                      - time [ref=e231]: 2029/01
+                    - paragraph [ref=e233]: This is a pending test certification 1
+                - listitem [ref=e234]:
+                  - article [ref=e235]:
+                    - generic [ref=e236]:
+                      - img [ref=e237]
+                      - heading "Test Certification 1" [level=3] [ref=e241]
+                      - img "已驗證" [ref=e242]
+                    - paragraph [ref=e245]: Test Issuer 1
+                    - generic [ref=e246]:
+                      - img [ref=e247]
+                      - time [ref=e249]: 2024/01
+                      - generic [ref=e250]: "-"
+                      - time [ref=e251]: 2029/01
+                    - paragraph [ref=e253]: This is a pending test certification 1
+                - listitem [ref=e254]:
+                  - article [ref=e255]:
+                    - generic [ref=e256]:
+                      - img [ref=e257]
+                      - heading "Approved Certification" [level=3] [ref=e261]
+                      - img "已驗證" [ref=e262]
+                    - paragraph [ref=e265]: Approved Issuer
+                    - generic [ref=e266]:
+                      - img [ref=e267]
+                      - time [ref=e269]: 2023/01
+                      - generic [ref=e270]: "-"
+                      - time [ref=e271]: 2028/01
+                    - paragraph [ref=e273]: This is an approved test certification
+                - listitem [ref=e274]:
+                  - article [ref=e275]:
+                    - generic [ref=e276]:
+                      - img [ref=e277]
+                      - heading "Approved Certification" [level=3] [ref=e281]
+                      - img "已驗證" [ref=e282]
+                    - paragraph [ref=e285]: Approved Issuer
+                    - generic [ref=e286]:
+                      - img [ref=e287]
+                      - time [ref=e289]: 2023/01
+                      - generic [ref=e290]: "-"
+                      - time [ref=e291]: 2028/01
+                    - paragraph [ref=e293]: This is an approved test certification
+          - generic [ref=e295]:
+            - heading "聯絡資訊" [level=3] [ref=e297]
+            - generic [ref=e298]:
+              - generic [ref=e299]:
+                - img [ref=e300]
+                - generic [ref=e302]:
+                  - paragraph [ref=e303]: 電話
+                  - link "0912345678" [ref=e304] [cursor=pointer]:
+                    - /url: tel:0912345678
+              - generic [ref=e305]:
+                - img [ref=e306]
+                - generic [ref=e309]:
+                  - paragraph [ref=e310]: 服務地區
+                  - generic [ref=e311]:
+                    - generic [ref=e312]: 雲林縣
+                    - generic [ref=e313]: 台東縣
+                    - generic [ref=e314]: 台南市
+                    - generic [ref=e315]: 澎湖縣
+                    - generic [ref=e316]: 桃園市
+                    - generic [ref=e317]: 台北市
+                    - generic [ref=e318]: 台中市
+                    - generic [ref=e319]: 新竹縣
+                    - generic [ref=e320]: 新竹市
+                    - generic [ref=e321]: 南投縣
+                    - generic [ref=e322]: 連江縣
+                    - generic [ref=e323]: 嘉義縣
+              - generic [ref=e325]:
+                - img [ref=e326]
+                - generic [ref=e328]: 註冊時間：2026/01/09
+              - button "立即聯絡" [ref=e330]:
+                - img [ref=e331]
+                - text: 立即聯絡
+    - contentinfo [ref=e333]:
+      - generic [ref=e334]:
+        - generic [ref=e335]:
+          - generic [ref=e336]:
+            - link "Y YAMU" [ref=e337] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e339]: "Y"
+              - generic [ref=e340]: YAMU
+            - paragraph [ref=e341]: 專業業務員搜尋平台，連結優質業務員與需求客戶，打造透明、高效的商業合作環境。
+            - paragraph [ref=e342]: 讓每一次合作都值得信賴
+          - generic [ref=e343]:
+            - heading "功能" [level=3] [ref=e344]
+            - list [ref=e345]:
+              - listitem [ref=e346]:
+                - link "搜尋業務員" [ref=e347] [cursor=pointer]:
+                  - /url: /search
+              - listitem [ref=e348]:
+                - link "熱門業務員" [ref=e349] [cursor=pointer]:
+                  - /url: /search?sort=popular
+              - listitem [ref=e350]:
+                - link "產業類別" [ref=e351] [cursor=pointer]:
+                  - /url: /industries
+              - listitem [ref=e352]:
+                - link "服務地區" [ref=e353] [cursor=pointer]:
+                  - /url: /regions
+          - generic [ref=e354]:
+            - heading "關於" [level=3] [ref=e355]
+            - list [ref=e356]:
+              - listitem [ref=e357]:
+                - link "關於 YAMU" [ref=e358] [cursor=pointer]:
+                  - /url: /about
+              - listitem [ref=e359]:
+                - link "服務條款" [ref=e360] [cursor=pointer]:
+                  - /url: /terms
+              - listitem [ref=e361]:
+                - link "隱私權政策" [ref=e362] [cursor=pointer]:
+                  - /url: /privacy
+              - listitem [ref=e363]:
+                - link "常見問題" [ref=e364] [cursor=pointer]:
+                  - /url: /faq
+          - generic [ref=e365]:
+            - heading "帳號" [level=3] [ref=e366]
+            - list [ref=e367]:
+              - listitem [ref=e368]:
+                - link "業務員註冊" [ref=e369] [cursor=pointer]:
+                  - /url: /register
+              - listitem [ref=e370]:
+                - link "登入" [ref=e371] [cursor=pointer]:
+                  - /url: /login
+              - listitem [ref=e372]:
+                - link "個人中心" [ref=e373] [cursor=pointer]:
+                  - /url: /dashboard
+              - listitem [ref=e374]:
+                - link "聯絡我們" [ref=e375] [cursor=pointer]:
+                  - /url: /contact
+        - generic [ref=e376]:
+          - generic [ref=e377]:
+            - generic [ref=e379]: © 2026 YAMU. All rights reserved.
+            - generic [ref=e380]:
+              - generic [ref=e381]: Made with
+              - img [ref=e382]
+              - generic [ref=e384]: by YAMU Team
+            - generic [ref=e385]:
+              - link "服務條款" [ref=e386] [cursor=pointer]:
+                - /url: /terms
+              - link "隱私權政策" [ref=e387] [cursor=pointer]:
+                - /url: /privacy
+              - link "網站地圖" [ref=e388] [cursor=pointer]:
+                - /url: /sitemap
+          - paragraph [ref=e390]: 本網站為業務員推廣平台，所有刊登資訊均經過審核。若有任何問題請聯繫客服。
+  - region "Notifications alt+T"
+  - generic [ref=e391]:
+    - img [ref=e393]
+    - button "Open Tanstack query devtools" [ref=e441] [cursor=pointer]:
+      - img [ref=e442]
+  - button "Open Next.js Dev Tools" [ref=e495] [cursor=pointer]:
+    - img [ref=e496]
+  - alert [ref=e499]
+```
