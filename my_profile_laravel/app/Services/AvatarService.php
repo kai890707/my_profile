@@ -81,9 +81,9 @@ class AvatarService
 
         // 8. 回傳處理後的資料
         return [
-            'avatar_data' => $processed['data'],
-            'avatar_mime' => $processed['mime'],
-            'avatar_size' => $processed['size'],
+            'data' => $processed['data'],
+            'mime' => $processed['mime'],
+            'size' => $processed['size'],
         ];
     }
 
@@ -199,6 +199,23 @@ class AvatarService
             'avatar_mime' => null,
             'avatar_size' => null,
         ];
+    }
+
+    /**
+     * 將 Avatar 二進制資料轉換為 Data URL
+     *
+     * @param object $profile Profile model 實例（需包含 avatar_data 和 avatar_mime 欄位）
+     * @return string|null Data URL 格式的圖片，或 null（若沒有頭像）
+     */
+    public function getAvatarUrl(object $profile): ?string
+    {
+        if (! $profile->avatar_data || ! $profile->avatar_mime) {
+            return null;
+        }
+
+        $base64 = base64_encode($profile->avatar_data);
+
+        return "data:{$profile->avatar_mime};base64,{$base64}";
     }
 
     /**

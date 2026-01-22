@@ -385,4 +385,142 @@ class SalespersonController extends Controller
             'message' => $message,
         ]);
     }
+
+    /**
+     * Upload avatar for current salesperson.
+     *
+     * POST /api/salesperson/avatar
+     * Rate limit: 10 requests/minute
+     */
+    public function uploadAvatar(
+        UpdateSalespersonProfileRequest $request,
+        AvatarService $avatarService
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
+            ], 401);
+        }
+
+        if (! $user->isSalesperson()) {
+            return response()->json([
+                'success' => false,
+                'error' => '僅業務員可上傳頭像',
+            ], 403);
+        }
+
+        $profile = $user->salespersonProfile;
+
+        if (! $profile) {
+            return response()->json([
+                'success' => false,
+                'error' => '業務員個人資料不存在',
+            ], 404);
+        }
+
+        // Validate avatar is present
+        if (! $request->filled('avatar')) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'VALIDATION_ERROR', 'message' => 'Avatar is required'],
+            ], 422);
+        }
+
+        try {
+            $processed = $avatarService->processAvatar($request->input('avatar'));
+
+            // Update profile with processed avatar
+            $profile->avatar_data = $processed['data'];
+            $profile->avatar_mime = $processed['mime'];
+            $profile->save();
+
+            Log::info('Avatar uploaded successfully', [
+                'user_id' => $user->id,
+                'profile_id' => $profile->id,
+                'mime' => $processed['mime'],
+                'size' => $processed['size'],
+            ]);
+
+            // Return avatar as data URL
+            $avatarUrl = $avatarService->getAvatarUrl($profile);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'avatar' => $avatarUrl,
+                ],
+                'message' => '頭像上傳成功',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Avatar upload failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => 'AVATAR_UPLOAD_FAILED',
+                    'message' => $e->getMessage(),
+                ],
+            ], 400);
+        }
+    }
+
+    /**
+     * Delete avatar for current salesperson.
+     *
+     * DELETE /api/salesperson/avatar
+     * Rate limit: 10 requests/minute
+     */
+    public function deleteAvatar(): JsonResponse
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'error' => ['code' => 'UNAUTHORIZED', 'message' => 'Authentication required'],
+            ], 401);
+        }
+
+        if (! $user->isSalesperson()) {
+            return response()->json([
+                'success' => false,
+                'error' => '僅業務員可刪除頭像',
+            ], 403);
+        }
+
+        $profile = $user->salespersonProfile;
+
+        if (! $profile) {
+            return response()->json([
+                'success' => false,
+                'error' => '業務員個人資料不存在',
+            ], 404);
+        }
+
+        // Clear avatar
+        $profile->avatar_data = null;
+        $profile->avatar_mime = null;
+        $profile->save();
+
+        Log::info('Avatar deleted successfully', [
+            'user_id' => $user->id,
+            'profile_id' => $profile->id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'avatar' => null,
+            ],
+            'message' => '頭像已刪除',
+        ]);
+    }
 }

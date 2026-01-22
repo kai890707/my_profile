@@ -101,6 +101,12 @@ Route::prefix('salesperson')->group(function (): void {
     // Public route (Rate limit: 60 requests/minute)
     Route::middleware('throttle:60,1')->get('/status', [SalespersonController::class, 'status']);
 
+    // Avatar upload (Rate limit: 10 requests/minute - resource intensive)
+    Route::middleware(['jwt.auth', 'throttle:10,1'])->group(function (): void {
+        Route::post('/avatar', [SalespersonController::class, 'uploadAvatar']);
+        Route::delete('/avatar', [SalespersonController::class, 'deleteAvatar']);
+    });
+
     // Protected routes (Rate limit: 120 requests/minute)
     Route::middleware(['jwt.auth', 'throttle:120,1'])->group(function (): void {
         Route::post('/upgrade', [SalespersonController::class, 'upgrade']);

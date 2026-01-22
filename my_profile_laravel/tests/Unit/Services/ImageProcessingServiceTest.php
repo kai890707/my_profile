@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Services\ImageProcessingService;
+use Illuminate\Support\Facades\Log;
 
 /**
  * ImageProcessingService 單元測試
@@ -18,6 +19,9 @@ use App\Services\ImageProcessingService;
 
 describe('ImageProcessingService', function () {
     beforeEach(function () {
+        // Mock Log facade to prevent "Facade root has not been set" error
+        Log::shouldReceive('info')->andReturn(null);
+
         $this->service = new ImageProcessingService();
     });
 
