@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Services\ImageProcessingService;
 use Illuminate\Support\Facades\Log;
+use Tests\TestCase;
 
 /**
  * ImageProcessingService 單元測試
@@ -17,10 +18,12 @@ use Illuminate\Support\Facades\Log;
  * 目標：測試覆蓋率 >= 90%
  */
 
+uses(TestCase::class);
+
 describe('ImageProcessingService', function () {
     beforeEach(function () {
-        // Mock Log facade to prevent "Facade root has not been set" error
-        Log::shouldReceive('info')->andReturn(null);
+        // Mock Log facade to prevent logging during tests
+        Log::spy();
 
         $this->service = new ImageProcessingService();
     });
