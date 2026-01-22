@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\AvatarService;
 use App\Services\SalespersonProfileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,8 @@ use OpenApi\Attributes as OA;
 class SalespersonProfileController extends Controller
 {
     public function __construct(
-        private readonly SalespersonProfileService $profileService
+        private readonly SalespersonProfileService $profileService,
+        private readonly AvatarService $avatarService
     ) {}
 
     /**
@@ -94,6 +96,11 @@ class SalespersonProfileController extends Controller
 
         $profiles = $this->profileService->getAll($filters);
 
+        // Format each profile in the paginated collection
+        $profiles->through(function ($profile) {
+            return $this->formatProfile($profile);
+        });
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -157,7 +164,7 @@ class SalespersonProfileController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'profile' => $profile,
+                'profile' => $this->formatProfile($profile),
             ],
         ]);
     }
@@ -231,7 +238,7 @@ class SalespersonProfileController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'profile' => $profile,
+                'profile' => $this->formatProfile($profile),
             ],
         ]);
     }
@@ -349,7 +356,7 @@ class SalespersonProfileController extends Controller
             'success' => true,
             'message' => 'Profile created successfully',
             'data' => [
-                'profile' => $profile,
+                'profile' => $this->formatProfile($profile),
             ],
         ], 201);
     }
@@ -466,7 +473,7 @@ class SalespersonProfileController extends Controller
             'success' => true,
             'message' => 'Profile updated successfully',
             'data' => [
-                'profile' => $profile,
+                'profile' => $this->formatProfile($profile),
             ],
         ]);
     }
@@ -537,5 +544,25 @@ class SalespersonProfileController extends Controller
             'success' => true,
             'message' => 'Profile deleted successfully',
         ]);
+    }
+
+    /**
+     * Format profile data for JSON response.
+     * Removes binary fields and adds avatar data URL.
+     *
+     * @param object $profile SalespersonProfile instance
+     * @return array Formatted profile data
+     */
+    private function formatProfile(object $profile): array
+    {
+        $data = $profile->toArray();
+
+        // Remove binary fields that can't be JSON encoded
+        unset($data['avatar_data'], $data['avatar_mime'], $data['avatar_size']);
+
+        // Add avatar as data URL if present
+        $data['avatar'] = $this->avatarService->getAvatarUrl($profile);
+
+        return $data;
     }
 }

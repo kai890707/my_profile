@@ -176,6 +176,42 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'reapply_days', type: 'integer', minimum: 0, maximum: 90, example: 7),
     ]
 )]
+#[OA\Schema(
+    schema: 'Experience',
+    required: ['id', 'user_id', 'company', 'position', 'start_date'],
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'user_id', type: 'integer', example: 2),
+        new OA\Property(property: 'company', type: 'string', example: '台積電'),
+        new OA\Property(property: 'position', type: 'string', example: '業務經理'),
+        new OA\Property(property: 'start_date', type: 'string', format: 'date', example: '2020-01-01'),
+        new OA\Property(property: 'end_date', type: 'string', format: 'date', nullable: true, example: '2023-12-31'),
+        new OA\Property(property: 'description', type: 'string', nullable: true, example: '負責企業客戶開發與維護'),
+        new OA\Property(property: 'sort_order', type: 'integer', example: 1),
+        new OA\Property(property: 'approval_status', type: 'string', enum: ['pending', 'approved', 'rejected'], example: 'approved'),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time', example: '2023-01-15T10:30:00Z'),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', example: '2023-01-15T10:30:00Z'),
+    ]
+)]
+#[OA\Schema(
+    schema: 'Certification',
+    required: ['id', 'user_id', 'name', 'issuer'],
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'user_id', type: 'integer', example: 2),
+        new OA\Property(property: 'name', type: 'string', example: 'PMP 專案管理師'),
+        new OA\Property(property: 'issuer', type: 'string', example: 'PMI'),
+        new OA\Property(property: 'issue_date', type: 'string', format: 'date', nullable: true, example: '2023-01-15'),
+        new OA\Property(property: 'expiry_date', type: 'string', format: 'date', nullable: true, example: '2026-01-15'),
+        new OA\Property(property: 'description', type: 'string', nullable: true, example: '國際專案管理專業證照'),
+        new OA\Property(property: 'file_mime', type: 'string', nullable: true, example: 'application/pdf'),
+        new OA\Property(property: 'file_size', type: 'integer', nullable: true, description: '檔案大小 (bytes)', example: 204800),
+        new OA\Property(property: 'file_url', type: 'string', nullable: true, description: '檔案下載 URL', example: '/api/certifications/1/file'),
+        new OA\Property(property: 'approval_status', type: 'string', enum: ['pending', 'approved', 'rejected'], example: 'pending'),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time', example: '2023-01-15T10:30:00Z'),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', example: '2023-01-15T10:30:00Z'),
+    ]
+)]
 final class OpenApiSchemas
 {
     // This class only exists to hold OpenAPI schema definitions

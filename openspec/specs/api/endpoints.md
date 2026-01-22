@@ -226,8 +226,16 @@
 ```
 
 ### GET /salesperson/experiences
-**Description**: Get own work experiences
-**Access**: Protected (salesperson role)
+**Description**: Get all work experiences for the authenticated salesperson
+**Access**: Protected (requires auth + salesperson role)
+**Headers**: `Authorization: Bearer {token}`
+
+**Query Parameters**:
+- `sort_by` (optional, default: start_date): Field to sort by
+  - Allowed values: `start_date`, `company`, `position`, `sort_order`
+- `order` (optional, default: desc): Sort order
+  - Allowed values: `asc`, `desc`
+
 **Response (200)**:
 ```json
 {
@@ -236,13 +244,15 @@
     {
       "id": 1,
       "user_id": 10,
-      "company": "ABC公司",
+      "company": "台積電",
       "position": "業務經理",
       "start_date": "2020-01-01",
       "end_date": "2023-12-31",
-      "description": "管理團隊，達成120%業績目標",
+      "description": "負責企業客戶開發與維護，達成120%業績目標",
       "approval_status": "approved",
       "rejected_reason": null,
+      "approved_by": 1,
+      "approved_at": "2020-01-15T08:30:00Z",
       "sort_order": 0,
       "created_at": "2026-01-10T12:00:00Z",
       "updated_at": "2026-01-10T12:00:00Z"
@@ -252,19 +262,45 @@
 }
 ```
 
+**Response (401)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Authentication required"
+  }
+}
+```
+
+**Response (403)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Only salespeople can access experiences"
+  }
+}
+```
+
 ### POST /salesperson/experiences
-**Description**: Create new work experience
-**Access**: Protected (salesperson role)
+**Description**: Create a new work experience (auto-approved)
+**Access**: Protected (requires auth + salesperson role)
+**Headers**: `Authorization: Bearer {token}`
+
 **Request Body**:
 ```json
 {
   "company": "string (required, max:200)",
   "position": "string (required, max:200)",
   "start_date": "YYYY-MM-DD (required)",
-  "end_date": "YYYY-MM-DD (optional, must be after start_date)",
-  "description": "string (optional)"
+  "end_date": "YYYY-MM-DD (optional, must be >= start_date)",
+  "description": "string (optional)",
+  "sort_order": "integer (optional, min:0, default:0)"
 }
 ```
+
 **Response (201)**:
 ```json
 {
@@ -272,12 +308,15 @@
   "data": {
     "id": 3,
     "user_id": 10,
-    "company": "ABC公司",
-    "position": "業務經理",
-    "start_date": "2020-01-01",
-    "end_date": "2023-12-31",
-    "description": "...",
+    "company": "聯發科技",
+    "position": "資深業務代表",
+    "start_date": "2024-01-01",
+    "end_date": null,
+    "description": "負責半導體產品銷售",
     "approval_status": "approved",
+    "rejected_reason": null,
+    "approved_by": null,
+    "approved_at": null,
     "sort_order": 0,
     "created_at": "2026-01-11T10:00:00Z",
     "updated_at": "2026-01-11T10:00:00Z"
@@ -286,27 +325,143 @@
 }
 ```
 
+**Response (401)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Authentication required"
+  }
+}
+```
+
+**Response (403)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Only salespeople can create experiences"
+  }
+}
+```
+
+**Response (422)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "The given data was invalid",
+    "details": {
+      "company": ["公司名稱為必填項目"],
+      "position": ["職位名稱為必填項目"],
+      "end_date": ["結束日期必須等於或晚於開始日期"]
+    }
+  }
+}
+```
+
+**Note**: Experience records are automatically approved (approval_status = 'approved') upon creation.
+
 ### PUT /salesperson/experiences/{id}
-**Description**: Update work experience
-**Access**: Protected (salesperson role, owner only)
-**Request Body**: Same as POST
+**Description**: Update an existing work experience
+**Access**: Protected (requires auth + salesperson role + ownership)
+**Headers**: `Authorization: Bearer {token}`
+**Path Parameter**: `id` (integer) - Experience ID
+
+**Request Body**:
+```json
+{
+  "company": "string (required, max:200)",
+  "position": "string (required, max:200)",
+  "start_date": "YYYY-MM-DD (required)",
+  "end_date": "YYYY-MM-DD (optional, must be >= start_date)",
+  "description": "string (optional)",
+  "sort_order": "integer (optional, min:0)"
+}
+```
+
 **Response (200)**:
 ```json
 {
   "success": true,
   "data": {
     "id": 1,
-    "company": "Updated Company",
-    "position": "Updated Position",
-    ...
+    "user_id": 10,
+    "company": "聯發科技股份有限公司",
+    "position": "資深業務經理",
+    "start_date": "2020-01-01",
+    "end_date": "2024-12-31",
+    "description": "更新後的描述",
+    "approval_status": "approved",
+    "rejected_reason": null,
+    "approved_by": 1,
+    "approved_at": "2020-01-15T08:30:00Z",
+    "sort_order": 1,
+    "created_at": "2026-01-10T12:00:00Z",
+    "updated_at": "2026-01-22T14:30:00Z"
   },
   "message": "Experience updated successfully"
 }
 ```
 
+**Response (401)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Authentication required"
+  }
+}
+```
+
+**Response (403)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "You can only update your own experiences"
+  }
+}
+```
+
+**Response (404)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Experience not found"
+  }
+}
+```
+
+**Response (422)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "The given data was invalid",
+    "details": {
+      "end_date": ["結束日期必須等於或晚於開始日期"]
+    }
+  }
+}
+```
+
+**Business Rule**: Only the owner (BR-EXP-001) can update their own experiences.
+
 ### DELETE /salesperson/experiences/{id}
-**Description**: Delete work experience
-**Access**: Protected (salesperson role, owner only)
+**Description**: Delete a work experience
+**Access**: Protected (requires auth + salesperson role + ownership)
+**Headers**: `Authorization: Bearer {token}`
+**Path Parameter**: `id` (integer) - Experience ID
+
 **Response (200)**:
 ```json
 {
@@ -315,9 +470,48 @@
 }
 ```
 
+**Response (401)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Authentication required"
+  }
+}
+```
+
+**Response (403)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "You can only delete your own experiences"
+  }
+}
+```
+
+**Response (404)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Experience not found"
+  }
+}
+```
+
+**Business Rule**: Only the owner (BR-EXP-001) can delete their own experiences.
+
 ### GET /salesperson/certifications
-**Description**: Get own certifications
-**Access**: Protected (salesperson role)
+**Description**: Get all certifications for the authenticated salesperson
+**Access**: Protected (requires auth + salesperson role)
+**Headers**: `Authorization: Bearer {token}`
+
+**Query Parameters**: None
+
 **Response (200)**:
 ```json
 {
@@ -326,16 +520,20 @@
     {
       "id": 1,
       "user_id": 10,
-      "name": "Certified Sales Professional",
-      "issuer": "Sales Institute",
+      "name": "Certified Sales Professional (CSP)",
+      "issuer": "Sales and Marketing Institute",
       "issue_date": "2022-01-15",
       "expiry_date": "2025-01-15",
-      "description": "Advanced sales certification",
-      "file_path": "certifications/abc123.pdf",
-      "file_url": "https://example.com/storage/certifications/abc123.pdf",
-      "file_size": 1024000,
+      "description": "Advanced sales certification with focus on B2B strategies",
+      "file_data": null,
+      "file_mime": "application/pdf",
+      "file_size": 2048576,
+      "file_size_mb": 1.95,
+      "has_file": true,
       "approval_status": "approved",
       "rejected_reason": null,
+      "approved_by": 1,
+      "approved_at": "2022-01-20T10:00:00Z",
       "created_at": "2026-01-10T12:00:00Z",
       "updated_at": "2026-01-10T12:00:00Z"
     }
@@ -344,20 +542,58 @@
 }
 ```
 
+**Response (401)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Authentication required"
+  }
+}
+```
+
+**Response (403)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Only salespeople can access certifications"
+  }
+}
+```
+
+**Note**:
+- Certifications are sorted by `created_at DESC` (newest first)
+- `file_data` is never returned in API responses for performance reasons
+- Use `has_file` to check if certification has an attached file
+- `file_size_mb` is calculated and rounded to 2 decimal places
+
 ### POST /salesperson/certifications
-**Description**: Upload certification (requires approval)
-**Access**: Protected (salesperson role)
+**Description**: Upload a new certification with Base64-encoded file (requires admin approval)
+**Access**: Protected (requires auth + salesperson role)
+**Headers**: `Authorization: Bearer {token}`
+
 **Request Body**:
 ```json
 {
   "name": "string (required, max:200)",
   "issuer": "string (required, max:200)",
-  "issue_date": "YYYY-MM-DD (required)",
-  "expiry_date": "YYYY-MM-DD (optional)",
+  "issue_date": "YYYY-MM-DD (optional)",
+  "expiry_date": "YYYY-MM-DD (optional, must be >= issue_date)",
   "description": "string (optional)",
-  "file_data": "base64 encoded file (optional, JPG/PNG/PDF, max 5MB)"
+  "file": "string (required, Base64 encoded file)",
+  "file_mime": "string (required, allowed: image/jpeg, image/jpg, image/png, application/pdf)"
 }
 ```
+
+**File Requirements**:
+- Format: Base64 encoded string
+- Supported MIME types: `image/jpeg`, `image/jpg`, `image/png`, `application/pdf`
+- Max size: 16MB (16,777,216 bytes)
+- Can include data URL prefix (e.g., `data:application/pdf;base64,`) or just the Base64 string
+
 **Response (201)**:
 ```json
 {
@@ -365,23 +601,110 @@
   "data": {
     "id": 2,
     "user_id": 10,
-    "name": "Certified Sales Professional",
-    "issuer": "Sales Institute",
-    "issue_date": "2022-01-15",
-    "expiry_date": "2025-01-15",
-    "file_path": "certifications/xyz789.pdf",
-    "file_url": "https://example.com/storage/certifications/xyz789.pdf",
+    "name": "Project Management Professional (PMP)",
+    "issuer": "Project Management Institute",
+    "issue_date": "2023-06-01",
+    "expiry_date": "2026-06-01",
+    "description": "PMP certification for project management",
+    "file_data": null,
+    "file_mime": "application/pdf",
+    "file_size": 3145728,
+    "file_size_mb": 3.0,
+    "has_file": true,
     "approval_status": "pending",
+    "rejected_reason": null,
+    "approved_by": null,
+    "approved_at": null,
     "created_at": "2026-01-11T10:00:00Z",
     "updated_at": "2026-01-11T10:00:00Z"
   },
-  "message": "Certification created successfully and pending approval"
+  "message": "Certification created successfully. Pending approval."
+}
+```
+
+**Response (401)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Authentication required"
+  }
+}
+```
+
+**Response (403)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Only salespeople can create certifications"
+  }
+}
+```
+
+**Response (422) - Validation Error**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "The given data was invalid",
+    "details": {
+      "name": ["證照名稱為必填項目"],
+      "file": ["證照檔案為必填項目"],
+      "file_mime": ["只接受 JPEG、PNG 或 PDF 格式的檔案"]
+    }
+  }
+}
+```
+
+**Response (422) - Invalid Base64**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_FILE",
+    "message": "Invalid Base64 file data"
+  }
+}
+```
+
+**Response (422) - File Too Large**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FILE_TOO_LARGE",
+    "message": "File size exceeds 16MB limit"
+  }
+}
+```
+
+**Important Notes**:
+- Certification `approval_status` is automatically set to `"pending"` upon creation
+- Admin approval is required before certification becomes visible to public
+- File is stored in database as BLOB (file_data column)
+- Base64 encoding increases file size by ~33%, so actual upload limit is ~12MB of original file
+
+**Example Base64 Upload**:
+```json
+{
+  "name": "Sales Excellence Award",
+  "issuer": "National Sales Association",
+  "issue_date": "2024-01-01",
+  "file": "data:application/pdf;base64,JVBERi0xLjQKJeLjz9MKNCAwIG9iaiA8P...",
+  "file_mime": "application/pdf"
 }
 ```
 
 ### DELETE /salesperson/certifications/{id}
-**Description**: Delete certification
-**Access**: Protected (salesperson role, owner only)
+**Description**: Delete a certification
+**Access**: Protected (requires auth + salesperson role + ownership)
+**Headers**: `Authorization: Bearer {token}`
+**Path Parameter**: `id` (integer) - Certification ID
+
 **Response (200)**:
 ```json
 {
@@ -389,6 +712,41 @@
   "message": "Certification deleted successfully"
 }
 ```
+
+**Response (401)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Authentication required"
+  }
+}
+```
+
+**Response (403)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "You can only delete your own certifications"
+  }
+}
+```
+
+**Response (404)**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Certification not found"
+  }
+}
+```
+
+**Business Rule**: Only the owner (BR-CERT-001) can delete their own certifications.
 
 ### GET /salesperson/approval-status
 **Description**: Get aggregated approval status for profile, company, experiences, and certifications
