@@ -264,11 +264,14 @@ class SalespersonController extends Controller
         // Reload profile to get updated data
         $profile = $user->salespersonProfile()->first();
 
-        // Build response with avatar data URL
+        // Build response with avatar data URL (using helper to properly encode binary data)
         $responseData = $profile->toArray();
-        if ($profile->avatar_data && $profile->avatar_mime) {
-            $responseData['avatar'] = "data:{$profile->avatar_mime};base64,{$profile->avatar_data}";
-        }
+
+        // Remove binary fields that can't be JSON encoded
+        unset($responseData['avatar_data'], $responseData['avatar_mime'], $responseData['avatar_size']);
+
+        // Add avatar as data URL instead
+        $responseData['avatar'] = $avatarService->getAvatarUrl($profile);
 
         return response()->json([
             'success' => true,
@@ -282,7 +285,7 @@ class SalespersonController extends Controller
      *
      * GET /api/salespeople
      */
-    public function index(): JsonResponse
+    public function index(AvatarService $avatarService): JsonResponse
     {
         $salespeople = User::where('role', User::ROLE_SALESPERSON)
             ->where('salesperson_status', User::STATUS_APPROVED)
@@ -291,15 +294,12 @@ class SalespersonController extends Controller
             ->paginate(20);
 
         // Transform to flat structure matching SalespersonSearchResult
-        $transformed = $salespeople->through(function (User $user) {
+        $transformed = $salespeople->through(function (User $user) use ($avatarService) {
             $profile = $user->salespersonProfile;
             $company = $profile?->company;
 
-            // Build avatar data URL from base64 stored in database
-            $avatarUrl = null;
-            if ($profile?->avatar_data && $profile?->avatar_mime) {
-                $avatarUrl = "data:{$profile->avatar_mime};base64,{$profile->avatar_data}";
-            }
+            // Build avatar data URL using helper (properly encodes binary data)
+            $avatarUrl = $profile ? $avatarService->getAvatarUrl($profile) : null;
 
             return [
                 'id' => $profile?->id,
