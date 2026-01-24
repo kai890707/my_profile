@@ -421,22 +421,22 @@ class UserResource extends Resource
                         Components\TextEntry::make('salesperson_applied_at')
                             ->label('申請時間')
                             ->dateTime('Y-m-d H:i')
-                            ->default('N/A'),
+                            ->placeholder('N/A'),
 
                         Components\TextEntry::make('salesperson_approved_at')
                             ->label('審核時間')
                             ->dateTime('Y-m-d H:i')
-                            ->default('N/A'),
+                            ->placeholder('N/A'),
 
                         Components\TextEntry::make('rejection_reason')
                             ->label('拒絕原因')
-                            ->default('N/A')
+                            ->placeholder('N/A')
                             ->columnSpanFull(),
 
                         Components\TextEntry::make('can_reapply_at')
                             ->label('可重新申請時間')
                             ->dateTime('Y-m-d')
-                            ->default('N/A'),
+                            ->placeholder('N/A'),
                     ])
                     ->columns(2)
                     ->visible(fn ($record) => $record->role === User::ROLE_SALESPERSON),
@@ -450,7 +450,7 @@ class UserResource extends Resource
                         Components\TextEntry::make('email_verified_at')
                             ->label('Email 驗證時間')
                             ->dateTime('Y-m-d H:i')
-                            ->default('未驗證'),
+                            ->placeholder('未驗證'),
 
                         Components\TextEntry::make('updated_at')
                             ->label('最後更新時間')
@@ -459,7 +459,7 @@ class UserResource extends Resource
                         Components\TextEntry::make('deleted_at')
                             ->label('刪除時間')
                             ->dateTime('Y-m-d H:i')
-                            ->default('N/A'),
+                            ->placeholder('N/A'),
                     ])
                     ->columns(2),
             ]);
