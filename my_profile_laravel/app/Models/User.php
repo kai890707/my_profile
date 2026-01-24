@@ -4,18 +4,21 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable implements JWTSubject
+class User extends Authenticatable implements JWTSubject, FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, HasRoles;
 
     // Roles
     public const ROLE_USER = 'user';
@@ -267,5 +270,14 @@ class User extends Authenticatable implements JWTSubject
             'rejection_reason' => $reason,
             'can_reapply_at' => $reapplyDays > 0 ? now()->addDays($reapplyDays) : null,
         ]);
+    }
+
+    /**
+     * Determine if the user can access Filament panel.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Only admin users can access Filament admin panel
+        return $this->isAdmin();
     }
 }
