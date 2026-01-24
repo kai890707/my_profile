@@ -1893,3 +1893,388 @@ public function updateProfile(Request $request): JsonResponse
 
 ## Frontend 規格
 ---
+
+---
+
+# Contact Mechanism API (聯繫機制)
+
+**Version**: 1.0  
+**Last Updated**: 2026-01-23
+
+## Overview
+
+Contact Mechanism 功能提供業務員與客戶之間的聯繫管道，包含：
+1. 業務員設定聯繫方式
+2. 客戶提交聯繫請求
+3. 聯繫事件追蹤
+4. Email 通知
+
+## API Endpoints
+
+| Endpoint | Method | Auth | Role | Description |
+|----------|--------|------|------|-------------|
+| `/api/salesperson/profile/contact` | PUT | ✅ | salesperson | 更新聯繫方式 |
+| `/api/salespersons/{id}/contact-info` | GET | ❌ | - | 查詢聯繫資訊 |
+| `/api/contact-requests` | POST | ✅ | user, salesperson | 提交聯繫請求 |
+| `/api/events/track` | POST | ❌ | - | 追蹤事件 |
+
+---
+
+## PUT /api/salesperson/profile/contact
+
+**Description**: 業務員更新個人聯繫方式
+
+**Authentication**: Required (JWT, salesperson role)
+
+**Rate Limit**: 120 requests/minute
+
+### Request
+
+```http
+PUT /api/salesperson/profile/contact
+Authorization: Bearer {access_token}
+Content-Type: application/json
+```
+
+```json
+{
+  "phone": "0912-345-678",
+  "email_public": "contact@example.com",
+  "line_id": "my_line_id",
+  "wechat_id": "my_wechat",
+  "contact_preferences": ["line", "phone", "email", "wechat"]
+}
+```
+
+### Request Fields
+
+| Field | Type | Required | Description | Validation |
+|-------|------|----------|-------------|------------|
+| phone | string | No | 聯繫電話 | nullable, regex:/^09\d{8}$\|^0\d-\d{7,8}$/ |
+| email_public | string | No | 公開 Email | nullable, email, max:255 |
+| line_id | string | No | LINE ID | nullable, min:3, max:20, regex:/^[a-zA-Z0-9_]+$/ |
+| wechat_id | string | No | WeChat ID | nullable, min:6, max:20, regex:/^[a-zA-Z0-9_-]+$/ |
+| contact_preferences | array | No | 聯繫偏好順序 | nullable, array, in:phone,email,line,wechat |
+
+**Business Rules**:
+- BR-VR-001: 至少要有一種聯繫方式（phone, email_public, line_id, wechat_id）
+
+### Response (200 OK)
+
+```json
+{
+  "success": true,
+  "data": {
+    "phone": "0912-345-678",
+    "email_public": "contact@example.com",
+    "line_id": "my_line_id",
+    "wechat_id": "my_wechat",
+    "contact_preferences": ["line", "phone", "email", "wechat"]
+  },
+  "message": "聯繫方式已更新"
+}
+```
+
+### Error Responses
+
+**422 Validation Error**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "驗證失敗",
+    "details": {
+      "contact_methods": ["請至少提供一種聯繫方式"]
+    }
+  }
+}
+```
+
+---
+
+## GET /api/salespersons/{id}/contact-info
+
+**Description**: 查詢業務員的公開聯繫資訊
+
+**Authentication**: Not Required
+
+**Rate Limit**: 60 requests/minute
+
+### Request
+
+```http
+GET /api/salespersons/{id}/contact-info
+```
+
+### Path Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | integer | 業務員 ID |
+
+### Response (200 OK)
+
+```json
+{
+  "success": true,
+  "data": {
+    "phone": "0912-345-678",
+    "email_public": "contact@example.com",
+    "line_id": "my_line_id",
+    "wechat_id": "my_wechat",
+    "contact_preferences": ["line", "phone", "email", "wechat"]
+  }
+}
+```
+
+### Error Responses
+
+**404 Not Found**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "業務員不存在或尚未通過審核"
+  }
+}
+```
+
+---
+
+## POST /api/contact-requests
+
+**Description**: 客戶提交聯繫請求給業務員
+
+**Authentication**: Required (JWT)
+
+**Rate Limit**: 5 requests/hour (IP-based)
+
+**Business Logic Rate Limit**:
+- 同一業務員: 24 小時內只能提交一次
+- 每日上限: 5 次聯繫請求
+
+### Request
+
+```http
+POST /api/contact-requests
+Authorization: Bearer {access_token}
+Content-Type: application/json
+```
+
+```json
+{
+  "salesperson_id": 123,
+  "customer_phone": "0912345678",
+  "message": "您好，我想了解保險相關服務"
+}
+```
+
+### Request Fields
+
+| Field | Type | Required | Description | Validation |
+|-------|------|----------|-------------|------------|
+| salesperson_id | integer | Yes | 業務員 ID | required, integer, exists:users,id, ApprovedSalespersonExists |
+| customer_phone | string | No | 客戶手機 | nullable, regex:/^09\d{8}$/ |
+| message | string | Yes | 訊息內容 | required, min:10, max:500 |
+
+**Business Rules**:
+- BR-VR-002: salesperson_id 必須是已通過審核的業務員
+- BR-RL-002: 24小時內同一業務員只能聯繫一次
+- BR-RL-003: 每日最多 5 次聯繫請求
+- BR-SEC-001: message 會經過 XSS 防護 (strip_tags)
+
+### Response (201 Created)
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "salesperson_id": 123,
+    "customer_name": "王小明",
+    "customer_email": "customer@example.com",
+    "customer_phone": "0912345678",
+    "message": "您好，我想了解保險相關服務",
+    "status": "pending",
+    "created_at": "2026-01-23T10:30:00.000000Z"
+  },
+  "message": "聯繫請求已送出，業務員將盡快回覆您"
+}
+```
+
+### Error Responses
+
+**429 Too Many Requests (Rate Limit - Same Salesperson)**:
+```json
+{
+  "success": false,
+  "message": "您在 24 小時內已聯繫過此業務員，請稍後再試"
+}
+```
+
+**429 Too Many Requests (Rate Limit - Daily Limit)**:
+```json
+{
+  "success": false,
+  "message": "您今天已達到聯繫上限（5 次），請明天再試"
+}
+```
+
+**422 Validation Error**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "驗證失敗",
+    "details": {
+      "salesperson_id": ["選擇的業務員不存在或尚未通過審核"],
+      "message": ["訊息至少需要 10 個字元"]
+    }
+  }
+}
+```
+
+---
+
+## POST /api/events/track
+
+**Description**: 追蹤聯繫相關事件（用於分析）
+
+**Authentication**: Not Required (支援匿名追蹤)
+
+**Rate Limit**: 100 requests/minute
+
+### Request
+
+```http
+POST /api/events/track
+Content-Type: application/json
+```
+
+```json
+{
+  "event_type": "profile_view",
+  "salesperson_id": 123
+}
+```
+
+### Request Fields
+
+| Field | Type | Required | Description | Validation |
+|-------|------|----------|-------------|------------|
+| event_type | string | Yes | 事件類型 | required, in:profile_view,contact_form_submission |
+| salesperson_id | integer | Yes | 業務員 ID | required, integer, exists:users,id |
+
+**Event Types**:
+- `profile_view`: 瀏覽業務員檔案
+- `contact_form_submission`: 提交聯繫表單
+
+**Privacy**:
+- IP 地址會經過 SHA256 hashing 後儲存
+- 支援匿名追蹤（user_id 可為 null）
+
+### Response (200 OK)
+
+```json
+{
+  "success": true,
+  "message": "事件已記錄"
+}
+```
+
+### Error Responses
+
+**422 Validation Error**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "驗證失敗",
+    "details": {
+      "event_type": ["事件類型無效"],
+      "salesperson_id": ["業務員不存在"]
+    }
+  }
+}
+```
+
+---
+
+## Security Features
+
+### Data Protection
+
+1. **Encryption**:
+   - Customer email: AES-256-CBC encryption
+   - Customer phone: AES-256-CBC encryption
+
+2. **Privacy**:
+   - IP addresses: SHA256 hashing
+   - User agent: Stored as-is
+
+3. **XSS Protection**:
+   - Message content: `strip_tags()` applied
+
+### Rate Limiting
+
+1. **IP-based** (Middleware):
+   - Contact requests: 5/hour
+   - Contact info: 60/minute
+   - Event tracking: 100/minute
+
+2. **Business Logic** (Redis Cache):
+   - Same salesperson: 24 hours cooldown
+   - Daily limit: 5 requests per user
+
+### Authentication
+
+- JWT tokens required for:
+  - Update contact methods
+  - Submit contact requests
+- Public endpoints:
+  - Get contact info
+  - Track events (optional auth)
+
+---
+
+## Email Notifications
+
+### Contact Request Received
+
+**Trigger**: 當客戶提交聯繫請求時
+
+**Recipient**: 業務員 (salesperson email)
+
+**Delivery**: Asynchronous via Queue
+
+**Retry**: 3 attempts (backoff: 1min, 5min, 15min)
+
+**Template**: `emails.contact-request-received`
+
+**Content**:
+```
+新的客戶聯繫請求
+
+客戶資訊：
+- 姓名：{customer_name}
+- Email：{customer_email}
+- 電話：{customer_phone}
+
+訊息內容：
+{message}
+
+[回覆客戶] (mailto link)
+```
+
+---
+
+## Related Specifications
+
+- **Data Model**: `openspec/changes/archived/20260122-add-contact-mechanism/specs/data-model.md`
+- **Business Rules**: `openspec/changes/archived/20260122-add-contact-mechanism/specs/business-rules.md`
+- **Architecture**: `openspec/changes/archived/20260122-add-contact-mechanism/specs/architecture.md`
+

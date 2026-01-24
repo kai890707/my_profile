@@ -643,3 +643,319 @@ GET /api/salesperson/profile → security={{"bearerAuth":{}}}
 - 避免瀏覽器快取舊版本文件
 
 ---
+
+---
+
+# Contact Mechanism Business Rules
+
+**Feature**: Contact Mechanism (聯繫機制)  
+**Version**: 1.0  
+**Last Updated**: 2026-01-23
+
+## Overview
+
+Contact Mechanism 功能的業務規則定義，涵蓋驗證、rate limiting、安全性、資料完整性和 email 通知。
+
+---
+
+## BR-VR: Validation Rules (驗證規則)
+
+### BR-VR-001: 至少一種聯繫方式
+**Description**: 業務員更新聯繫方式時，至少要提供一種聯繫方法
+
+**Applies to**:
+- PUT /api/salesperson/profile/contact
+
+**Rule**:
+```
+至少以下一項不為 null:
+- phone
+- email_public
+- line_id
+- wechat_id
+```
+
+**Implementation**:
+- Custom Validation Rule: `AtLeastOneContactMethod`
+- Error Message: "請至少提供一種聯繫方式（電話、Email、LINE ID 或 WeChat ID）"
+
+**Test Cases**:
+- ✅ 只提供 phone → 通過
+- ✅ 提供 phone + email → 通過
+- ❌ 全部為 null → 失敗
+
+---
+
+### BR-VR-002: 業務員審核狀態驗證
+**Description**: 只有已通過審核的業務員可以接收聯繫請求
+
+**Applies to**:
+- POST /api/contact-requests (salesperson_id validation)
+
+**Rule**:
+```
+salesperson_id 必須滿足:
+- User exists
+- role = 'salesperson'
+- salesperson_status = 'approved'
+```
+
+**Implementation**:
+- Custom Validation Rule: `ApprovedSalespersonExists`
+- Error Message: "選擇的業務員不存在或尚未通過審核"
+
+**Test Cases**:
+- ✅ Approved salesperson → 通過
+- ❌ Pending salesperson → 失敗
+- ❌ Rejected salesperson → 失敗
+- ❌ Regular user → 失敗
+
+---
+
+## BR-RL: Rate Limiting Rules (頻率限制規則)
+
+### BR-RL-001: IP-based Rate Limiting
+**Description**: IP 層級的請求頻率限制（Laravel Throttle Middleware）
+
+**Applies to**:
+- POST /api/contact-requests: 5 requests/hour
+- GET /api/salespersons/{id}/contact-info: 60 requests/minute
+- POST /api/events/track: 100 requests/minute
+
+**Implementation**:
+```php
+Route::middleware('throttle:5,60') // 5 requests per 60 minutes
+```
+
+**Response** (429 Too Many Requests):
+```json
+{
+  "message": "Too Many Attempts."
+}
+```
+
+---
+
+### BR-RL-002: 同一業務員 24 小時限制
+**Description**: 同一用戶對同一業務員，24 小時內只能提交一次聯繫請求
+
+**Applies to**:
+- POST /api/contact-requests
+
+**Rule**:
+```
+IF 過去 24 小時內，同一 user_id + salesperson_id 組合已有請求
+THEN 拒絕新請求
+```
+
+**Implementation**:
+- Service: `RateLimitService::canContactSalesperson()`
+- Storage: Redis Cache
+- Key: `contact_limit:{user_id}:{salesperson_id}`
+- TTL: 24 hours
+
+**Response** (429):
+```json
+{
+  "success": false,
+  "message": "您在 24 小時內已聯繫過此業務員，請稍後再試"
+}
+```
+
+**Test Cases**:
+- ✅ 首次聯繫 → 成功
+- ❌ 24小時內第二次聯繫同一業務員 → 失敗
+- ✅ 24小時內聯繫不同業務員 → 成功
+- ✅ 24小時後再次聯繫 → 成功
+
+---
+
+### BR-RL-003: 每日 5 次聯繫上限
+**Description**: 每個用戶每天最多提交 5 次聯繫請求（跨所有業務員）
+
+**Applies to**:
+- POST /api/contact-requests
+
+**Rule**:
+```
+IF 今日（UTC）已提交 5 次請求
+THEN 拒絕新請求
+```
+
+**Implementation**:
+- Service: `RateLimitService::canSubmitToday()`
+- Storage: Redis Cache
+- Key: `daily_contact_count:{user_id}:{date}`
+- TTL: End of day (UTC)
+
+**Response** (429):
+```json
+{
+  "success": false,
+  "message": "您今天已達到聯繫上限（5 次），請明天再試"
+}
+```
+
+**Test Cases**:
+- ✅ 第 1-5 次請求 → 成功
+- ❌ 第 6 次請求 → 失敗
+- ✅ 隔天第 1 次請求 → 成功
+
+---
+
+## BR-SEC: Security Rules (安全規則)
+
+### BR-SEC-001: XSS 防護
+**Description**: 使用者輸入的訊息內容必須經過 XSS 防護
+
+**Applies to**:
+- POST /api/contact-requests (message field)
+
+**Rule**:
+```php
+$sanitized_message = strip_tags($message);
+```
+
+**Implementation**:
+- Service: `ContactRequestService::createRequest()`
+- Function: `strip_tags()`
+
+**Test Cases**:
+- Input: `"Hello <script>alert('XSS')</script>"`
+- Output: `"Hello alert('XSS')"`
+
+---
+
+## BR-DI: Data Integrity Rules (資料完整性規則)
+
+### BR-DI-001: Customer Email 加密
+**Description**: 客戶 email 使用 AES-256-CBC 加密儲存
+
+**Applies to**:
+- contact_requests.customer_email
+
+**Implementation**:
+- Model: `ContactRequest`
+- Cast: `'customer_email' => 'encrypted'`
+- Encryption: Laravel's built-in encryption (AES-256-CBC)
+
+---
+
+### BR-DI-002: Customer Phone 加密
+**Description**: 客戶 phone 使用 AES-256-CBC 加密儲存
+
+**Applies to**:
+- contact_requests.customer_phone
+
+**Implementation**:
+- Model: `ContactRequest`
+- Cast: `'customer_phone' => 'encrypted'`
+- Encryption: Laravel's built-in encryption (AES-256-CBC)
+
+---
+
+### BR-DI-003: IP 地址 Hashing
+**Description**: IP 地址使用 SHA256 hashing 儲存（隱私保護）
+
+**Applies to**:
+- contact_events.ip_address_hash
+
+**Implementation**:
+```php
+$ip_hash = hash('sha256', $ip_address);
+```
+
+**Reason**: 
+- 保護使用者隱私
+- 仍可用於去重和分析
+- 不可逆向還原 IP
+
+---
+
+### BR-DI-004: Event 不可變性
+**Description**: Contact Event 記錄是不可變的（immutable）
+
+**Applies to**:
+- contact_events table
+
+**Implementation**:
+```php
+// ContactEvent Model
+public const UPDATED_AT = null;
+```
+
+**Reason**:
+- 事件記錄用於分析，不應被修改
+- 只有 created_at，沒有 updated_at
+
+---
+
+## BR-EM: Email Rules (Email 規則)
+
+### BR-EM-001: 非同步 Email 發送
+**Description**: Email 通知使用 Queue 非同步發送
+
+**Applies to**:
+- ContactRequestReceived email
+
+**Implementation**:
+- Queue: Redis
+- Job: `SendContactRequestEmail`
+- Dispatch: `SendContactRequestEmail::dispatch($contactRequest)`
+
+**Retry Policy**:
+- Attempts: 3
+- Backoff: [60, 300, 900] (1min, 5min, 15min)
+
+**Failure Handling**:
+```php
+public function failed(\Throwable $exception): void
+{
+    Log::error('Failed to send contact request email', [
+        'contact_request_id' => $this->contactRequest->id,
+        'error' => $exception->getMessage(),
+    ]);
+}
+```
+
+---
+
+## BR-TR: Tracking Rules (追蹤規則)
+
+### BR-TR-001: 匿名追蹤支援
+**Description**: Event tracking 支援匿名使用者
+
+**Applies to**:
+- POST /api/events/track
+
+**Rule**:
+```
+user_id 可為 null（代表匿名使用者）
+```
+
+**Use Cases**:
+- 未登入使用者瀏覽業務員檔案
+- 追蹤匿名流量
+
+---
+
+### BR-TR-002: IP Hashing for Privacy
+**Description**: 追蹤事件時，IP 地址必須經過 hashing
+
+**Applies to**:
+- All contact_events records
+
+**Implementation**:
+```php
+ContactEvent::track($eventType, $salespersonId, $userId);
+// Internally hashes IP with SHA256
+```
+
+---
+
+## Related Specifications
+
+- **API Specs**: `openspec/specs/api/endpoints.md#contact-mechanism-api`
+- **Data Model**: `openspec/changes/archived/20260122-add-contact-mechanism/specs/data-model.md`
+- **Architecture**: `openspec/changes/archived/20260122-add-contact-mechanism/specs/architecture.md`
+
