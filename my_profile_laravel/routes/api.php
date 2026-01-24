@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CertificationController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\ContactRequestController;
+use App\Http\Controllers\Api\EventTrackingController;
 use App\Http\Controllers\Api\ExperienceController;
 use App\Http\Controllers\Api\IndustryController;
 use App\Http\Controllers\Api\RegionController;
@@ -119,6 +121,9 @@ Route::prefix('salesperson')->group(function (): void {
         // Approval status (aggregated query)
         Route::get('/approval-status', [SalespersonController::class, 'approvalStatus']);
 
+        // Contact methods management
+        Route::put('/profile/contact', [SalespersonController::class, 'updateContact']);
+
         // Experiences CRUD
         Route::get('/experiences', [ExperienceController::class, 'index']);
         Route::post('/experiences', [ExperienceController::class, 'store']);
@@ -134,6 +139,20 @@ Route::prefix('salesperson')->group(function (): void {
 
 // Public salespeople search (Rate limit: 60 requests/minute)
 Route::middleware('throttle:60,1')->get('/salespeople', [SalespersonController::class, 'index']);
+
+// Contact mechanism routes
+Route::prefix('salespersons')->group(function (): void {
+    // Public: Get salesperson contact info (Rate limit: 60 requests/minute)
+    Route::middleware('throttle:60,1')->get('/{id}/contact-info', [SalespersonController::class, 'getContactInfo']);
+});
+
+// Protected contact requests (Rate limit: 5 requests/hour for abuse prevention)
+Route::middleware(['jwt.auth', 'throttle:5,60'])->prefix('contact-requests')->group(function (): void {
+    Route::post('/', [ContactRequestController::class, 'store']);
+});
+
+// Event tracking (Rate limit: 100 requests/minute)
+Route::middleware('throttle:100,1')->post('/events/track', [EventTrackingController::class, 'track']);
 
 // Admin routes (Rate limit: 300 requests/minute)
 Route::middleware(['jwt.auth', 'admin', 'throttle:300,1'])->prefix('admin')->group(function (): void {
