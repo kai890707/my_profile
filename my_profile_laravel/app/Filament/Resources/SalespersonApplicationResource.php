@@ -7,7 +7,6 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\SalespersonApplicationResource\Pages;
 use App\Models\User;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Infolists\Components;
 use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
