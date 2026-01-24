@@ -1,0 +1,634 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Models\Certification;
+use App\Models\Company;
+use App\Models\ContactEvent;
+use App\Models\ContactRequest;
+use App\Models\DailyAnalytics;
+use App\Models\Experience;
+use App\Models\SalespersonProfile;
+use App\Models\User;
+use Carbon\Carbon;
+use function Pest\Laravel\actingAs;
+
+beforeEach(function () {
+    // Create test users
+    $this->salesperson = User::factory()->create([
+        'role' => 'salesperson',
+        'status' => 'active',
+    ]);
+
+    $this->admin = User::factory()->create([
+        'role' => 'admin',
+        'status' => 'active',
+    ]);
+
+    // Create salesperson profile
+    $this->profile = SalespersonProfile::factory()->create([
+        'user_id' => $this->salesperson->id,
+    ]);
+});
+
+describe('Salesperson Analytics', function () {
+    describe('GET /api/salesperson/analytics/stats', function () {
+        test('returns stats for authenticated salesperson with default 7 days range', function () {
+            // Create test data
+            $today = Carbon::today();
+
+            // Historical data (aggregated)
+            DailyAnalytics::factory()->create([
+                'salesperson_id' => $this->salesperson->id,
+                'date' => $today->copy()->subDays(3)->toDateString(),
+                'profile_views_count' => 10,
+                'contact_requests_count' => 2,
+                'unique_visitors_count' => 8,
+            ]);
+
+            // Today's real-time data
+            ContactEvent::factory()->count(5)->create([
+                'salesperson_id' => $this->salesperson->id,
+                'event_type' => 'profile_view',
+                'created_at' => $today,
+            ]);
+
+            ContactRequest::factory()->count(1)->create([
+                'salesperson_id' => $this->salesperson->id,
+                'created_at' => $today,
+            ]);
+
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/salesperson/analytics/stats');
+
+            $response->assertStatus(200)
+                ->assertJsonStructure([
+                    'success',
+                    'data' => [
+                        'profile_views',
+                        'contact_requests',
+                        'unique_visitors',
+                        'conversion_rate',
+                        'previous_period',
+                        'growth',
+                        'range',
+                    ],
+                    'meta' => ['timestamp'],
+                ]);
+
+            expect($response->json('data.range'))->toBe('7days');
+        });
+
+        test('returns stats for today range', function () {
+            // Create today's data
+            $today = Carbon::today();
+
+            ContactEvent::factory()->count(3)->create([
+                'salesperson_id' => $this->salesperson->id,
+                'event_type' => 'profile_view',
+                'created_at' => $today,
+            ]);
+
+            ContactRequest::factory()->count(1)->create([
+                'salesperson_id' => $this->salesperson->id,
+                'created_at' => $today,
+            ]);
+
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/salesperson/analytics/stats?range=today');
+
+            $response->assertStatus(200);
+
+            expect($response->json('data.range'))->toBe('today');
+            expect($response->json('data.profile_views'))->toBeGreaterThanOrEqual(3);
+            expect($response->json('data.contact_requests'))->toBeGreaterThanOrEqual(1);
+        });
+
+        test('returns stats for 30 days range', function () {
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/salesperson/analytics/stats?range=30days');
+
+            $response->assertStatus(200);
+            expect($response->json('data.range'))->toBe('30days');
+        });
+
+        test('calculates conversion rate correctly', function () {
+            $today = Carbon::today();
+
+            // Create 10 profile views and 2 contact requests = 20% conversion
+            ContactEvent::factory()->count(10)->create([
+                'salesperson_id' => $this->salesperson->id,
+                'event_type' => 'profile_view',
+                'created_at' => $today,
+            ]);
+
+            ContactRequest::factory()->count(2)->create([
+                'salesperson_id' => $this->salesperson->id,
+                'created_at' => $today,
+            ]);
+
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/salesperson/analytics/stats?range=today');
+
+            $response->assertStatus(200);
+
+            $conversionRate = $response->json('data.conversion_rate');
+            expect($conversionRate)->toBeGreaterThan(0);
+            expect($conversionRate)->toBeLessThanOrEqual(100);
+        });
+
+        test('includes growth data', function () {
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/salesperson/analytics/stats');
+
+            $response->assertStatus(200)
+                ->assertJsonStructure([
+                    'data' => [
+                        'growth' => [
+                            'profile_views',
+                            'contact_requests',
+                            'unique_visitors',
+                            'conversion_rate',
+                        ],
+                    ],
+                ]);
+        });
+
+        test('rejects invalid range parameter', function () {
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/salesperson/analytics/stats?range=invalid');
+
+            $response->assertStatus(422);
+        });
+
+        test('requires authentication', function () {
+            $response = $this->getJson('/api/salesperson/analytics/stats');
+            $response->assertStatus(401);
+        });
+    });
+
+    describe('GET /api/salesperson/analytics/trends', function () {
+        test('returns daily trends data for 7 days', function () {
+            // Create historical data
+            $days = 7;
+            for ($i = 0; $i < $days; $i++) {
+                DailyAnalytics::factory()->create([
+                    'salesperson_id' => $this->salesperson->id,
+                    'date' => Carbon::today()->subDays($i)->toDateString(),
+                    'profile_views_count' => rand(1, 20),
+                    'contact_requests_count' => rand(0, 5),
+                ]);
+            }
+
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/salesperson/analytics/trends');
+
+            $response->assertStatus(200)
+                ->assertJsonStructure([
+                    'success',
+                    'data' => [
+                        'trends' => [
+                            '*' => [
+                                'date',
+                                'profile_views',
+                                'contact_requests',
+                                'unique_visitors',
+                            ],
+                        ],
+                        'range',
+                    ],
+                ]);
+
+            expect($response->json('data.range'))->toBe('7days');
+            expect(count($response->json('data.trends')))->toBe(7);
+        });
+
+        test('returns trends for 30 days', function () {
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/salesperson/analytics/trends?range=30days');
+
+            $response->assertStatus(200);
+            expect($response->json('data.range'))->toBe('30days');
+            expect(count($response->json('data.trends')))->toBe(30);
+        });
+
+        test('trends are ordered by date descending', function () {
+            for ($i = 0; $i < 5; $i++) {
+                DailyAnalytics::factory()->create([
+                    'salesperson_id' => $this->salesperson->id,
+                    'date' => Carbon::today()->subDays($i)->toDateString(),
+                ]);
+            }
+
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/salesperson/analytics/trends');
+
+            $response->assertStatus(200);
+
+            $trends = $response->json('data.trends');
+            $dates = array_column($trends, 'date');
+
+            // Verify descending order
+            expect($dates)->toBe(array_reverse(array_values(array_sort($dates))));
+        });
+
+        test('requires authentication', function () {
+            $response = $this->getJson('/api/salesperson/analytics/trends');
+            $response->assertStatus(401);
+        });
+    });
+
+    describe('GET /api/salesperson/analytics/recent-contacts', function () {
+        test('returns recent contact requests with visitor info', function () {
+            // Create contact requests with events
+            $contactRequest = ContactRequest::factory()->create([
+                'salesperson_id' => $this->salesperson->id,
+                'visitor_id' => null,
+                'created_at' => Carbon::now()->subHours(2),
+            ]);
+
+            // Create associated profile view event
+            ContactEvent::factory()->create([
+                'salesperson_id' => $this->salesperson->id,
+                'visitor_id' => null,
+                'event_type' => 'profile_view',
+                'ip_address_hash' => hash('sha256', '127.0.0.1'),
+                'created_at' => Carbon::now()->subHours(3),
+            ]);
+
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/salesperson/analytics/recent-contacts');
+
+            $response->assertStatus(200)
+                ->assertJsonStructure([
+                    'success',
+                    'data' => [
+                        '*' => [
+                            'id',
+                            'created_at',
+                            'visitor_type',
+                            'visitor_info',
+                        ],
+                    ],
+                ]);
+        });
+
+        test('limits to 10 most recent contacts by default', function () {
+            // Create 15 contact requests
+            ContactRequest::factory()->count(15)->create([
+                'salesperson_id' => $this->salesperson->id,
+            ]);
+
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/salesperson/analytics/recent-contacts');
+
+            $response->assertStatus(200);
+            expect(count($response->json('data')))->toBe(10);
+        });
+
+        test('allows custom limit parameter', function () {
+            ContactRequest::factory()->count(20)->create([
+                'salesperson_id' => $this->salesperson->id,
+            ]);
+
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/salesperson/analytics/recent-contacts?limit=5');
+
+            $response->assertStatus(200);
+            expect(count($response->json('data')))->toBe(5);
+        });
+
+        test('validates limit parameter range', function () {
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/salesperson/analytics/recent-contacts?limit=101');
+
+            $response->assertStatus(422);
+        });
+
+        test('requires authentication', function () {
+            $response = $this->getJson('/api/salesperson/analytics/recent-contacts');
+            $response->assertStatus(401);
+        });
+    });
+});
+
+describe('Admin Analytics', function () {
+    describe('GET /api/admin/analytics/overview', function () {
+        test('returns platform overview statistics', function () {
+            // Create test data
+            User::factory()->count(5)->create(['role' => 'salesperson']);
+            Company::factory()->count(3)->create();
+
+            $response = actingAs($this->admin, 'api')
+                ->getJson('/api/admin/analytics/overview');
+
+            $response->assertStatus(200)
+                ->assertJsonStructure([
+                    'success',
+                    'data' => [
+                        'total_salespersons',
+                        'total_companies',
+                        'total_profile_views',
+                        'total_contact_requests',
+                        'pending_approvals' => [
+                            'experiences',
+                            'certifications',
+                        ],
+                        'range',
+                    ],
+                ]);
+        });
+
+        test('filters by date range', function () {
+            $response = actingAs($this->admin, 'api')
+                ->getJson('/api/admin/analytics/overview?range=30days');
+
+            $response->assertStatus(200);
+            expect($response->json('data.range'))->toBe('30days');
+        });
+
+        test('includes pending approvals count', function () {
+            // Create pending items
+            Experience::factory()->create([
+                'salesperson_id' => $this->salesperson->id,
+                'status' => 'pending',
+            ]);
+
+            Certification::factory()->create([
+                'salesperson_id' => $this->salesperson->id,
+                'status' => 'pending',
+            ]);
+
+            $response = actingAs($this->admin, 'api')
+                ->getJson('/api/admin/analytics/overview');
+
+            $response->assertStatus(200);
+
+            $pending = $response->json('data.pending_approvals');
+            expect($pending['experiences'])->toBeGreaterThanOrEqual(1);
+            expect($pending['certifications'])->toBeGreaterThanOrEqual(1);
+        });
+
+        test('requires admin role', function () {
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/admin/analytics/overview');
+
+            $response->assertStatus(403);
+        });
+
+        test('requires authentication', function () {
+            $response = $this->getJson('/api/admin/analytics/overview');
+            $response->assertStatus(401);
+        });
+    });
+
+    describe('GET /api/admin/analytics/top-salespersons', function () {
+        test('returns top salespersons by profile views', function () {
+            // Create multiple salespersons with different view counts
+            $sp1 = User::factory()->create(['role' => 'salesperson']);
+            $sp2 = User::factory()->create(['role' => 'salesperson']);
+
+            SalespersonProfile::factory()->create(['user_id' => $sp1->id]);
+            SalespersonProfile::factory()->create(['user_id' => $sp2->id]);
+
+            DailyAnalytics::factory()->create([
+                'salesperson_id' => $sp1->id,
+                'date' => Carbon::today()->toDateString(),
+                'profile_views_count' => 100,
+            ]);
+
+            DailyAnalytics::factory()->create([
+                'salesperson_id' => $sp2->id,
+                'date' => Carbon::today()->toDateString(),
+                'profile_views_count' => 50,
+            ]);
+
+            $response = actingAs($this->admin, 'api')
+                ->getJson('/api/admin/analytics/top-salespersons');
+
+            $response->assertStatus(200)
+                ->assertJsonStructure([
+                    'success',
+                    'data' => [
+                        '*' => [
+                            'salesperson_id',
+                            'salesperson_name',
+                            'profile_views',
+                            'contact_requests',
+                            'conversion_rate',
+                        ],
+                    ],
+                ]);
+        });
+
+        test('limits to 10 salespersons by default', function () {
+            $response = actingAs($this->admin, 'api')
+                ->getJson('/api/admin/analytics/top-salespersons');
+
+            $response->assertStatus(200);
+            expect(count($response->json('data')))->toBeLessThanOrEqual(10);
+        });
+
+        test('allows custom limit parameter', function () {
+            $response = actingAs($this->admin, 'api')
+                ->getJson('/api/admin/analytics/top-salespersons?limit=5');
+
+            $response->assertStatus(200);
+            expect(count($response->json('data')))->toBeLessThanOrEqual(5);
+        });
+
+        test('orders by profile views descending', function () {
+            for ($i = 1; $i <= 3; $i++) {
+                $sp = User::factory()->create(['role' => 'salesperson']);
+                SalespersonProfile::factory()->create(['user_id' => $sp->id]);
+
+                DailyAnalytics::factory()->create([
+                    'salesperson_id' => $sp->id,
+                    'date' => Carbon::today()->toDateString(),
+                    'profile_views_count' => $i * 10, // 10, 20, 30
+                ]);
+            }
+
+            $response = actingAs($this->admin, 'api')
+                ->getJson('/api/admin/analytics/top-salespersons');
+
+            $response->assertStatus(200);
+
+            $salespersons = $response->json('data');
+            $views = array_column($salespersons, 'profile_views');
+
+            // Verify descending order
+            expect($views)->toBe(array_reverse(array_values(array_sort($views))));
+        });
+
+        test('requires admin role', function () {
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/admin/analytics/top-salespersons');
+
+            $response->assertStatus(403);
+        });
+    });
+
+    describe('GET /api/admin/analytics/activity', function () {
+        test('returns recent platform activity', function () {
+            // Create test activity
+            ContactRequest::factory()->count(5)->create([
+                'created_at' => Carbon::now()->subHours(1),
+            ]);
+
+            $response = actingAs($this->admin, 'api')
+                ->getJson('/api/admin/analytics/activity');
+
+            $response->assertStatus(200)
+                ->assertJsonStructure([
+                    'success',
+                    'data' => [
+                        '*' => [
+                            'type',
+                            'timestamp',
+                            'data',
+                        ],
+                    ],
+                ]);
+        });
+
+        test('limits to 20 activities by default', function () {
+            $response = actingAs($this->admin, 'api')
+                ->getJson('/api/admin/analytics/activity');
+
+            $response->assertStatus(200);
+            expect(count($response->json('data')))->toBeLessThanOrEqual(20);
+        });
+
+        test('orders by timestamp descending', function () {
+            $response = actingAs($this->admin, 'api')
+                ->getJson('/api/admin/analytics/activity');
+
+            $response->assertStatus(200);
+
+            $activities = $response->json('data');
+            if (!empty($activities)) {
+                $timestamps = array_column($activities, 'timestamp');
+                // Verify descending order
+                expect($timestamps)->toBe(array_reverse(array_values(array_sort($timestamps))));
+            }
+        });
+
+        test('requires admin role', function () {
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/admin/analytics/activity');
+
+            $response->assertStatus(403);
+        });
+    });
+
+    describe('GET /api/admin/analytics/growth', function () {
+        test('returns growth trends over time', function () {
+            // Create historical data
+            for ($i = 0; $i < 7; $i++) {
+                DailyAnalytics::factory()->create([
+                    'salesperson_id' => $this->salesperson->id,
+                    'date' => Carbon::today()->subDays($i)->toDateString(),
+                ]);
+            }
+
+            $response = actingAs($this->admin, 'api')
+                ->getJson('/api/admin/analytics/growth');
+
+            $response->assertStatus(200)
+                ->assertJsonStructure([
+                    'success',
+                    'data' => [
+                        'trends' => [
+                            '*' => [
+                                'date',
+                                'total_profile_views',
+                                'total_contact_requests',
+                                'active_salespersons',
+                            ],
+                        ],
+                        'range',
+                    ],
+                ]);
+        });
+
+        test('supports 30 days range', function () {
+            $response = actingAs($this->admin, 'api')
+                ->getJson('/api/admin/analytics/growth?range=30days');
+
+            $response->assertStatus(200);
+            expect($response->json('data.range'))->toBe('30days');
+            expect(count($response->json('data.trends')))->toBe(30);
+        });
+
+        test('trends are ordered by date descending', function () {
+            for ($i = 0; $i < 5; $i++) {
+                DailyAnalytics::factory()->create([
+                    'date' => Carbon::today()->subDays($i)->toDateString(),
+                ]);
+            }
+
+            $response = actingAs($this->admin, 'api')
+                ->getJson('/api/admin/analytics/growth');
+
+            $response->assertStatus(200);
+
+            $trends = $response->json('data.trends');
+            $dates = array_column($trends, 'date');
+
+            // Verify descending order
+            expect($dates)->toBe(array_reverse(array_values(array_sort($dates))));
+        });
+
+        test('requires admin role', function () {
+            $response = actingAs($this->salesperson, 'api')
+                ->getJson('/api/admin/analytics/growth');
+
+            $response->assertStatus(403);
+        });
+    });
+});
+
+describe('Rate Limiting', function () {
+    test('salesperson analytics endpoints respect 60 req/min throttle', function () {
+        $this->markTestSkipped('Rate limiting test requires time-based testing');
+    });
+
+    test('admin analytics endpoints respect 120 req/min throttle', function () {
+        $this->markTestSkipped('Rate limiting test requires time-based testing');
+    });
+});
+
+describe('Performance', function () {
+    test('stats endpoint uses hybrid query strategy efficiently', function () {
+        // This is more of a documentation test
+        // Real performance testing would require profiling tools
+
+        $today = Carbon::today();
+
+        // Create mix of historical and today's data
+        DailyAnalytics::factory()->create([
+            'salesperson_id' => $this->salesperson->id,
+            'date' => $today->copy()->subDays(1)->toDateString(),
+            'profile_views_count' => 50,
+        ]);
+
+        ContactEvent::factory()->count(5)->create([
+            'salesperson_id' => $this->salesperson->id,
+            'event_type' => 'profile_view',
+            'created_at' => $today,
+        ]);
+
+        $startTime = microtime(true);
+
+        $response = actingAs($this->salesperson, 'api')
+            ->getJson('/api/salesperson/analytics/stats');
+
+        $executionTime = microtime(true) - $startTime;
+
+        $response->assertStatus(200);
+
+        // Should complete in reasonable time (< 500ms)
+        expect($executionTime)->toBeLessThan(0.5);
+    });
+});
