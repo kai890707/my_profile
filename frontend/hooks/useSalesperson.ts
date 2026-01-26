@@ -83,6 +83,25 @@ export function useUpdateProfile() {
   });
 }
 
+/**
+ * 更新聯絡方式
+ */
+export function useUpdateContactMethods() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: salespersonApi.updateContactMethods,
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: salespersonKeys.profile });
+      toast.success(response.message || '聯絡方式已更新');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || '更新失敗，請稍後再試';
+      toast.error(message);
+    },
+  });
+}
+
 // ========== Company Hooks ==========
 
 /**

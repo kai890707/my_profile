@@ -86,12 +86,18 @@ export interface AuthResponse {
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 
+export type ContactPreference = 'phone' | 'email_public' | 'line' | 'wechat';
+
 export interface SalespersonProfile {
   id: number;
   user_id: number;
   company_id: number | null;
   full_name: string | null;
   phone: string;
+  email_public: string | null;
+  line_id: string | null;
+  wechat_id: string | null;
+  contact_preferences: ContactPreference[] | null;
   bio: string | null;
   specialties: string | null;
   service_regions: string[];
@@ -214,6 +220,32 @@ export interface ApprovalStatusData {
     approval_status: ApprovalStatus;
     rejected_reason: string | null;
   }>;
+}
+
+// ============================================
+// Contact Types
+// ============================================
+
+export interface ContactInfo {
+  phone: string | null;
+  email_public: string | null;
+  line_id: string | null;
+  wechat_id: string | null;
+  contact_preferences: ContactPreference[] | null;
+  has_contact_methods: boolean;
+}
+
+export interface ContactRequest {
+  id: number;
+  user_id: number;
+  salesperson_id: number;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string | null;
+  message: string;
+  status: 'pending' | 'contacted' | 'completed';
+  created_at: string;
+  updated_at: string;
 }
 
 // ============================================

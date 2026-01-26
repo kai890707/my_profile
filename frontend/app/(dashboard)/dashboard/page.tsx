@@ -21,6 +21,7 @@ import { AddCompanyDialog } from '@/components/salesperson/AddCompanyDialog';
 import { AlertDialog } from '@/components/ui/alert-dialog';
 import { createCompany } from '@/lib/api/companies';
 import type { Company } from '@/types/api';
+import { ContactMethodsForm } from '@/components/contact/ContactMethodsForm';
 
 // 個人資料表單驗證
 const profileSchema = z.object({
@@ -625,6 +626,20 @@ export default function ProfilePage() {
           )}
         </CardContent>
       </Card>
+
+      {/* 聯絡方式設定 */}
+      {profile && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              聯絡方式設定
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ContactMethodsForm profile={profile} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Add Company Dialog */}
       <AddCompanyDialog
