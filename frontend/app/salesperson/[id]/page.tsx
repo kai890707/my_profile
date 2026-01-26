@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '@/components/layout/header';
@@ -27,14 +28,23 @@ import { useAuth, useLogout } from '@/hooks/useAuth';
 import { formatDate } from '@/lib/utils/format';
 import { ExperienceTimeline } from '@/components/features/salesperson/experience-timeline';
 import { CertificationCards } from '@/components/features/salesperson/certification-cards';
+import { ContactInfoDisplay } from '@/components/contact/ContactInfoDisplay';
+import { ContactModal } from '@/components/contact/ContactModal';
+import { useTrackEvent } from '@/hooks/useTracking';
+import { useContactInfo } from '@/hooks/useContact';
 
 export default function SalespersonDetailPage() {
   const params = useParams();
   const id = parseInt(params.id as string);
+  const [showContactModal, setShowContactModal] = useState(false);
 
   const { data: salesperson, isLoading, error } = useSalespersonDetail(id);
   const { data: user, isLoading: authLoading } = useAuth();
+  const { data: contactInfo, isLoading: contactInfoLoading } = useContactInfo(id);
   const logoutMutation = useLogout();
+
+  // Track profile view event
+  useTrackEvent('profile_view', id, !isLoading && !!salesperson);
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -226,26 +236,22 @@ export default function SalespersonDetailPage() {
             </div>
 
             {/* 右側聯絡資訊 */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 space-y-6">
+              {/* Contact Info Display */}
+              {!contactInfoLoading && contactInfo && (
+                <ContactInfoDisplay
+                  contactInfo={contactInfo}
+                  onContactClick={() => setShowContactModal(true)}
+                  salespersonName={salesperson.full_name || undefined}
+                />
+              )}
+
+              {/* 其他資訊卡片 */}
               <Card className="sticky top-20">
                 <CardHeader>
-                  <CardTitle>聯絡資訊</CardTitle>
+                  <CardTitle>其他資訊</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* 電話 */}
-                  <div className="flex items-start gap-3">
-                    <Phone className="h-5 w-5 text-slate-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm text-slate-500 mb-1">電話</p>
-                      <a
-                        href={`tel:${salesperson.phone}`}
-                        className="text-slate-900 hover:text-primary-600 transition-colors"
-                      >
-                        {salesperson.phone}
-                      </a>
-                    </div>
-                  </div>
-
                   {/* 服務地區 */}
                   {serviceRegions.length > 0 && (
                     <div className="flex items-start gap-3">
@@ -263,7 +269,6 @@ export default function SalespersonDetailPage() {
                     </div>
                   )}
 
-
                   {/* 註冊時間 */}
                   <div className="pt-4 border-t border-slate-200">
                     <div className="flex items-center gap-2 text-sm text-slate-500">
@@ -274,12 +279,14 @@ export default function SalespersonDetailPage() {
                     </div>
                   </div>
 
-                  {/* CTA */}
+                  {/* Contact Modal */}
                   <div className="pt-4 space-y-2">
-                    <Button className="w-full" size="lg">
-                      <Phone className="mr-2 h-4 w-4" />
-                      立即聯絡
-                    </Button>
+                    <ContactModal
+                      isOpen={showContactModal}
+                      onClose={() => setShowContactModal(false)}
+                      salespersonId={id}
+                      salespersonName={salesperson.full_name || '業務員'}
+                    />
                   </div>
                 </CardContent>
               </Card>

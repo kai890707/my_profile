@@ -71,6 +71,22 @@ export async function updateProfile(data: UpdateProfileRequest): Promise<ApiResp
   return response.data;
 }
 
+/**
+ * 更新聯絡方式
+ */
+export interface UpdateContactMethodsRequest {
+  phone?: string;
+  email_public?: string;
+  line_id?: string;
+  wechat_id?: string;
+  contact_preferences?: string[];
+}
+
+export async function updateContactMethods(data: UpdateContactMethodsRequest): Promise<ApiResponse<SalespersonProfile>> {
+  const response = await apiClient.put<ApiResponse<SalespersonProfile>>('/salesperson/profile/contact', data);
+  return response.data;
+}
+
 // ========== Company APIs ==========
 
 /**

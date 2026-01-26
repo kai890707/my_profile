@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ContactRequestController;
 use App\Http\Controllers\Api\EventTrackingController;
 use App\Http\Controllers\Api\ExperienceController;
 use App\Http\Controllers\Api\IndustryController;
+use App\Http\Controllers\Api\RatingController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\SalespersonController;
 use App\Http\Controllers\Api\SalespersonProfileController;
@@ -154,6 +155,29 @@ Route::middleware(['jwt.auth', 'throttle:5,60'])->prefix('contact-requests')->gr
 // Event tracking (Rate limit: 100 requests/minute)
 Route::middleware('throttle:100,1')->post('/events/track', [EventTrackingController::class, 'track']);
 
+// Rating system routes
+Route::prefix('ratings')->group(function (): void {
+    // Protected: Submit rating (Rate limit: 3 requests/hour to prevent spam)
+    Route::middleware(['jwt.auth', 'throttle:3,60'])->post('/', [RatingController::class, 'store']);
+
+    // Protected: Update rating (Rate limit: 5 requests/hour)
+    Route::middleware(['jwt.auth', 'throttle:5,60'])->put('/{rating}', [RatingController::class, 'update']);
+
+    // Protected: Reply to rating (Rate limit: 10 requests/hour)
+    Route::middleware(['jwt.auth', 'throttle:10,60'])->post('/{rating}/reply', [RatingController::class, 'reply']);
+
+    // Protected: Report rating (Rate limit: 5 requests/hour)
+    Route::middleware(['jwt.auth', 'throttle:5,60'])->post('/{rating}/report', [RatingController::class, 'report']);
+});
+
+Route::prefix('salespersons')->group(function (): void {
+    // Public: Get rating stats (Rate limit: 60 requests/minute)
+    Route::middleware('throttle:60,1')->get('/{salespersonId}/rating-stats', [RatingController::class, 'stats']);
+
+    // Public: Get ratings list (Rate limit: 60 requests/minute)
+    Route::middleware('throttle:60,1')->get('/{salespersonId}/ratings', [RatingController::class, 'index']);
+});
+
 // Admin routes (Rate limit: 300 requests/minute)
 Route::middleware(['jwt.auth', 'admin', 'throttle:300,1'])->prefix('admin')->group(function (): void {
     // Dashboard statistics
@@ -186,4 +210,7 @@ Route::middleware(['jwt.auth', 'admin', 'throttle:300,1'])->prefix('admin')->gro
     Route::get('/users', [AdminController::class, 'getUsers']);
     Route::put('/users/{id}/status', [AdminController::class, 'updateUserStatus']);
     Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
+
+    // Rating moderation
+    Route::post('/ratings/{rating}/moderate', [RatingController::class, 'moderate']);
 });
